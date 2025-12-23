@@ -15,6 +15,7 @@ module.exports = async function (env, argv) {
     // deeply-nested relative paths from within node_modules. Provide aliases for
     // common depths so webpack can resolve them to the project's `app/` folder.
     '../../../../../../app': path.resolve(__dirname, 'app'),
+  '../../../../../../../app': path.resolve(__dirname, 'app'),
     '../../../../../app': path.resolve(__dirname, 'app'),
     '../../../../app': path.resolve(__dirname, 'app'),
     '../../../app': path.resolve(__dirname, 'app'),
