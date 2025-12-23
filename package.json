@@ -2,6 +2,7 @@
   "name": "expo-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "homepage": "https://tail-trails.github.io/tt-app",
   "scripts": {
     "start": "expo start",
     "start-web": "expo start --web",

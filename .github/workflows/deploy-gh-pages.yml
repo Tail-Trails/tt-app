@@ -31,6 +31,9 @@ jobs:
       - name: Build web bundle
         env:
           EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
+          # Ensure assets are emitted with the repository subpath so GitHub Pages can find them
+          PUBLIC_URL: '/tt-app'
+          EXPO_PUBLIC_URL: '/tt-app'
         run: npm run build
 
       - name: Deploy to GitHub Pages
