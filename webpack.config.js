@@ -20,6 +20,8 @@ module.exports = async function (env, argv) {
     '../../../../app': path.resolve(__dirname, 'app'),
     '../../../app': path.resolve(__dirname, 'app'),
     '@': path.resolve(__dirname),
+    // Provide a shim for nanoid to avoid ESM/CJS interop issues in the web bundle
+    'nanoid': path.resolve(__dirname, 'web', 'nanoid-shim.js'),
   };
 
   // Define the EXPO_ROUTER_APP_ROOT env var so expo-router can find the app directory

@@ -221,6 +221,53 @@ expo build:web
 
 Zip the output (usually `web-build/` or `build/`) and upload it to a Release or serve it via GitHub Pages.
 
+No Apple team / Personal development
+-----------------------------------
+
+If you don't have (or don't want) a paid Apple Developer Program membership yet, you can still develop and test iOS builds locally. Below are the practical options and limitations.
+
+- Personal Team (free Apple ID):
+	- In Xcode you can sign in with a free Apple ID (Xcode → Preferences → Accounts). Xcode will create a "Personal Team" that allows you to run development-signed builds on devices you own. This is sufficient for local testing and debugging on real devices.
+	- Limitations: Personal Team signing is intended for development only — you cannot distribute these builds via TestFlight or the App Store, and there are limits on the number of devices and provisioning capabilities.
+
+- Simulator: No Apple account required
+	- You can run your app on the iOS Simulator (macOS + Xcode) without any Apple developer account. This is the fastest way to iterate on UI and logic.
+
+- Expo options (no paid account needed for development)
+	- Use Expo Go to test most of the app on iOS without building a native binary.
+	- Use `expo prebuild` + Xcode (Personal Team) to run a development-signed binary on your device.
+
+What you cannot do without a paid Apple Developer membership
+	- Publish to TestFlight or the App Store.
+	- Create distribution provisioning profiles and upload signed IPAs for external testing and release.
+
+Enrolling in Apple Developer Program (when you're ready to distribute)
+-----------------------------------------------------------------------
+
+1. Enroll: Sign in at https://developer.apple.com/programs/ and enroll as an individual or organization (paid annual fee applies).
+
+2. App Store Connect API Key (recommended for CI)
+	 - In App Store Connect (appstoreconnect.apple.com) create an API Key (Users & Access → Keys). Save the Key ID and download the .p8 private key file — you'll need to add this to your CI or EAS configuration.
+	 - In CI (GitHub Actions, EAS, etc.) store the following as secrets:
+		 - APP_STORE_CONNECT_KEY_ID
+		 - APP_STORE_CONNECT_ISSUER_ID
+		 - APP_STORE_CONNECT_PRIVATE_KEY (base64-encoded or .p8 file content)
+
+3. Configure signing in CI
+	 - With an App Store Connect API key you can request/stage provisioning profiles and certificates via Fastlane or EAS, or configure your CI to use Xcode's automatic signing with the appropriate team ID.
+
+4. Add team members
+	 - If you're part of an organization, the account owner can add you as a member with appropriate roles in App Store Connect and Developer Portal so you can upload builds.
+
+Quick checks
+------------
+- To see if you have a paid team: in Xcode → Preferences → Accounts, select your Apple ID and look for a team name with a 10-character Team ID string; paid accounts show the team and roles.
+- To run on a device with Personal Team: connect your device, open the project in Xcode, pick your device as the run target, and allow Xcode to manage signing (it may prompt for credentials).
+
+If you'd like, I can:
+- Add a short "iOS Local Dev (no Apple team)" section with exact Xcode steps and screenshots to `BUILD.md`.
+- Add CI snippets showing how to use App Store Connect API keys with Fastlane or EAS once you have a paid account.
+
 Help and next steps
 -------------------
 If you want, I can:
