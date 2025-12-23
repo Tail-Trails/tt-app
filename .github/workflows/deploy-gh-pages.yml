@@ -8,6 +8,8 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,6 +19,11 @@ jobs:
         with:
           # Expo / react-native packages added to the project require Node 20+ in CI
           node-version: '20.x'
+
+      - name: Print Node & npm versions
+        run: |
+          node -v
+          npm -v
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
