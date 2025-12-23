@@ -22,3 +22,7 @@ npm-debug.*
 web-build/
 .env
 .env.local
+android/
+ios/
+key.properties
+.DS_Store
