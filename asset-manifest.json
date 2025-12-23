@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.js": "/tt-app/static/js/main.408e26b3.js",
+    "main.js": "/tt-app/static/js/main.c4673c0f.js",
     "static/css/607.bc73cfed.css": "/tt-app/static/css/607.bc73cfed.css",
-    "static/js/607.3bfb0a52.js": "/tt-app/static/js/607.3bfb0a52.js",
+    "static/js/607.3346a232.js": "/tt-app/static/js/607.3346a232.js",
     "static/media/icon.png": "/tt-app/static/media/icon.f99e957780228420852c.png",
     "favicon.ico": "/tt-app/favicon.ico",
     "static/media/arrow_down.png": "/tt-app/static/media/arrow_down.fd10304a000d8aeb6c42.png",
@@ -11,15 +11,16 @@
     "favicon-32.png": "/tt-app/favicon-32.png",
     "favicon-16.png": "/tt-app/favicon-16.png",
     "manifest.json": "/tt-app/manifest.json",
-    "static/media/index.cjs": "/tt-app/static/media/index.f6d03137e8c9dd0de04c.cjs",
+    "nanoid-non-secure.js": "/tt-app/nanoid-non-secure.js",
     "serve.json": "/tt-app/serve.json",
-    "main.408e26b3.js.map": "/tt-app/static/js/main.408e26b3.js.map",
+    "nanoid-shim.js": "/tt-app/nanoid-shim.js",
+    "main.c4673c0f.js.map": "/tt-app/static/js/main.c4673c0f.js.map",
     "607.bc73cfed.css.map": "/tt-app/static/css/607.bc73cfed.css.map",
-    "607.3bfb0a52.js.map": "/tt-app/static/js/607.3bfb0a52.js.map"
+    "607.3346a232.js.map": "/tt-app/static/js/607.3346a232.js.map"
   },
   "entrypoints": [
     "static/css/607.bc73cfed.css",
-    "static/js/607.3bfb0a52.js",
-    "static/js/main.408e26b3.js"
+    "static/js/607.3346a232.js",
+    "static/js/main.c4673c0f.js"
   ]
 }

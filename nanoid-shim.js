@@ -1,0 +1,1 @@
+const defaultNanoid=require("nanoid/index.cjs");exports.nanoid=defaultNanoid,exports.default=defaultNanoid;
