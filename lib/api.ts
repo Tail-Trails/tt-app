@@ -1,1 +1,1 @@
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080';
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://tt-api-340847553966.europe-west1.run.app';
