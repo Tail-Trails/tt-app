@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import createContextHook from '@nkzw/create-context-hook';
 import { useAuth } from '@/context/AuthContext';
 import { DogProfile } from '@/types/dog-profile';
 import { API_URL } from '@/lib/api';
 
 export const [DogsContext, useDogs] = createContextHook(() => {
-  const { user, session } = useAuth();
+  const { user, session, isLoading: isAuthLoading } = useAuth();
   const [dogProfiles, setDogProfiles] = useState<DogProfile[]>([]);
   const [activeDogId, setActiveDogId] = useState<string | null>(null);
   const [isDogProfileLoading, setIsDogProfileLoading] = useState<boolean>(true);
@@ -57,13 +57,16 @@ export const [DogsContext, useDogs] = createContextHook(() => {
   }, [user, session, loadDogProfiles]);
 
   useEffect(() => {
+    // Don't decide dog profile loading state until auth has finished initializing.
+    if (isAuthLoading) return;
+
     if (user && session) {
       loadDogProfiles(user.id, session.accessToken);
     } else {
       setDogProfiles([]);
       setIsDogProfileLoading(false);
     }
-  }, [user, session, loadDogProfiles]);
+  }, [user, session, loadDogProfiles, isAuthLoading]);
 
   const createDogProfile = useCallback(async (profile: Omit<DogProfile, 'id' | 'created_at' | 'updated_at'>) => {
     if (!session) throw new Error('No session');

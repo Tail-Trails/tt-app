@@ -1,13 +1,17 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack, useRouter, useSegments } from "expo-router";
+
+import { useRouter, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+
 import React, { useEffect } from "react";
-import { ActivityIndicator, View, StyleSheet } from "react-native";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { AuthContext, useAuth } from "@/context/AuthContext";
-import { AccountContext } from "@/context/AccountContext";
-import { TrailsContext } from "@/context/TrailsContext";
-import { DogsContext, useDogs } from "@/context/DogsContext";
+
+import { AuthContext, useAuth } from '@/context/AuthContext';
+import { AccountContext } from '@/context/AccountContext';
+import { TrailsContext } from '@/context/TrailsContext';
+
+import { DogsContext, useDogs } from '@/context/DogsContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -21,7 +25,15 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoading || isDogProfileLoading) return;
+    // Wait until auth and dog profile loading are settled before making navigation decisions.
+    if (isLoading) return;
+
+    // If dog profiles are still loading, don't redirect yet. We only redirect when loading is finished
+    // to avoid jumping to onboarding before data arrives.
+    if (isDogProfileLoading) {
+      console.log('Navigation: waiting for dog profiles to finish loading');
+      return;
+    }
 
     const inAuthGroup = segments[0] === '(tabs)';
     const inLoginOrSignup = segments[0] === 'login' || segments[0] === 'signup';
@@ -33,6 +45,7 @@ function RootLayoutNav() {
       console.log('Redirecting to login: user not authenticated');
       router.replace('/login');
     } else if (isAuthenticated && !hasDogProfile && !inOnboarding) {
+      // Only redirect to onboarding after we've confirmed there are no dog profiles.
       console.log('Redirecting to onboarding: no dog profile');
       router.replace('/onboarding/dog-basics');
     } else if (isAuthenticated && hasDogProfile && inLoginOrSignup) {

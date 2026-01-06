@@ -1,14 +1,22 @@
 import React, { useEffect, useRef } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated, Platform, Text } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { TouchableOpacity, View, StyleSheet, Animated, Text, Platform } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
+
 
 export default function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
   const animatedValues = useRef(
     state.routes.map(() => new Animated.Value(0))
   ).current;
 
   useEffect(() => {
+    // Debug: log current navigation state to detect unexpected extra tabs
+    console.log('AnimatedTabBar state.index:', state.index);
+    console.log('AnimatedTabBar routes:', state.routes.map(r => ({ name: r.name, key: r.key })));
+    console.log('AnimatedTabBar descriptors keys:', Object.keys(descriptors));
+
     state.routes.forEach((route, index) => {
       Animated.timing(animatedValues[index], {
         toValue: state.index === index ? 1 : 0,
@@ -18,10 +26,22 @@ export default function AnimatedTabBar({ state, descriptors, navigation }: Botto
     });
   }, [state.index, state.routes, animatedValues]);
 
+  const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 20);
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: bottomPadding }]}>
       <View style={styles.tabBar}>
-        {state.routes.map((route, index) => {
+        {/**
+         * Render only routes that expose tab bar options (title/label/icon).
+         * File-based routing sometimes injects extra routes; this guard
+         * prevents rendering unexpected tabs while we diagnose the cause.
+         */}
+        {state.routes
+          .filter(route => {
+            const opts = descriptors[route.key]?.options;
+            return !!(opts && (opts.tabBarLabel || opts.title || opts.tabBarIcon));
+          })
+          .map((route, index) => {
           const { options } = descriptors[route.key];
           const label = options.tabBarLabel !== undefined
             ? options.tabBarLabel
@@ -114,7 +134,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 16,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 16,
     paddingTop: 12,
     alignItems: 'center',
   },

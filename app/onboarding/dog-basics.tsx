@@ -1,23 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  Image,
-  Alert,
-  ScrollView,
-  Platform,
-  ActivityIndicator,
-} from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { useAuth } from '@/context/AuthContext';
+import React, { useState, useEffect, useRef } from 'react';
+import { Text, View, StyleSheet, TouchableOpacity, TextInput, Image, Alert, ScrollView, Platform, ActivityIndicator } from 'react-native';
+
+import { useRouter, Stack } from 'expo-router';
+
 import { useDogs } from '@/context/DogsContext';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
-import { Camera, ChevronDown, Upload } from 'lucide-react-native';
+
+import { ChevronDown, Camera, Upload } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { DogSize, DOG_SIZES } from '@/types/dog-profile';
 
 export default function DogBasicsScreen() {

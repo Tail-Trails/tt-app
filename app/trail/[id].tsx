@@ -1,7 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ActivityIndicator,
   Platform,
@@ -11,16 +10,19 @@ import {
   Linking,
   Animated,
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { ThemedText as Text } from '@/components/ThemedText';
+
+import { router, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
 import TrailMap from '@/components/TrailMap';
-import { MapPin, Clock, Calendar, Edit3, Check, X, Navigation, TrendingUp, Tag, Camera, Activity, Star, ArrowLeft, Share2, Bookmark, MoreVertical } from 'lucide-react-native';
+import { Clock, MapPin, Calendar, Edit3, Check, X, Navigation, TrendingUp, Tag, Camera, Activity, Star, ArrowLeft, Share2, Bookmark, MoreVertical } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
 import { Trail } from '@/types/trail';
+
 import { formatDistance, formatDuration } from '@/utils/distance';
 import colors from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -54,7 +56,8 @@ export default function TrailDetailScreen() {
   // can produce text nodes that raise "Text strings must be rendered within a <Text> component".
   const IconOrEmoji = ({ IconComponent, emoji, size = 18, color }: { IconComponent: any; emoji?: string; size?: number; color?: string }) => {
     if (Platform.OS === 'web') {
-      return <Text style={{ fontSize: size }}>{emoji || '•'}</Text>;
+      // Use ThemedText so the emoji/text is correctly wrapped in a <Text> component on web
+      return <Text style={{ fontSize: size, color: color || undefined }}>{emoji || '•'}</Text>;
     }
     const Icon = IconComponent;
     return <Icon size={size} color={color} />;
@@ -494,7 +497,7 @@ export default function TrailDetailScreen() {
 
           <View style={styles.statsSection}>
             <View style={styles.statCard}>
-              <View style={styles.statIconContainer}>
+                <View style={styles.statIconContainer}>
                 <MapPin size={20} color="#ffffff" strokeWidth={2.5} />
               </View>
               <Text style={styles.statLabel}>Distance</Text>
@@ -502,7 +505,7 @@ export default function TrailDetailScreen() {
             </View>
 
             <View style={styles.statCard}>
-              <View style={styles.statIconContainer}>
+                <View style={styles.statIconContainer}>
                 <Clock size={20} color="#ffffff" strokeWidth={2.5} />
               </View>
               <Text style={styles.statLabel}>Duration</Text>
@@ -512,7 +515,7 @@ export default function TrailDetailScreen() {
             {trail.difficulty && (
               <View style={styles.statCard}>
                 <View style={styles.statIconContainer}>
-                  <TrendingUp size={20} color="#ffffff" strokeWidth={2.5} />
+                  <IconOrEmoji IconComponent={TrendingUp} emoji="⛰️" size={20} color="#ffffff" />
                 </View>
                 <Text style={styles.statLabel}>Difficulty</Text>
                 <Text style={styles.statValue}>{trail.difficulty}</Text>
@@ -523,7 +526,7 @@ export default function TrailDetailScreen() {
           {trail.environment_tags && trail.environment_tags.length > 0 && !isEditingDetails && (
             <View style={styles.tagsSection}>
               <View style={styles.sectionHeader}>
-                <Tag size={18} color={colors.darkGreen} />
+                <IconOrEmoji IconComponent={Tag} emoji="🏷️" size={18} color={colors.darkGreen} />
                 <Text style={styles.sectionTitle}>Environment</Text>
               </View>
               <View style={styles.tagsGrid}>
@@ -666,9 +669,9 @@ export default function TrailDetailScreen() {
             </View>
           )}
 
-          <View style={styles.mapSection}>
+            <View style={styles.mapSection}>
             <View style={styles.sectionHeader}>
-              <Navigation size={18} color={colors.darkGreen} />
+              <IconOrEmoji IconComponent={Navigation} emoji="🧭" size={18} color={colors.darkGreen} />
               <Text style={styles.sectionTitle}>Route Map</Text>
             </View>
             <View style={styles.mapContainer}>
@@ -686,14 +689,14 @@ export default function TrailDetailScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.detailsSection}>
+          <View>
             <Text style={styles.detailsTitle}>Additional Details</Text>
             
             {trail.maxElevation !== undefined && (
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <TrendingUp size={18} color={colors.primary} />
-                </View>
+                    <IconOrEmoji IconComponent={TrendingUp} emoji="⛰️" size={18} color={colors.primary} />
+                  </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Elevation Gain</Text>
                   <Text style={styles.detailValue}>{trail.maxElevation}m</Text>
@@ -727,7 +730,7 @@ export default function TrailDetailScreen() {
 
             <View style={styles.detailRow}>
               <View style={styles.detailIcon}>
-                <Calendar size={18} color={colors.primary} />
+                <IconOrEmoji IconComponent={Calendar} emoji="📅" size={18} color={colors.primary} />
               </View>
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Date & Time</Text>

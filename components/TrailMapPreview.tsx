@@ -7,19 +7,31 @@ interface TrailMapPreviewProps {
   coordinates?: Coordinate[];
   path?: number[][] | null;
   style?: any;
+  startLatitude?: number | null;
+  startLongitude?: number | null;
 }
 
-export default function TrailMapPreview({ coordinates, path, style }: TrailMapPreviewProps) {
+export default function TrailMapPreview({ coordinates, path, style, startLatitude = null, startLongitude = null }: TrailMapPreviewProps) {
   const coords = (coordinates && coordinates.length > 0)
     ? coordinates
     : (Array.isArray(path) ? path.map(p => ({ latitude: p[1], longitude: p[0] })) : []);
 
   const region = useMemo(() => {
     const c = coords ?? [];
-    if (coords.length === 0) {
+    if (coords.length === 0 && (startLatitude == null || startLongitude == null)) {
       return {
         latitude: 40.7128,
         longitude: -74.0060,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+    }
+
+    // If explicit start coordinates are provided prefer centering on them.
+    if ((startLatitude != null) && (startLongitude != null)) {
+      return {
+        latitude: startLatitude,
+        longitude: startLongitude,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       };

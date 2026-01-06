@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useState, useMemo } from 'react';
 import createContextHook from '@nkzw/create-context-hook';
 import { useAuth } from '@/context/AuthContext';
 import { Trail } from '@/types/trail';

@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
-import { MapPin, Navigation, User } from 'lucide-react-native';
+
+import { Navigation, MapPin, User } from 'lucide-react-native';
 import AnimatedTabBar from '@/components/AnimatedTabBar';
 
 export default function TabLayout() {

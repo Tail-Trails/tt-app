@@ -1,5 +1,6 @@
-import React, { forwardRef, useEffect, useRef, useImperativeHandle } from 'react';
-import { View, StyleSheet } from 'react-native';
+import useEffect, { forwardRef } from 'react';
+
+import { View } from 'react-native';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 

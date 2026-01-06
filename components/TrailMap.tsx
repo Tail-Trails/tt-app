@@ -1,4 +1,5 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
+
 import MapView, { Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import colors from '@/constants/colors';
 

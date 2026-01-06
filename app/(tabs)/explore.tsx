@@ -1,34 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+
 import { useFocusEffect, useRouter } from 'expo-router';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-  ActivityIndicator,
-  Animated,
-  TextInput,
-  Modal,
-  FlatList,
-} from 'react-native';
+
+import { Text, View, ScrollView, TouchableOpacity, Platform, ActivityIndicator, Animated, TextInput, Modal, FlatList } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
-import {
-  Search,
-  MapPin,
-  Heart,
-  Umbrella,
-  Bookmark,
-  Star,
-  X,
-  BarChart3,
-  Navigation,
-  ChevronLeft,
-} from 'lucide-react-native';
+
+import { MapPin, Search, Heart, Umbrella, Bookmark, Star, X, BarChart3, Navigation, Icon, ChevronLeft } from 'lucide-react-native';
 import { useTrails } from '@/context/TrailsContext';
 import { Trail } from '@/types/trail';
 import { formatDistance } from '@/utils/distance';
@@ -376,7 +357,13 @@ export default function ExploreScreen() {
                   cachePolicy="memory-disk"
                 />
               ) : (
-                <TrailMapPreview coordinates={trail.coordinates} path={(trail as any).path} style={styles.largeTrailImage} />
+                <TrailMapPreview
+                  coordinates={trail.coordinates}
+                  path={(trail as any).path}
+                  style={styles.largeTrailImage}
+                  startLatitude={(trail as any).startLatitude}
+                  startLongitude={(trail as any).startLongitude}
+                />
               )}
               
               <LinearGradient

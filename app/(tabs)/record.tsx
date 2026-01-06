@@ -1,31 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Platform,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  Animated,
-  PanResponder,
-  Dimensions,
-  TextInput,
-  Modal,
-  ScrollView,
-} from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Text, View, StyleSheet, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, TextInput, Modal, ScrollView } from 'react-native';
 
 import TrailMap from '@/components/TrailMap';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as Haptics from 'expo-haptics';
+
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Play, Square, MapPin, Watch, Bell, ChevronUp, ChevronDown, Navigation } from 'lucide-react-native';
+
+import { Square, Play, MapPin, Watch, Bell, ChevronUp, Navigation, ChevronDown, Upload } from 'lucide-react-native';
 import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
+
 import { Coordinate, Trail } from '@/types/trail';
-import { calculateTotalDistance, formatDistance, formatDuration } from '@/utils/distance';
+
+import { formatDistance, calculateTotalDistance, formatDuration } from '@/utils/distance';
 
 const LOCATION_TRACKING_TASK = 'background-location-task';
 

@@ -1,12 +1,7 @@
+
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
+import { StyleSheet, View, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { ThemedText as Text } from '@/components/ThemedText';
 import { useRouter } from 'expo-router';
 import { MapPin, Clock } from 'lucide-react-native';
 import { useTrails } from '@/context/TrailsContext';

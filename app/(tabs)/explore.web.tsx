@@ -1,42 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-  ActivityIndicator,
-  Animated,
-  TextInput,
-  Modal,
-  FlatList,
-} from 'react-native';
+import { Text, View, StyleSheet, ScrollView, TouchableOpacity, Platform, ActivityIndicator, Animated, TextInput, Modal, FlatList } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import {
-  Search,
-  MapPin,
-  Heart,
-  Umbrella,
-  Bookmark,
-  Star,
-  X,
-  BarChart3,
-  Navigation,
-  ChevronLeft,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react-native';
+
+import { MapPin, Search, Heart, Umbrella, Bookmark, Star, X, BarChart3, Navigation, ChevronLeft, ChevronUp, ChevronDown, Icon } from 'lucide-react-native';
 import * as maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import { useTrails } from '@/context/TrailsContext';
+
 import { Trail } from '@/types/trail';
 import { formatDistance } from '@/utils/distance';
 import TrailMapPreview from '@/components/TrailMapPreview';
+import { useTrails } from '@/context/TrailsContext';
 
 
 const CATEGORIES = [
@@ -475,7 +451,13 @@ export default function ExploreWebScreen() {
                   cachePolicy="memory-disk"
                 />
               ) : (
-                <TrailMapPreview coordinates={trail.coordinates} path={(trail as any).path} style={styles.largeTrailImage} />
+                <TrailMapPreview
+                  coordinates={trail.coordinates}
+                  path={(trail as any).path}
+                  style={styles.largeTrailImage}
+                  startLatitude={(trail as any).startLatitude}
+                  startLongitude={(trail as any).startLongitude}
+                />
               )}
               
               <LinearGradient

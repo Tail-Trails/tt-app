@@ -1,19 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Platform,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
-import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import { Text, View, StyleSheet, TouchableOpacity, ScrollView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ChevronLeft } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PERSONALITY_TAGS, RECALL_RELIABILITY_OPTIONS, RecallReliability } from '@/types/dog-profile';
+import { RECALL_RELIABILITY_OPTIONS, PERSONALITY_TAGS, RecallReliability } from '@/types/dog-profile';
 import { useAuth } from '@/context/AuthContext';
 import { useDogs } from '@/context/DogsContext';
 
@@ -67,7 +58,7 @@ export default function DogPersonalityScreen() {
 
     try {
       console.log(isEditing ? 'Updating dog profile for user:' : 'Creating dog profile for user:', user.id);
-      
+
       const profileData = {
         user_id: user.id,
         name: params.name,

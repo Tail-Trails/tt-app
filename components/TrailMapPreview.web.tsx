@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import * as maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import { Text, View, StyleSheet } from 'react-native';
 import { Coordinate } from '@/types/trail';
+import * as maplibregl from 'maplibre-gl';
+
 
 interface TrailMapPreviewProps {
   coordinates?: Coordinate[];
@@ -10,9 +10,11 @@ interface TrailMapPreviewProps {
   path?: number[][] | null;
   style?: any;
   height?: number | string;
+  startLatitude?: number | null;
+  startLongitude?: number | null;
 }
 
-export default function TrailMapPreview({ coordinates, path, style, height = 260 }: TrailMapPreviewProps) {
+export default function TrailMapPreview({ coordinates, path, style, height = 260, startLatitude = null, startLongitude = null }: TrailMapPreviewProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
 
@@ -25,9 +27,9 @@ export default function TrailMapPreview({ coordinates, path, style, height = 260
     if (!mapContainerRef.current) return;
 
     // Initialize map
-    const center: [number, number] = coords.length > 0
-      ? [coords[0].longitude, coords[0].latitude]
-      : [0, 0];
+    const center: [number, number] = (startLatitude != null && startLongitude != null)
+      ? [startLongitude, startLatitude]
+      : (coords.length > 0 ? [coords[0].longitude, coords[0].latitude] : [0, 0]);
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,

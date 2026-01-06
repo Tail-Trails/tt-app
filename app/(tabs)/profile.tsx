@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   Alert,
@@ -12,6 +11,7 @@ import {
   Modal,
   Animated,
 } from 'react-native';
+import { ThemedText as Text } from '@/components/ThemedText';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
@@ -19,7 +19,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useAccount } from '@/context/AccountContext';
 import { useDogs } from '@/context/DogsContext';
 import { useTrails } from '@/context/TrailsContext';
-import { LogOut, Mail, Dog, Camera, X, MapPin, Star, BarChart3, Bookmark } from 'lucide-react-native';
+
+import { Mail, LogOut, Dog, Camera, X, MapPin, Star, BarChart3, Bookmark } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -394,7 +395,13 @@ export default function ProfileScreen() {
               {trail.photo ? (
                 <Image source={{ uri: trail.photo }} style={styles.trailImage} />
               ) : (
-                <TrailMapPreview coordinates={trail.coordinates} path={(trail as any).path} style={styles.trailImage} />
+                <TrailMapPreview
+                  coordinates={trail.coordinates}
+                  path={(trail as any).path}
+                  style={styles.trailImage}
+                  startLatitude={(trail as any).startLatitude}
+                  startLongitude={(trail as any).startLongitude}
+                />
               )}
               
               <LinearGradient

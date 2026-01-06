@@ -1,27 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Platform,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  Animated,
-  PanResponder,
-  Dimensions,
-  TextInput,
-  Modal,
-} from 'react-native';
+import { Text, View, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, TextInput, ScrollView, Modal } from 'react-native';
 
 import TrailMap from '@/components/TrailMap';
+
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Play, Square, MapPin, Watch, Bell, ChevronUp, ChevronDown, Navigation } from 'lucide-react-native';
+
+import { Square, Play, MapPin, Watch, Bell, ChevronUp, Play as PlayIcon, Square as SquareIcon, ChevronDown, Navigation } from 'lucide-react-native';
 import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
+
 import { Coordinate, Trail } from '@/types/trail';
-import { calculateTotalDistance, formatDistance, formatDuration } from '@/utils/distance';
+
+import { formatDistance, calculateTotalDistance, formatDuration } from '@/utils/distance';
 
 const LOCATION_KEY = 'recording_coordinates';
 const START_TIME_KEY = 'recording_start_time';

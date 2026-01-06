@@ -1,10 +1,15 @@
+
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Text, View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+
+import { Stack } from 'expo-router';
 import TrailMap from '@/components/TrailMap';
-import { MapPin, Clock, Navigation, TrendingUp, ArrowLeft } from 'lucide-react-native';
+
+import { Clock, MapPin, Navigation, ArrowLeft, TrendingUp } from 'lucide-react-native';
 import colors from '@/constants/colors';
+
 import { formatDistance, formatDuration } from '@/utils/distance';
+import { useRouter } from 'expo-router';
 
 const DEMO_TRAIL = {
   id: 'demo-trail',
