@@ -89,6 +89,9 @@ npm run start -- --ios
 npm run start -- --android
 ```
 
+`npx expo run:android --variant release`
+`adb logcat '*:E'`
+
 ## How can I deploy this project?
 
 ### **Publish to App Store (iOS)**

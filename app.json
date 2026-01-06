@@ -35,6 +35,11 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.tailtrails.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAn3mei2obx2g6PZFahuexvYBt2T7_1alQ"
+        }
+      },
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
