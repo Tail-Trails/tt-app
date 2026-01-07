@@ -92,6 +92,11 @@ npm run start -- --android
 `npx expo run:android --variant release`
 `adb logcat '*:E'`
 
+`cd ios && pod install && cd ..`
+`npx expo run:ios --device`
+`npx expo run:ios --configuration Release`
+`npx eas build --platform ios --local --profile production`
+
 ## How can I deploy this project?
 
 ### **Publish to App Store (iOS)**

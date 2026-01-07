@@ -2,6 +2,7 @@ import { forwardRef } from 'react';
 
 import MapView, { Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import colors from '@/constants/colors';
+import { Platform } from 'react-native';
 
 interface TrailMapProps {
   coordinates?: { latitude: number; longitude: number }[];
@@ -37,10 +38,13 @@ const TrailMap = forwardRef<MapView, TrailMapProps>(({
     longitudeDelta: 0.01,
   } : undefined;
 
+  // user google maps on android, apple maps on ios
+  const provider = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
+
   return (
     <MapView
       ref={ref}
-      provider={PROVIDER_GOOGLE}
+      provider={provider}
       style={style}
       initialRegion={initialRegion || defaultRegion}
       scrollEnabled={scrollEnabled}
