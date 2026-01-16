@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import { Coordinate } from '@/types/trail';
 import * as maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 
 interface TrailMapPreviewProps {
@@ -17,9 +18,10 @@ interface TrailMapPreviewProps {
 export default function TrailMapPreview({ coordinates, path, style, height = 260, startLatitude = null, startLongitude = null }: TrailMapPreviewProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const markerRef = useRef<maplibregl.Marker | null>(null);
 
   // derive coords from coordinates or path
-  const coords = (coordinates && coordinates.length > 0)
+  const coords: Coordinate[] = (coordinates && coordinates.length > 0)
     ? coordinates
     : (Array.isArray((path as any)) ? (path as number[][]).map(p => ({ latitude: p[1], longitude: p[0] })) : []);
 
@@ -42,6 +44,7 @@ export default function TrailMapPreview({ coordinates, path, style, height = 260
     mapRef.current = map;
 
     map.on('load', () => {
+      // If we have a route (multiple points), draw it
       if (coords && coords.length > 1) {
         const geojson = {
           type: 'Feature',
@@ -70,18 +73,40 @@ export default function TrailMapPreview({ coordinates, path, style, height = 260
         coords.forEach(c => bounds.extend([c.longitude, c.latitude]));
         map.fitBounds(bounds, { padding: 10, maxZoom: 16 });
       }
+
+      // If there's a single point, place a marker at the location and center
+      else if (coords && coords.length === 1) {
+        const pt = coords[0];
+        // create a simple default marker
+        if (markerRef.current) {
+          markerRef.current.setLngLat([pt.longitude, pt.latitude]);
+        } else {
+          const m = new maplibregl.Marker({ color: '#5d6b4a' })
+            .setLngLat([pt.longitude, pt.latitude])
+            .addTo(map);
+          markerRef.current = m;
+        }
+
+        map.setCenter([pt.longitude, pt.latitude]);
+        map.setZoom(14);
+      }
     });
 
     return () => {
-      map.remove();
+      try {
+        map.remove();
+      } catch (e) {
+        // ignore remove errors
+      }
       mapRef.current = null;
+      markerRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapContainerRef]);
+  // Recreate map when coordinates/path/start center change
+  }, [JSON.stringify(coords), startLatitude, startLongitude]);
 
   return (
     <View style={[styles.container, style]}>
-      {coordinates && coordinates.length > 0 ? (
+      {coords && coords.length > 0 ? (
         <div
           ref={mapContainerRef}
           style={{ width: '100%', height: typeof height === 'number' ? `${height}px` : height }}
@@ -89,7 +114,7 @@ export default function TrailMapPreview({ coordinates, path, style, height = 260
       ) : (
         <View style={styles.placeholder}>
           <Text style={styles.text}>Map Preview (Web)</Text>
-          <Text style={styles.subtext}>{coordinates?.length || 0} points recorded</Text>
+          <Text style={styles.subtext}>{coords?.length || 0} points recorded</Text>
         </View>
       )}
     </View>

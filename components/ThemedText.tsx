@@ -1,25 +1,18 @@
 import React from 'react';
-import { Text, StyleSheet, Platform, TextProps } from 'react-native';
+import { Text as RNText, StyleSheet, Platform, TextProps } from 'react-native';
 
-export function ThemedText(props: TextProps) {
+const ThemedText: React.FC<TextProps> = (props) => {
   const { style, children, ...otherProps } = props;
 
   return (
-    <Text
-      // 1. Force one line where needed or use simple strategy
-      textBreakStrategy="simple"
-      // 2. The Android "breathing room" fix
+    <RNText
       {...otherProps}
-      style={[
-        styles.default,
-        style,
-        Platform.OS === 'android' ? styles.androidFix : null,
-      ]}
+      style={[styles.default, style]}
     >
       {children}
-    </Text>
+    </RNText>
   );
-}
+};
 
 const styles = StyleSheet.create({
   default: {
@@ -32,3 +25,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
 });
+
+// Named + default exports for compatibility
+export { ThemedText };
+export default ThemedText;
