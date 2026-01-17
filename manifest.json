@@ -4,7 +4,8 @@
   "lang": "en",
   "name": "TailTrails",
   "short_name": "TailTrails",
-  "start_url": "/?utm_source=web_app_manifest",
+  "start_url": "/",
+  "theme_color": "#ffffff",
   "orientation": "portrait",
   "related_applications": [
     {
