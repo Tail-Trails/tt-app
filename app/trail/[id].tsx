@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import {
+import { 
   View,
   StyleSheet,
   ActivityIndicator,
@@ -9,8 +9,8 @@ import {
   Alert,
   Linking,
   Animated,
+  Text,
 } from 'react-native';
-import { ThemedText as Text } from '@/components/ThemedText';
 
 import { router, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';

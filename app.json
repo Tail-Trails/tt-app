@@ -62,7 +62,22 @@
       ]
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "TailTrails",
+      "shortName": "TailTrails",
+      "lang": "en",
+      "themeColor": "#ffffff",
+      "backgroundColor": "#ffffff",
+      "display": "standalone",
+      "startUrl": "/",
+      "description": "The ultimate dog walking tracker app to monitor your furry friend's adventures!",
+      "orientation": "portrait",
+      "meta": {
+        "apple": {
+          "mobileWebAppCapable": "yes",
+          "mobileWebAppStatusBarStyle": "black-translucent"
+        }
+      }
     },
     "plugins": [
       "expo-router",

@@ -5,7 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 
 
-export default function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+console.log('[init] components/AnimatedTabBar.tsx loaded');
+
+export function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const animatedValues = useRef(
     state.routes.map(() => new Animated.Value(0))
@@ -126,6 +128,8 @@ export default function AnimatedTabBar({ state, descriptors, navigation }: Botto
     </View>
   );
 }
+
+// named export only (avoid default-export TDZ issues)
 
 const styles = StyleSheet.create({
   container: {

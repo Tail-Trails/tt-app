@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { StyleSheet, View, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { ThemedText as Text } from '@/components/ThemedText';
+import { StyleSheet, View, FlatList, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MapPin, Clock } from 'lucide-react-native';
 import { useTrails } from '@/context/TrailsContext';

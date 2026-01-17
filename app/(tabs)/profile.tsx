@@ -10,8 +10,8 @@ import {
   TextInput,
   Modal,
   Animated,
+  Text,
 } from 'react-native';
-import { ThemedText as Text } from '@/components/ThemedText';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';

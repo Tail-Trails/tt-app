@@ -1,6 +1,6 @@
-import useEffect, { forwardRef } from 'react';
+import React, { useEffect, forwardRef, useRef, useImperativeHandle } from 'react';
 
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -27,7 +27,7 @@ const TrailMap = forwardRef<any, TrailMapProps>(({
   scrollEnabled = true,
   zoomEnabled = true,
 }, ref) => {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
 
   useImperativeHandle(ref, () => ({

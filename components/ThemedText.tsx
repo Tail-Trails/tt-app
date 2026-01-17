@@ -1,6 +1,8 @@
 import React from 'react';
 import { Text as RNText, StyleSheet, Platform, TextProps } from 'react-native';
 
+console.log('[init] components/ThemedText.tsx loaded');
+
 const ThemedText: React.FC<TextProps> = (props) => {
   const { style, children, ...otherProps } = props;
 
@@ -26,6 +28,5 @@ const styles = StyleSheet.create({
   },
 });
 
-// Named + default exports for compatibility
+// Named export only to avoid default-export initialization ordering issues
 export { ThemedText };
-export default ThemedText;

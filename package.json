@@ -11,6 +11,7 @@
     "ios": "expo run:ios",
     "build": "npx expo export:web",
     "build:web": "npx expo export:web",
+    "preview": "expo run:web",
     "postbuild": "cp -f web-build/index.html web-build/404.html || true"
   },
   "dependencies": {

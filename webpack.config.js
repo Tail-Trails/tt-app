@@ -33,6 +33,8 @@ module.exports = async function (env, argv) {
   config.plugins.push(
     new webpack.DefinePlugin({
       'process.env.EXPO_ROUTER_APP_ROOT': JSON.stringify('app'),
+      // Expose EXPO_PUBLIC_API_URL to the web bundle so client code can read it at runtime.
+      'process.env.EXPO_PUBLIC_API_URL': JSON.stringify(process.env.EXPO_PUBLIC_API_URL || ''),
     })
   );
 
