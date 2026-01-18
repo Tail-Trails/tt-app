@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View } from 'react-native';
+import styles from './TrailMapPreview.styles';
 import { Coordinate } from '@/types/trail';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -121,26 +122,4 @@ export default function TrailMapPreview({ coordinates, path, style, height = 260
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    overflow: 'hidden',
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholder: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 12,
-  },
-  text: {
-    color: '#5d6b4a',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  subtext: {
-    color: '#666',
-    fontSize: 12,
-    marginTop: 4,
-  },
-});
+// styles imported from TrailMapPreview.styles.ts

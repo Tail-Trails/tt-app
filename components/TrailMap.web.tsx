@@ -1,6 +1,7 @@
 import React, { useEffect, forwardRef, useRef, useImperativeHandle } from 'react';
 
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
+import styles from './TrailMap.styles';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -120,11 +121,6 @@ const TrailMap = forwardRef<any, TrailMapProps>(({
   );
 });
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#f3f4f6',
-    overflow: 'hidden',
-  },
-});
+// styles imported from TrailMap.styles.ts
 
 export default TrailMap;

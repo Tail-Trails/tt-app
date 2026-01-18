@@ -3,6 +3,7 @@ import { TouchableOpacity, View, StyleSheet, Animated, Text, Platform } from 're
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import styles from './AnimatedTabBar.styles';
 
 
 console.log('[init] components/AnimatedTabBar.tsx loaded');
@@ -28,11 +29,13 @@ export function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarP
     });
   }, [state.index, state.routes, animatedValues]);
 
-  const bottomPadding = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 20);
+  // Put the safe-area padding on the tabBar itself so its background
+  // extends to the bottom of the screen and there is no white gap.
+  const tabBarPaddingBottom = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 8);
 
   return (
-    <View style={[styles.container, { paddingBottom: bottomPadding }]}>
-      <View style={styles.tabBar}>
+    <View style={styles.container}>
+      <View style={[styles.tabBar, { paddingBottom: tabBarPaddingBottom }]}>
         {/**
          * Render only routes that expose tab bar options (title/label/icon).
          * File-based routing sometimes injects extra routes; this guard
@@ -128,63 +131,3 @@ export function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarP
     </View>
   );
 }
-
-// named export only (avoid default-export TDZ issues)
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    alignItems: 'center',
-  },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(30, 35, 13, 0.95)',
-    borderRadius: 50,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    gap: 6,
-  },
-  tabButton: {
-    height: 44,
-    borderRadius: 22,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tabTouchable: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tabContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingHorizontal: 0,
-  },
-  iconWrapper: {
-    width: 22,
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  label: {
-    color: '#FFFE77',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-});

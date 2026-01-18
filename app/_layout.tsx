@@ -12,6 +12,7 @@ import { AccountContext } from '@/context/AccountContext';
 import { TrailsContext } from '@/context/TrailsContext';
 
 import { DogsContext, useDogs } from '@/context/DogsContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -81,13 +82,15 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <AuthContext>
         <AccountContext>
-          <DogsContext>
-            <TrailsContext>
-              <GestureHandlerRootView style={styles.container}>
-                <RootLayoutNav />
-              </GestureHandlerRootView>
-            </TrailsContext>
-          </DogsContext>
+          <ThemeProvider>
+            <DogsContext>
+              <TrailsContext>
+                <GestureHandlerRootView style={styles.container}>
+                  <RootLayoutNav />
+                </GestureHandlerRootView>
+              </TrailsContext>
+            </DogsContext>
+          </ThemeProvider>
         </AccountContext>
       </AuthContext>
     </QueryClientProvider>

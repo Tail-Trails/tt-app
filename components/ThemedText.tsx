@@ -2,6 +2,7 @@ import React from 'react';
 import { Text as RNText, StyleSheet, Platform, TextProps } from 'react-native';
 
 console.log('[init] components/ThemedText.tsx loaded');
+import styles from './ThemedText.styles';
 
 const ThemedText: React.FC<TextProps> = (props) => {
   const { style, children, ...otherProps } = props;
@@ -16,17 +17,7 @@ const ThemedText: React.FC<TextProps> = (props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  default: {
-    // Put any default font styles here (like color or family)
-  },
-  androidFix: {
-    // This solves the "Profil" clipping
-    paddingRight: 2,
-    // Resetting font padding prevents vertical clipping
-    includeFontPadding: false,
-  },
-});
+// styles imported from ThemedText.styles.ts
 
 // Named export only to avoid default-export initialization ordering issues
 export { ThemedText };

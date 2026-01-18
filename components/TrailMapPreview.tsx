@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
+import styles from './TrailMapPreview.styles';
 import TrailMap from './TrailMap';
 import { Coordinate } from '@/types/trail';
 
@@ -72,14 +73,4 @@ export default function TrailMapPreview({ coordinates, path, style, startLatitud
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    overflow: 'hidden',
-    borderRadius: 12,
-    backgroundColor: '#f3f4f6',
-  },
-  map: {
-    width: '100%',
-    height: '100%',
-  },
-});
+// styles imported from TrailMapPreview.styles.ts

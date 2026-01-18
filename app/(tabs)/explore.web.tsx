@@ -10,6 +10,7 @@ import { MapPin, Search, Heart, Umbrella, Bookmark, Star, X, BarChart3, Navigati
 import * as maplibregl from 'maplibre-gl';
 
 import { Trail } from '@/types/trail';
+import styles from './explore.styles';
 import { formatDistance } from '@/utils/distance';
 import TrailMapPreview from '@/components/TrailMapPreview';
 import { useTrails } from '@/context/TrailsContext';
@@ -610,6 +611,4 @@ export default function ExploreWebScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  ...require('./explore.styles').default
-});
+// styles are imported from explore.styles.ts
