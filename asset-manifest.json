@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.js": "/static/js/main.bbeac867.js",
+    "main.js": "/static/js/main.ff360bec.js",
     "static/css/607.bc73cfed.css": "/static/css/607.bc73cfed.css",
     "static/js/607.60fffd6b.js": "/static/js/607.60fffd6b.js",
     "static/media/icon.png": "/static/media/icon.f99e957780228420852c.png",
@@ -16,13 +16,13 @@
     "nanoid-shim.js": "/nanoid-shim.js",
     "reanimated-shim.js": "/reanimated-shim.js",
     "CNAME": "/CNAME",
-    "main.bbeac867.js.map": "/static/js/main.bbeac867.js.map",
+    "main.ff360bec.js.map": "/static/js/main.ff360bec.js.map",
     "607.bc73cfed.css.map": "/static/css/607.bc73cfed.css.map",
     "607.60fffd6b.js.map": "/static/js/607.60fffd6b.js.map"
   },
   "entrypoints": [
     "static/css/607.bc73cfed.css",
     "static/js/607.60fffd6b.js",
-    "static/js/main.bbeac867.js"
+    "static/js/main.ff360bec.js"
   ]
 }
