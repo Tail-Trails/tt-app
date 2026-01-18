@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 
 import { Navigation, MapPin, User } from 'lucide-react-native';
 import { AnimatedTabBar } from '@/components/AnimatedTabBar';
+import colors from '@/constants/colors';
 
 export default function TabLayout() {
   return (
@@ -9,8 +10,8 @@ export default function TabLayout() {
       tabBar={(props) => <AnimatedTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#FFFE77',
-        tabBarInactiveTintColor: '#9ca3af',
+        tabBarActiveTintColor: colors.light.tabIconSelected,
+        tabBarInactiveTintColor: colors.light.tabIconDefault,
       }}
     >
       <Tabs.Screen

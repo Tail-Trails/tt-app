@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/context/AuthContext';
 import { UserPlus } from 'lucide-react-native';
+import colors from '@/constants/colors';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -189,7 +190,7 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F7F2',
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -203,12 +204,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700' as const,
-    color: '#1a1f0a',
+  color: colors.light.text,
     marginTop: 16,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6b7280',
+  color: colors.muted,
     marginTop: 8,
     textAlign: 'center',
   },
@@ -221,11 +222,11 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#5d6b4a',
+  color: colors.primary,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#fff',
+  backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#a8ad8e',
     borderRadius: 12,

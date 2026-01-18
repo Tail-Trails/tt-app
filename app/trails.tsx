@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { StyleSheet, View, FlatList, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
+import colors from '@/constants/colors';
 import { useRouter } from 'expo-router';
 import { MapPin, Clock } from 'lucide-react-native';
 import { useTrails } from '@/context/TrailsContext';
@@ -18,17 +19,17 @@ export default function TrailsScreen() {
     >
       <View style={styles.trailHeader}>
         <View style={styles.iconContainer}>
-          <MapPin size={24} color="#2563eb" />
+          <MapPin size={24} color={colors.primary} />
         </View>
         <View style={styles.trailInfo}>
           <Text style={styles.trailDate}>{formatDate(item.date)}</Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <MapPin size={16} color="#6b7280" />
+              <MapPin size={16} color={colors.muted} />
               <Text style={styles.statText}>{formatDistance(item.distance)}</Text>
             </View>
             <View style={styles.statItem}>
-              <Clock size={16} color="#6b7280" />
+              <Clock size={16} color={colors.muted} />
               <Text style={styles.statText}>{formatDuration(item.duration)}</Text>
             </View>
           </View>
@@ -39,7 +40,7 @@ export default function TrailsScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <MapPin size={64} color="#d1d5db" />
+      <MapPin size={64} color={colors.border} />
       <Text style={styles.emptyTitle}>No trails yet</Text>
       <Text style={styles.emptyText}>
         Start recording your first dog walk to see it here!
@@ -71,7 +72,7 @@ export default function TrailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.surface,
   },
   list: {
     padding: 16,
@@ -84,14 +85,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.surface,
   },
   trailItem: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+  shadowColor: colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#eff6ff',
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
   trailDate: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1f2937',
+    color: colors.darkGreen,
     marginBottom: 6,
   },
   statsRow: {
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 14,
-    color: '#6b7280',
+    color: colors.muted,
     fontWeight: '500' as const,
   },
   emptyContainer: {
@@ -148,7 +149,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#6b7280',
+    color: colors.muted,
     textAlign: 'center',
     lineHeight: 24,
   },

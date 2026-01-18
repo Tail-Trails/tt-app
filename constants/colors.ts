@@ -11,14 +11,18 @@ const lightTheme = {
   paleYellow: '#d4d4a0',
   // semantic additions for more consistent theming
   surface: '#f3f4f6',
-  border: '#e5e7eb',
-  muted: '#6b7280',
+  border: '#d1d5db', // slightly darker for better contrast
+  muted: '#5b646f', // darker muted text for accessibility
+  white: '#ffffff',
+  black: '#000000',
+  info: '#2563eb',
+  danger: '#b91c1c',
   tabBarBg: 'rgba(40,46,16,0.95)',
   light: {
-    text: '#1a1f0a',
-    background: '#F8F7F2',
+    text: '#11120f',
+    background: '#F7F7F3',
     tint: '#5d6b4a',
-    tabIconDefault: '#9ca3af',
+    tabIconDefault: '#7f8b7a', // darker default icon color
     tabIconSelected: '#FFFE77',
   },
 };
@@ -28,7 +32,7 @@ const darkTheme = {
   primary: '#86a06a', // slightly lighter green for contrast on dark bg
   accent: '#FFFE77',
   background: '#071009', // very dark background
-  darkGreen: '#e6f0d9', // used for text in dark mode
+  darkGreen: '#b5c47aff', // used for text in dark mode
   mediumGreen: '#223015',
   lightGreen: '#6b7b56',
   paleYellow: '#bfb77a',
@@ -36,6 +40,10 @@ const darkTheme = {
   surface: '#0f1a14',
   border: '#123019',
   muted: '#9ca3af',
+  white: '#eef7e6',
+  black: '#071009',
+  info: '#6596ff',
+  danger: '#ef9a9a',
   tabBarBg: 'rgba(10,12,6,0.95)',
   light: {
     text: '#eef7e6',

@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import colors from '@/constants/colors';
 
 export default StyleSheet.create({
   container: {
@@ -9,7 +10,7 @@ export default StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(30, 35, 13, 0.95)',
+    backgroundColor: colors.tabBarBg,
     borderRadius: 0,
     paddingVertical: 8,
     paddingHorizontal: 8,
@@ -50,7 +51,7 @@ export default StyleSheet.create({
     justifyContent: 'center',
   },
   label: {
-    color: '#FFFE77',
+    color: colors.accent,
     fontSize: 13,
     fontWeight: '600',
   },

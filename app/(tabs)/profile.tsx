@@ -301,7 +301,7 @@ export default function ProfileScreen() {
                 />
               ) : (
                 <View style={[styles.dogPhoto, styles.dogPhotoPlaceholder]}>
-                  <Dog size={40} color="#9ca3af" />
+                  <Dog size={40} color={colors.muted} />
                 </View>
               )}
             </View>
@@ -342,7 +342,7 @@ export default function ProfileScreen() {
       ) : (
         <View style={styles.dogCardContainer}>
           <View style={styles.noDogCard}>
-            <Dog size={48} color="#9ca3af" />
+            <Dog size={48} color={colors.muted} />
             <Text style={styles.noDogText}>No dog profile yet</Text>
             <TouchableOpacity
               style={styles.addDogButton}
@@ -421,7 +421,7 @@ export default function ProfileScreen() {
                 <Animated.View style={{ transform: [{ scale: anim }] }}>
                   <Bookmark 
                     size={20} 
-                    color={isSaved ? "#000" : "#64748b"} 
+                    color={isSaved ? "#000" : colors.muted} 
                     fill={isSaved ? "#000" : "none"}
                     strokeWidth={2} 
                   />
@@ -438,17 +438,17 @@ export default function ProfileScreen() {
                 <View style={styles.trailBadges}>
                   {trail.difficulty && (
                     <View style={styles.trailBadge}>
-                      <BarChart3 size={14} color="#d4d4a0" strokeWidth={2.5} />
+                      <BarChart3 size={14} color={colors.paleYellow} strokeWidth={2.5} />
                       <Text style={styles.trailBadgeText}>{trail.difficulty}</Text>
                     </View>
                   )}
                   <View style={styles.trailBadge}>
-                    <MapPin size={14} color="#d4d4a0" strokeWidth={2.5} />
+                    <MapPin size={14} color={colors.paleYellow} strokeWidth={2.5} />
                     <Text style={styles.trailBadgeText}>{formatDistance(trail.distance)}</Text>
                   </View>
                   {trail.rating && (
                     <View style={styles.trailBadge}>
-                      <Star size={14} color="#fbbf24" fill="#fbbf24" strokeWidth={2} />
+                      <Star size={14} color={colors.accent} fill={colors.accent} strokeWidth={2} />
                       <Text style={styles.trailBadgeText}>{trail.rating.toFixed(1)}</Text>
                     </View>
                   )}
@@ -459,7 +459,7 @@ export default function ProfileScreen() {
           })
         ) : (
           <View style={styles.emptyContainer}>
-            <MapPin size={48} color="#9ca3af" />
+            <MapPin size={48} color={colors.light.tabIconDefault} />
             <Text style={styles.emptyText}>
               {selectedTab === 'created' 
                 ? 'No trails created yet'
@@ -477,10 +477,10 @@ export default function ProfileScreen() {
         disabled={isLoading}
       >
         {isLoading ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={colors.light.tabIconSelected} />
         ) : (
           <>
-            <LogOut size={20} color="#fff" />
+            <LogOut size={20} color={colors.light.tabIconSelected} />
             <Text style={styles.signOutText}>Sign Out</Text>
           </>
         )}
@@ -522,7 +522,7 @@ export default function ProfileScreen() {
                   </View>
                 )}
                 <View style={styles.cameraOverlay}>
-                  <Camera size={24} color="#fff" />
+                  <Camera size={24} color={colors.light.tabIconSelected} />
                 </View>
               </TouchableOpacity>
               <Text style={styles.photoHint}>Tap to change photo</Text>
@@ -535,7 +535,7 @@ export default function ProfileScreen() {
                 value={editedName}
                 onChangeText={setEditedName}
                 placeholder="Enter your name"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={colors.light.tabIconDefault}
               />
             </View>
 
@@ -555,7 +555,7 @@ export default function ProfileScreen() {
               disabled={isSaving}
             >
               {isSaving ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.light.tabIconSelected} />
               ) : (
                 <Text style={styles.saveButtonText}>Save Changes</Text>
               )}

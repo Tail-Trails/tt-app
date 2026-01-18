@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Square, Play, MapPin, Watch, Bell, ChevronUp, Play as PlayIcon, Square as SquareIcon, ChevronDown, Navigation } from 'lucide-react-native';
 import styles from './record.styles';
+import colors from '@/constants/colors';
 import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -371,7 +372,7 @@ export default function RecordScreenWeb() {
   if (isLoadingPermission) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#5d6b4a" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Checking permissions...</Text>
       </View>
     );

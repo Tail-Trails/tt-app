@@ -26,6 +26,7 @@ import { Trail } from '@/types/trail';
 import { formatDistance, formatDuration } from '@/utils/distance';
 import colors from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import styles from './[id].styles';
 
 const ENVIRONMENT_TAG_OPTIONS = [
   'Forest', 'Urban', 'Beach', 'Mountain', 'Rural', 'Park',
@@ -347,7 +348,10 @@ export default function TrailDetailScreen() {
   const canEdit = trail.user_id === user?.id;
 
   return (
-    <View style={styles.container}>
+    <View style={[
+      styles.container,
+      { paddingTop: insets.top + 70, paddingBottom: Math.max(16, insets.bottom), paddingHorizontal: 16 + (insets.left || 0) },
+    ]}>
       {Platform.OS === 'web' && (
         <input
           ref={fileInputRef as any}
@@ -360,17 +364,17 @@ export default function TrailDetailScreen() {
 
       <View style={[styles.headerButtons, { top: insets.top + 12 }]}>
         <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
-          <ArrowLeft size={24} color="#1f2937" />
+         <ArrowLeft size={24} />
         </TouchableOpacity>
         <View style={styles.headerRightButtons}>
           <TouchableOpacity style={styles.headerButton} onPress={handleShare}>
-            <Share2 size={22} color="#1f2937" />
+          <Share2 size={22} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton} onPress={handleSave}>
-            <Bookmark size={22} color="#1f2937" fill={isSaved ? '#1f2937' : 'none'} />
+          <Bookmark size={22} fill={isSaved ? colors.darkGreen : 'none'} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton} onPress={handleMore}>
-            <MoreVertical size={22} color="#1f2937" />
+          <MoreVertical size={22} />
           </TouchableOpacity>
         </View>
       </View>
@@ -404,9 +408,9 @@ export default function TrailDetailScreen() {
                   disabled={isUploadingPhoto}
                 >
                   {isUploadingPhoto ? (
-                    <ActivityIndicator color="#fff" size="small" />
+                    <ActivityIndicator color={colors.white} size="small" />
                   ) : (
-                    <Camera size={20} color="#fff" />
+                    <Camera size={20} color={colors.white} />
                   )}
                 </TouchableOpacity>
               )}
@@ -498,7 +502,7 @@ export default function TrailDetailScreen() {
           <View style={styles.statsSection}>
             <View style={styles.statCard}>
                 <View style={styles.statIconContainer}>
-                <MapPin size={20} color="#ffffff" strokeWidth={2.5} />
+                <MapPin size={20} color={colors.white} strokeWidth={2.5} />
               </View>
               <Text style={styles.statLabel}>Distance</Text>
               <Text style={styles.statValue}>{formatDistance(trail.distance)}</Text>
@@ -506,7 +510,7 @@ export default function TrailDetailScreen() {
 
             <View style={styles.statCard}>
                 <View style={styles.statIconContainer}>
-                <Clock size={20} color="#ffffff" strokeWidth={2.5} />
+                <Clock size={20} color={colors.white} strokeWidth={2.5} />
               </View>
               <Text style={styles.statLabel}>Duration</Text>
               <Text style={styles.statValue}>{formatDuration(trail.duration)}</Text>
@@ -515,7 +519,7 @@ export default function TrailDetailScreen() {
             {trail.difficulty && (
               <View style={styles.statCard}>
                 <View style={styles.statIconContainer}>
-                  <IconOrEmoji IconComponent={TrendingUp} emoji="⛰️" size={20} color="#ffffff" />
+                  <IconOrEmoji IconComponent={TrendingUp} emoji="⛰️" size={20} color={colors.white} />
                 </View>
                 <Text style={styles.statLabel}>Difficulty</Text>
                 <Text style={styles.statValue}>{trail.difficulty}</Text>
@@ -753,520 +757,3 @@ export default function TrailDetailScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  headerButtons: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    zIndex: 100,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-  },
-  headerButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#ffffff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  headerRightButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 32,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: colors.lightGreen,
-    fontWeight: '500' as const,
-  },
-  heroSection: {
-    position: 'relative',
-  },
-  heroImageContainer: {
-    width: '100%',
-    height: 500,
-    position: 'relative',
-  },
-  heroImage: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#e5e7eb',
-  },
-  heroGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 100,
-  },
-  changePhotoFab: {
-    position: 'absolute',
-    bottom: 80,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-
-  addPhotoContainer: {
-    width: '100%',
-    height: 280,
-    backgroundColor: colors.lightGreen,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  addPhotoIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  addPhotoText: {
-    fontSize: 18,
-    fontWeight: '600' as const,
-    color: colors.darkGreen,
-    marginBottom: 4,
-  },
-  addPhotoSubtext: {
-    fontSize: 14,
-    color: colors.mediumGreen,
-  },
-  contentWrapper: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    marginTop: -24,
-    zIndex: 10,
-  },
-  content: {
-    padding: 24,
-  },
-  titleSection: {
-    marginBottom: 20,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    marginBottom: 8,
-  },
-  title: {
-    flex: 1,
-    fontSize: 32,
-    fontWeight: '700' as const,
-    color: colors.darkGreen,
-    lineHeight: 40,
-  },
-  editIconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.lightGreen,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  nameEditContainer: {
-    marginBottom: 8,
-  },
-  nameInput: {
-    fontSize: 28,
-    fontWeight: '700' as const,
-    color: colors.darkGreen,
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-  },
-  nameInputInDetails: {
-    fontSize: 16,
-    color: colors.darkGreen,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.lightGreen,
-    borderRadius: 12,
-    padding: 16,
-  },
-  editButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  saveIconButton: {
-    backgroundColor: colors.primary,
-  },
-  cancelIconButton: {
-    backgroundColor: colors.lightGreen,
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 12,
-  },
-  location: {
-    fontSize: 16,
-    color: colors.mediumGreen,
-    fontWeight: '500' as const,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  reviewCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: colors.paleYellow,
-  },
-  reviewText: {
-    fontSize: 16,
-    color: colors.darkGreen,
-    lineHeight: 24,
-  },
-  statsSection: {
-    flexDirection: 'row',
-    flexWrap: 'wrap' as const,
-    gap: 12,
-    marginBottom: 24,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: 100,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  statIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  statLabel: {
-    fontSize: 13,
-    color: colors.mediumGreen,
-    fontWeight: '500' as const,
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 20,
-    color: colors.darkGreen,
-    fontWeight: '700' as const,
-  },
-  tagsSection: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: colors.darkGreen,
-  },
-  tagsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap' as const,
-    gap: 8,
-  },
-  tagChip: {
-    backgroundColor: colors.lightGreen,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  tagText: {
-    fontSize: 14,
-    fontWeight: '500' as const,
-    color: colors.darkGreen,
-  },
-  editDetailsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  editDetailsText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: colors.primary,
-  },
-  editSection: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  editSectionTitle: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: colors.darkGreen,
-    marginBottom: 12,
-  },
-  ratingStars: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  starButton: {
-    padding: 4,
-  },
-  reviewInput: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.lightGreen,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 15,
-    color: colors.darkGreen,
-    minHeight: 120,
-  },
-  difficultyOptions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  difficultyChip: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: colors.background,
-    borderWidth: 2,
-    borderColor: colors.lightGreen,
-    alignItems: 'center',
-  },
-  difficultyChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  difficultyChipText: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: colors.mediumGreen,
-  },
-  difficultyChipTextSelected: {
-    color: '#fff',
-  },
-  editTagChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.background,
-    borderWidth: 1.5,
-    borderColor: colors.lightGreen,
-  },
-  editTagChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  editTagChipText: {
-    fontSize: 14,
-    fontWeight: '500' as const,
-    color: colors.mediumGreen,
-  },
-  editTagChipTextSelected: {
-    color: '#fff',
-  },
-  editActionButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-  },
-  cancelActionButton: {
-    backgroundColor: colors.background,
-    borderWidth: 2,
-    borderColor: colors.lightGreen,
-  },
-  cancelActionText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: colors.darkGreen,
-  },
-  saveActionButton: {
-    backgroundColor: colors.primary,
-  },
-  saveActionText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: '#fff',
-  },
-  mapSection: {
-    marginBottom: 20,
-  },
-  mapContainer: {
-    height: 260,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.lightGreen,
-  },
-  map: {
-    width: '100%',
-    height: '100%',
-  },
-  webMapPlaceholder: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.lightGreen,
-  },
-  webMapText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: colors.mediumGreen,
-  },
-  directionsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    gap: 10,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  directionsButtonText: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#fff',
-  },
-  detailsSection: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  detailsTitle: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: colors.darkGreen,
-    marginBottom: 16,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.background,
-  },
-  detailIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.lightGreen,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  detailContent: {
-    flex: 1,
-  },
-  detailLabel: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: colors.mediumGreen,
-    marginBottom: 2,
-  },
-  detailValue: {
-    fontSize: 16,
-    color: colors.darkGreen,
-    fontWeight: '500' as const,
-  },
-});

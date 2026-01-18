@@ -56,7 +56,7 @@ export default StyleSheet.create({
     marginBottom: 24,
   },
   dogCard: {
-    backgroundColor: colors.darkGreen,
+    backgroundColor: colors.background,
     borderRadius: 24,
     padding: 24,
     alignItems: 'center',
@@ -118,7 +118,7 @@ export default StyleSheet.create({
     gap: 12,
   },
   dogInfoBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
@@ -171,7 +171,7 @@ export default StyleSheet.create({
   },
   tab: {
     flex: 1,
-    backgroundColor: '#fff',
+  backgroundColor: '#fff',
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderRadius: 16,
@@ -216,7 +216,7 @@ export default StyleSheet.create({
   trailImage: {
     width: '100%',
     height: 260,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: colors.surface,
   },
   trailGradient: {
     position: 'absolute',
@@ -312,12 +312,12 @@ export default StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    backgroundColor: '#b91c1c',
+  backgroundColor: '#b91c1c',
     borderRadius: 12,
     padding: 16,
     marginTop: 16,
     borderWidth: 1,
-    borderColor: '#7f1d1d',
+  borderColor: '#7f1d1d',
   },
   signOutButtonDisabled: {
     opacity: 0.6,
@@ -399,7 +399,7 @@ export default StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
@@ -408,7 +408,7 @@ export default StyleSheet.create({
     borderColor: colors.lightGreen,
   },
   disabledInput: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,

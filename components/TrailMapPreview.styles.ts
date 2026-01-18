@@ -1,10 +1,11 @@
 import { StyleSheet } from 'react-native';
+import colors from '@/constants/colors';
 
 export default StyleSheet.create({
   container: {
     overflow: 'hidden',
     borderRadius: 12,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: colors.surface,
   },
   map: {
     width: '100%',
@@ -16,12 +17,12 @@ export default StyleSheet.create({
     padding: 12,
   },
   text: {
-    color: '#5d6b4a',
+    color: colors.primary,
     fontWeight: 'bold',
     fontSize: 16,
   },
   subtext: {
-    color: '#666',
+    color: colors.muted,
     fontSize: 12,
     marginTop: 4,
   },

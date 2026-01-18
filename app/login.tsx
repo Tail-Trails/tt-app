@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/context/AuthContext';
 import { Image } from 'expo-image';
+import colors from '@/constants/colors';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -178,7 +179,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F7F2',
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -196,12 +197,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '700' as const,
-    color: '#1a1f0a',
+  color: colors.light.text,
     marginTop: 16,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6b7280',
+  color: colors.muted,
     marginTop: 8,
     textAlign: 'center',
   },

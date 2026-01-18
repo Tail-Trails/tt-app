@@ -1,9 +1,10 @@
 import { StyleSheet, Platform } from 'react-native';
+import colors from '@/constants/colors';
 
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F7F2',
+    backgroundColor: colors.background,
   },
   map: {
     ...StyleSheet.absoluteFillObject,
@@ -12,51 +13,51 @@ export default StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F7F2',
+    backgroundColor: colors.background,
     padding: 20,
   },
   webText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: colors.muted,
     textAlign: 'center',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F7F2',
+    backgroundColor: colors.background,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: colors.muted,
   },
   permissionContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F7F2',
+    backgroundColor: colors.background,
     padding: 32,
   },
   permissionTitle: {
     marginTop: 16,
     fontSize: 20,
     fontWeight: '700' as const,
-    color: '#1f2937',
+    color: colors.darkGreen,
     textAlign: 'center',
   },
   permissionText: {
     marginTop: 8,
     fontSize: 16,
-    color: '#6b7280',
+    color: colors.muted,
     textAlign: 'center',
   },
   permissionButton: {
     marginTop: 24,
     paddingHorizontal: 32,
     paddingVertical: 16,
-    backgroundColor: '#5d6b4a',
+    backgroundColor: colors.primary,
     borderRadius: 12,
   },
   permissionButtonText: {
@@ -76,7 +77,7 @@ export default StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 16,
     padding: 16,
-    shadowColor: '#000',
+  shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -84,13 +85,13 @@ export default StyleSheet.create({
   },
   statLabel: {
     fontSize: 13,
-    color: '#6b7280',
+    color: colors.muted,
     fontWeight: '500' as const,
     marginBottom: 4,
   },
   statValue: {
     fontSize: 24,
-    color: '#1f2937',
+    color: colors.darkGreen,
     fontWeight: '700' as const,
   },
   controlContainer: {
@@ -105,7 +106,7 @@ export default StyleSheet.create({
     gap: 12,
     paddingHorizontal: 32,
     paddingVertical: 20,
-    backgroundColor: '#5d6b4a',
+  backgroundColor: colors.primary,
     borderRadius: 50,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -125,7 +126,7 @@ export default StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    backgroundColor: '#F8F7F2',
+  backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     shadowColor: '#000',
@@ -146,7 +147,7 @@ export default StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: '#d1d5db',
+    backgroundColor: colors.border,
     borderRadius: 2,
   },
   bottomSheetContent: {
@@ -162,14 +163,14 @@ export default StyleSheet.create({
   },
   statItem: {
     width: '31%',
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
   },
   statItemLabel: {
     fontSize: 11,
-    color: '#6b7280',
+  color: colors.muted,
     fontWeight: '600' as const,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
@@ -177,7 +178,7 @@ export default StyleSheet.create({
   },
   statItemValue: {
     fontSize: 18,
-    color: '#1f2937',
+    color: colors.darkGreen,
     fontWeight: '700' as const,
   },
   expandedContent: {
@@ -185,7 +186,7 @@ export default StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: colors.border,
     marginVertical: 16,
   },
   optionRow: {
@@ -193,7 +194,7 @@ export default StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     marginBottom: 12,
   },
@@ -212,18 +213,18 @@ export default StyleSheet.create({
   optionTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1f2937',
+    color: colors.darkGreen,
     marginBottom: 2,
   },
   optionSubtitle: {
     fontSize: 13,
-    color: '#6b7280',
+    color: colors.muted,
   },
   optionBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: colors.border,
   },
   optionBadgeActive: {
     backgroundColor: 'rgba(93, 107, 74, 0.15)',
@@ -231,10 +232,10 @@ export default StyleSheet.create({
   optionBadgeText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#6b7280',
+    color: colors.muted,
   },
   optionBadgeTextActive: {
-    color: '#5d6b4a',
+    color: colors.primary,
   },
   modalOverlay: {
     flex: 1,
@@ -293,7 +294,7 @@ export default StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#ffffff',
+  backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

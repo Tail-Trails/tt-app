@@ -4,6 +4,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import styles from './AnimatedTabBar.styles';
+import colors from '@/constants/colors';
 
 
 console.log('[init] components/AnimatedTabBar.tsx loaded');
@@ -89,7 +90,7 @@ export function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarP
             outputRange: [0, 0, 1],
           });
 
-          const iconColor = isFocused ? '#FFFE77' : '#9ca3af';
+          const iconColor = isFocused ? colors.accent : colors.muted || colors.light.tabIconDefault;
 
           return (
             <Animated.View

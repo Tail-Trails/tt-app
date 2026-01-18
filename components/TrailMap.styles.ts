@@ -1,8 +1,9 @@
 import { StyleSheet } from 'react-native';
+import colors from '@/constants/colors';
 
 export default StyleSheet.create({
   container: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: colors.surface,
     overflow: 'hidden',
   },
 });
