@@ -113,6 +113,19 @@ export const [AuthContext, useAuth] = createContextHook(() => {
     return data;
   }, []);
 
+  const signInWithToken = useCallback(async (tokenResponse: { accessToken: string; tokenType?: string; user?: User }) => {
+    // Accept token response from webauthn auth verify endpoint and persist session
+    const sessionObj: Session = {
+      accessToken: tokenResponse.accessToken,
+      tokenType: tokenResponse.tokenType || 'bearer',
+      user: (tokenResponse.user as User) || (user as User),
+    } as Session;
+    setSession(sessionObj);
+    setUser(sessionObj.user);
+    await AsyncStorage.setItem('session', JSON.stringify(sessionObj));
+    return sessionObj;
+  }, [user]);
+
   const signOut = useCallback(async () => {
     console.log('Signing out user');
     setSession(null);
@@ -128,6 +141,7 @@ export const [AuthContext, useAuth] = createContextHook(() => {
     verifyOtp,
     requestRegistration,
     verifyRegistration,
+    signInWithToken,
     signOut,
     isAuthenticated: !!session,
   }), [session, user, isLoading, requestOtp, verifyOtp, requestRegistration, verifyRegistration, signOut]);

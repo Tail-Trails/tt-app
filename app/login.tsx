@@ -3,12 +3,14 @@ import { Text, View, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingVi
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/context/AuthContext';
+import { webauthnAuthOptions, webauthnAuthVerify, base64UrlToBuffer, bufferToBase64Url } from '@/lib/api';
 import { Image } from 'expo-image';
 import colors from '@/constants/colors';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { requestOtp, verifyOtp } = useAuth();
+  const { signInWithToken } = useAuth();
   const [email, setEmail] = useState<string>('');
   const [otpCode, setOtpCode] = useState<string>('');
   const [step, setStep] = useState<'email' | 'otp'>('email');
@@ -120,6 +122,62 @@ export default function LoginScreen() {
                   <Text style={styles.buttonText}>Send OTP</Text>
                 )}
               </TouchableOpacity>
+
+              {Platform.OS === 'web' && (
+                <TouchableOpacity
+                  style={[styles.button, { marginTop: 8, backgroundColor: '#3b82f6' }]}
+                  onPress={async () => {
+                    if (!email) {
+                      Alert.alert('Error', 'Enter email for WebAuthn sign-in');
+                      return;
+                    }
+                    try {
+                      const opts = await webauthnAuthOptions(email.trim().toLowerCase());
+                      // Convert challenge and allow_credentials id to ArrayBuffers
+                      const publicKey: any = {
+                        ...opts,
+                        challenge: base64UrlToBuffer(opts.challenge),
+                      };
+                      if (opts.allow_credentials) {
+                        publicKey.allowCredentials = opts.allow_credentials.map((c: any) => ({
+                          type: c.type,
+                          id: base64UrlToBuffer(c.id),
+                        }));
+                      }
+
+                      console.log('WebAuthn get publicKey:', publicKey);
+                      const cred: any = await (navigator.credentials.get({ publicKey }) as Promise<Credential>);
+                      // @ts-ignore
+                      const assertion = cred as any;
+                      const authData = bufferToBase64Url(assertion.response.authenticatorData);
+                      const clientDataJSON = bufferToBase64Url(assertion.response.clientDataJSON);
+                      const signature = bufferToBase64Url(assertion.response.signature);
+                      const credentialId = bufferToBase64Url(assertion.rawId);
+
+                      const verifyResp = await webauthnAuthVerify({
+                        email: email.trim().toLowerCase(),
+                        id: credentialId,
+                        rawId: credentialId,
+                        response: {
+                          authenticatorData: authData,
+                          clientDataJSON: clientDataJSON,
+                          signature: signature,
+                        },
+                        type: 'public-key',
+                      });
+
+                      // sign in with token
+                      await signInWithToken(verifyResp);
+                      router.replace('/');
+                    } catch (err: any) {
+                      console.error('WebAuthn sign-in error', err);
+                      Alert.alert('WebAuthn Error', err?.message || String(err));
+                    }
+                  }}
+                >
+                  <Text style={styles.buttonText}>Sign in with Security Key</Text>
+                </TouchableOpacity>
+              )}
             </>
           ) : (
             <>

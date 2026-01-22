@@ -5,6 +5,7 @@ import { Text, View, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingVi
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/context/AuthContext';
+import { webauthnRegisterOptions, webauthnRegisterVerify, base64UrlToBuffer, bufferToBase64Url } from '@/lib/api';
 import { UserPlus } from 'lucide-react-native';
 import colors from '@/constants/colors';
 
@@ -131,6 +132,85 @@ export default function SignupScreen() {
                   <Text style={styles.buttonText}>Send OTP</Text>
                 )}
               </TouchableOpacity>
+
+              {Platform.OS === 'web' && (
+                <TouchableOpacity
+                  style={[styles.button, { marginTop: 8, backgroundColor: '#3b82f6' }]}
+                  onPress={async () => {
+                    if (!email || !name) {
+                      Alert.alert('Error', 'Please enter name and email to register a security key');
+                      return;
+                    }
+                    try {
+                      if (typeof window === 'undefined' || !(window as any).PublicKeyCredential) {
+                        Alert.alert('WebAuthn not supported', 'This browser does not support WebAuthn');
+                        return;
+                      }
+                      const opts: any = await webauthnRegisterOptions(email.trim().toLowerCase(), name.trim());
+                      // Build publicKey object expected by navigator.credentials.create
+                      const rpId = opts.rpId || opts.rp_id || opts.rp?.id;
+                      const userIdStr = opts.userId || opts.user_id || opts.user?.id || String(Date.now());
+                      const userName = opts.userName || opts.user_name || opts.user?.name || email.trim().toLowerCase();
+
+                      const publicKey: any = {
+                        challenge: base64UrlToBuffer(opts.challenge),
+                        rp: {
+                          id: rpId,
+                          name: opts.rpName || opts.rp_name || opts.rp?.name || (typeof window !== 'undefined' ? window.location.hostname : 'Tail Trails'),
+                        },
+                        user: {
+                          id: new TextEncoder().encode(userIdStr),
+                          name: userName,
+                          displayName: name.trim(),
+                        },
+                        pubKeyCredParams: opts.pubKeyCredParams || opts.pub_key_cred_params,
+                        timeout: opts.timeout,
+                      };
+
+                      console.log('WebAuthn register publicKey:', publicKey);
+
+                      // Convert excludeCredentials if present (accept multiple naming conventions)
+                      const exclude = opts.excludeCredentials || opts.exclude_credentials || opts.exclude_credentials_list;
+                      if (exclude && Array.isArray(exclude)) {
+                        publicKey.excludeCredentials = exclude.map((c: any) => ({
+                          id: base64UrlToBuffer(c.id),
+                          type: c.type || 'public-key',
+                        }));
+                      }
+
+                      const cred: any = await (navigator.credentials.create({ publicKey }) as Promise<Credential | null>);
+                      if (!cred) {
+                        Alert.alert('No credential created', 'The authenticator did not create a credential.');
+                        return;
+                      }
+                      const attestation = cred as any;
+                      const clientDataJSON = bufferToBase64Url(attestation.response.clientDataJSON);
+                      const attestationObject = bufferToBase64Url(attestation.response.attestationObject);
+                      const rawId = bufferToBase64Url(attestation.rawId);
+
+                      // Send to backend to verify & store credential using new API shape
+                      await webauthnRegisterVerify({
+                        email: email.trim().toLowerCase(),
+                        id: rawId,
+                        rawId: rawId,
+                        response: {
+                          clientDataJSON: clientDataJSON,
+                          attestationObject: attestationObject,
+                        },
+                        type: 'public-key',
+                        nickname: `${name.trim()}'s key`,
+                      });
+
+                      Alert.alert('Success', 'Security key registered');
+                    } catch (err: any) {
+                      console.error('WebAuthn register error', err);
+                      Alert.alert('WebAuthn Error', err?.message || String(err));
+                    }
+                  }}
+                >
+                  <Text style={styles.buttonText}>Register Security Key</Text>
+                </TouchableOpacity>
+              )}
             </>
           ) : (
             <>
