@@ -92,6 +92,11 @@ npm run start -- --android
 `npx expo run:android --variant release`
 `adb logcat '*:E'`
 
+`cd android && ./gradlew bundleRelease && cd ..`
+`jarsigner -verify -verbose -certs android/app/build/outputs/bundle/release/app-release.aab`
+`npx eas-cli build -p android --profile production --local`  # this worked
+
+
 `cd ios && pod install && cd ..`
 `npx expo run:ios --device`
 `npx expo run:ios --configuration Release`

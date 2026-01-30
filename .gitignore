@@ -25,4 +25,6 @@ web-build/
 android/
 ios/
 key.properties
+keystore.properties
 .DS_Store
+build-*
