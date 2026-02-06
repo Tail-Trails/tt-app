@@ -1,67 +1,106 @@
-import { forwardRef } from 'react';
-
-import MapView, { Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import colors from '@/constants/colors';
-import { Platform } from 'react-native';
+import { forwardRef, useMemo } from 'react';
+import * as MapLibreGL from '@maplibre/maplibre-react-native';
+// MapLibre's react-native types may not include all runtime props (styleURL etc.).
+// Cast the MapView to `any` to avoid TS complaints while preserving runtime behavior.
+const MLMapView: any = (MapLibreGL as any).MapView;
 
-interface TrailMapProps {
-  coordinates?: { latitude: number; longitude: number }[];
-  style?: any;
-  scrollEnabled?: boolean;
-  zoomEnabled?: boolean;
-  showsUserLocation?: boolean;
-  followsUserLocation?: boolean;
-  showsMyLocationButton?: boolean;
-  initialRegion?: {
-    latitude: number;
-    longitude: number;
-    latitudeDelta: number;
-    longitudeDelta: number;
-  };
-}
+  interface TrailMapProps {
+    coordinates?: { latitude: number; longitude: number }[];
+    style?: any;
+    scrollEnabled?: boolean;
+    zoomEnabled?: boolean;
+    showsUserLocation?: boolean;
+    followsUserLocation?: boolean;
+    showsMyLocationButton?: boolean;
+    initialRegion?: {
+      latitude: number;
+      longitude: number;
+      latitudeDelta: number;
+      longitudeDelta: number;
+    };
+    mapStyleURL?: string;
+  }
 
-const TrailMap = forwardRef<MapView, TrailMapProps>(({
-  coordinates,
-  style,
-  scrollEnabled = true,
-  zoomEnabled = true,
-  showsUserLocation = false,
-  followsUserLocation = false,
-  showsMyLocationButton = false,
-  initialRegion,
-}, ref) => {
-  const coords = coordinates ?? [];
-  const defaultRegion = coords.length > 0 ? {
-    latitude: coords[0].latitude,
-    longitude: coords[0].longitude,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
-  } : undefined;
+  const DEFAULT_STYLE = 'https://api.tailtrails.club/map/style.json';
 
-  // user google maps on android, apple maps on ios
-  const provider = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
+  function latDeltaToZoom(latDelta?: number) {
+    if (!latDelta) return 14;
+    if (latDelta <= 0.005) return 16;
+    if (latDelta <= 0.02) return 14;
+    if (latDelta <= 0.1) return 12;
+    return 10;
+  }
 
-  return (
-    <MapView
-      ref={ref}
-      provider={provider}
-      style={style}
-      initialRegion={initialRegion || defaultRegion}
-      scrollEnabled={scrollEnabled}
-      zoomEnabled={zoomEnabled}
-      showsUserLocation={showsUserLocation}
-      followsUserLocation={followsUserLocation}
-      showsMyLocationButton={showsMyLocationButton}
-    >
-      {coords.length > 1 && (
-        <Polyline
-          coordinates={coords}
-          strokeColor={colors.primary}
-          strokeWidth={4}
-        />
-      )}
-    </MapView>
-  );
-});
+  const TrailMap = forwardRef<any, TrailMapProps>(({ 
+    coordinates,
+    style,
+    scrollEnabled = true,
+    zoomEnabled = true,
+    showsUserLocation = false,
+    followsUserLocation = false,
+    showsMyLocationButton = false,
+    initialRegion,
+    mapStyleURL,
+  }, ref) => {
+    const coords = coordinates ?? [];
 
-export default TrailMap;
+    const center = useMemo(() => {
+      if (initialRegion) return [initialRegion.longitude, initialRegion.latitude];
+      if (coords.length === 0) return undefined;
+      const lat = coords[0].latitude;
+      const lon = coords[0].longitude;
+      return [lon, lat];
+    }, [coords, initialRegion]);
+
+    const geojson = useMemo(() => {
+      if (!coords || coords.length < 2) return null;
+      return {
+        type: 'Feature',
+        geometry: {
+          type: 'LineString',
+          coordinates: coords.map(c => [c.longitude, c.latitude]),
+        },
+      } as any;
+    }, [coords]);
+
+    // Use hosted style URL by default for native; allow override via `mapStyleURL` prop.
+    const defaultStyleUri = DEFAULT_STYLE;
+
+    const zoom = useMemo(() => {
+      const latDelta = initialRegion?.latitudeDelta;
+      return latDeltaToZoom(latDelta);
+    }, [initialRegion]);
+
+    return (
+      <MLMapView
+        ref={ref}
+        style={style}
+        styleURL={mapStyleURL ?? defaultStyleUri}
+        zoomEnabled={zoomEnabled}
+        scrollEnabled={scrollEnabled}
+        attributionEnabled={false}
+      >
+        {showsUserLocation && <MapLibreGL.UserLocation />}
+        {center && (
+          <MapLibreGL.Camera
+            centerCoordinate={center}
+            zoomLevel={zoom}
+            animationMode={'flyTo'}
+          />
+        )}
+
+        {geojson && (
+          <MapLibreGL.ShapeSource id="routeSource" shape={geojson}>
+            <MapLibreGL.LineLayer
+              id="routeLine"
+              style={{ lineColor: colors.primary, lineWidth: 4 }}
+            />
+          </MapLibreGL.ShapeSource>
+        )}
+      </MLMapView>
+    );
+  });
+
+  export default TrailMap;
+

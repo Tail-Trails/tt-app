@@ -4,7 +4,7 @@ import { useRouter, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 
 import React, { useEffect } from "react";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { AuthContext, useAuth } from '@/context/AuthContext';
@@ -13,6 +13,7 @@ import { TrailsContext } from '@/context/TrailsContext';
 
 import { DogsContext, useDogs } from '@/context/DogsContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import LottieLoader from '@/components/LottieLoader';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -56,11 +57,7 @@ function RootLayoutNav() {
   }, [isAuthenticated, hasDogProfile, segments, isLoading, isDogProfileLoading, router]);
 
   if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#2563eb" />
-      </View>
-    );
+    return <LottieLoader />;
   }
 
   return (

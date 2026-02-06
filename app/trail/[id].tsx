@@ -468,7 +468,7 @@ export default function TrailDetailScreen() {
               </View>
             ) : (
               <View style={styles.titleRow}>
-                <Text style={styles.title}>{trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}</Text>
+                <Text style={styles.title}>{trail.name || `Trail ${new Date(trail.createdAt).toLocaleDateString()}`}</Text>
               </View>
             )}
             
@@ -739,7 +739,7 @@ export default function TrailDetailScreen() {
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Date & Time</Text>
                 <Text style={styles.detailValue}>
-                  {new Date(trail.date).toLocaleString('en-US', {
+                  {new Date(trail.createdAt).toLocaleString('en-US', {
                     weekday: 'short',
                     year: 'numeric',
                     month: 'short',

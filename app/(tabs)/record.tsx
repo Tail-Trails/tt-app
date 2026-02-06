@@ -774,28 +774,6 @@ export default function RecordScreen() {
           {isExpanded && (
             <View style={styles.expandedContent}>
               <View style={styles.divider} />
-              
-              <TouchableOpacity
-                style={styles.optionRow}
-                onPress={() => {
-                  if (Platform.OS !== 'web') {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }
-                  Alert.alert('Apple Watch', 'Connect your Apple Watch to sync workout data.');
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={styles.optionIconContainer}>
-                  <Watch size={24} color="#5d6b4a" />
-                </View>
-                <View style={styles.optionTextContainer}>
-                  <Text style={styles.optionTitle}>Apple Watch</Text>
-                  <Text style={styles.optionSubtitle}>Not connected</Text>
-                </View>
-                <View style={styles.optionBadge}>
-                  <Text style={styles.optionBadgeText}>Connect</Text>
-                </View>
-              </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.optionRow}
@@ -812,10 +790,10 @@ export default function RecordScreen() {
                 </View>
                 <View style={styles.optionTextContainer}>
                   <Text style={styles.optionTitle}>Alerts</Text>
-                  <Text style={styles.optionSubtitle}>Distance & pace notifications</Text>
+                  {/* <Text style={styles.optionSubtitle}>Coming</Text> */}
                 </View>
                 <View style={[styles.optionBadge, styles.optionBadgeActive]}>
-                  <Text style={[styles.optionBadgeText, styles.optionBadgeTextActive]}>Active</Text>
+                  <Text style={[styles.optionBadgeText, styles.optionBadgeTextActive]}>Coming Soon</Text>
                 </View>
               </TouchableOpacity>
             </View>

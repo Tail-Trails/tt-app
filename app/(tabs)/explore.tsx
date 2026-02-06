@@ -394,9 +394,7 @@ export default function ExploreScreen() {
                 <Text style={styles.overlayTrailName}>
                   {trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}
                 </Text>
-                <Text style={styles.overlayLocation}>
-                  {trail.city ? `${trail.city}, ${trail.country || 'Unknown'}` : 'Location unknown'}
-                </Text>
+
                 <View style={styles.overlayBadges}>
                   {trail.difficulty && (
                     <View style={styles.badge}>
@@ -516,5 +514,3 @@ export default function ExploreScreen() {
     </View>
   );
 }
-
-// styles are imported from explore.styles.ts

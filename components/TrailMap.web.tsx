@@ -4,6 +4,8 @@ import { View } from 'react-native';
 import styles from './TrailMap.styles';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+// Use hosted outdoors style for web
+const OUTDOORS_STYLE_URL = 'https://api.tailtrails.club/map/style.json';
 
 interface TrailMapProps {
   coordinates: { latitude: number; longitude: number }[];
@@ -63,7 +65,7 @@ const TrailMap = forwardRef<any, TrailMapProps>(({
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json', // Basic open style
+      style: OUTDOORS_STYLE_URL,
       center: center,
       zoom: zoom,
       interactive: scrollEnabled && zoomEnabled,

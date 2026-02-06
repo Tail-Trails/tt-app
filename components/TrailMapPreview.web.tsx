@@ -4,6 +4,8 @@ import styles from './TrailMapPreview.styles';
 import { Coordinate } from '@/types/trail';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+// Use hosted outdoors style for web
+const OUTDOORS_STYLE_URL = 'https://api.tailtrails.club/map/style.json';
 
 
 interface TrailMapPreviewProps {
@@ -36,7 +38,7 @@ export default function TrailMapPreview({ coordinates, path, style, height = 260
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+      style: OUTDOORS_STYLE_URL,
       center,
       zoom: coords.length > 0 ? 12 : 1,
       interactive: false,
