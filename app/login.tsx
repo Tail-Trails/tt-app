@@ -1,27 +1,26 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { Text, View, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/context/AuthContext';
-import { webauthnAuthOptions, webauthnAuthVerify, base64UrlToBuffer, bufferToBase64Url } from '@/lib/api';
+import { firebaseAuthExchange } from '@/lib/api';
 import { Image } from 'expo-image';
 import colors from '@/constants/colors';
+import { firebaseAuth, signInWithEmailAndPassword } from '@/lib/firebase';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { requestOtp, verifyOtp } = useAuth();
   const { signInWithToken } = useAuth();
-  const [email, setEmail] = useState<string>('');
-  const [otpCode, setOtpCode] = useState<string>('');
-  const [step, setStep] = useState<'email' | 'otp'>('email');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [email, setEmail] = React.useState<string>('');
+  const [password, setPassword] = React.useState<string>('');
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
-  const handleRequestOtp = async () => {
-    if (!email) {
+  const handleSignIn = async () => {
+    if (!email || !password) {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
-      Alert.alert('Error', 'Please enter your email');
+      Alert.alert('Error', 'Please enter your email and password');
       return;
     }
 
@@ -31,38 +30,14 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      await requestOtp(email.trim().toLowerCase());
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-      setStep('otp');
-    } catch (error: any) {
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-      console.error('Request OTP error:', error);
-      Alert.alert('Error', error.message || 'Failed to request OTP');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otpCode) {
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-      Alert.alert('Error', 'Please enter the OTP code');
-      return;
-    }
-
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-
-    setIsLoading(true);
-    try {
-      await verifyOtp(email.trim().toLowerCase(), otpCode);
+      const credential = await signInWithEmailAndPassword(
+        firebaseAuth,
+        email.trim().toLowerCase(),
+        password
+      );
+      const idToken = await credential.user.getIdToken();
+      const session = await firebaseAuthExchange(idToken);
+      await signInWithToken(session);
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
@@ -71,8 +46,8 @@ export default function LoginScreen() {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
-      console.error('Verify OTP error:', error);
-      Alert.alert('Error', error.message || 'Invalid OTP code');
+      console.error('Firebase sign-in error:', error);
+      Alert.alert('Error', error.message || 'Failed to sign in');
     } finally {
       setIsLoading(false);
     }
@@ -95,127 +70,45 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.form}>
-          {step === 'email' ? (
-            <>
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="your@email.com"
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  autoComplete="email"
-                  editable={!isLoading}
-                />
-              </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="your@email.com"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+              editable={!isLoading}
+            />
+          </View>
 
-              <TouchableOpacity
-                style={[styles.button, isLoading && styles.buttonDisabled]}
-                onPress={handleRequestOtp}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>Send OTP</Text>
-                )}
-              </TouchableOpacity>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="password"
+              editable={!isLoading}
+            />
+          </View>
 
-              {Platform.OS === 'web' && (
-                <TouchableOpacity
-                  style={[styles.button, { marginTop: 8, backgroundColor: '#3b82f6' }]}
-                  onPress={async () => {
-                    if (!email) {
-                      Alert.alert('Error', 'Enter email for WebAuthn sign-in');
-                      return;
-                    }
-                    try {
-                      const opts = await webauthnAuthOptions(email.trim().toLowerCase());
-                      // Convert challenge and allow_credentials id to ArrayBuffers
-                      const publicKey: any = {
-                        ...opts,
-                        challenge: base64UrlToBuffer(opts.challenge),
-                      };
-                      if (opts.allow_credentials) {
-                        publicKey.allowCredentials = opts.allow_credentials.map((c: any) => ({
-                          type: c.type,
-                          id: base64UrlToBuffer(c.id),
-                        }));
-                      }
-
-                      console.log('WebAuthn get publicKey:', publicKey);
-                      const cred: any = await (navigator.credentials.get({ publicKey }) as Promise<Credential>);
-                      // @ts-ignore
-                      const assertion = cred as any;
-                      const authData = bufferToBase64Url(assertion.response.authenticatorData);
-                      const clientDataJSON = bufferToBase64Url(assertion.response.clientDataJSON);
-                      const signature = bufferToBase64Url(assertion.response.signature);
-                      const credentialId = bufferToBase64Url(assertion.rawId);
-
-                      const verifyResp = await webauthnAuthVerify({
-                        email: email.trim().toLowerCase(),
-                        id: credentialId,
-                        rawId: credentialId,
-                        response: {
-                          authenticatorData: authData,
-                          clientDataJSON: clientDataJSON,
-                          signature: signature,
-                        },
-                        type: 'public-key',
-                      });
-
-                      // sign in with token
-                      await signInWithToken(verifyResp);
-                      router.replace('/');
-                    } catch (err: any) {
-                      console.error('WebAuthn sign-in error', err);
-                      Alert.alert('WebAuthn Error', err?.message || String(err));
-                    }
-                  }}
-                >
-                  <Text style={styles.buttonText}>Sign in with Security Key</Text>
-                </TouchableOpacity>
-              )}
-            </>
-          ) : (
-            <>
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>OTP Code</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter 6-digit code"
-                  value={otpCode}
-                  onChangeText={setOtpCode}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  editable={!isLoading}
-                />
-                <Text style={styles.helperText}>Sent to {email}</Text>
-              </View>
-
-              <TouchableOpacity
-                style={[styles.button, isLoading && styles.buttonDisabled]}
-                onPress={handleVerifyOtp}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>Verify & Sign In</Text>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={() => setStep('email')}
-                disabled={isLoading}
-              >
-                <Text style={styles.secondaryButtonText}>Change Email</Text>
-              </TouchableOpacity>
-            </>
-          )}
+          <TouchableOpacity
+            style={[styles.button, isLoading && styles.buttonDisabled]}
+            onPress={handleSignIn}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Sign In</Text>
+            )}
+          </TouchableOpacity>
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don&apos;t have an account? </Text>

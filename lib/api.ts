@@ -80,3 +80,16 @@ export async function webauthnAuthVerify(payload: Record<string, any>) {
 	}
 	return res.json();
 }
+
+export async function firebaseAuthExchange(accessToken: string) {
+	const res = await fetch(`${API_URL}/auth/firebase`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ access_token: accessToken }),
+	});
+	if (!res.ok) {
+		const err = await res.json().catch(() => ({}));
+		throw new Error(err.detail?.[0]?.msg || err.detail || 'Failed to authenticate with Firebase');
+	}
+	return res.json();
+}

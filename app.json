@@ -16,6 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.tailtrails.app",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -98,13 +99,15 @@
           "photosPermission": "The app accesses your photos to let you share them with your friends."
         }
       ],
-      ["@maplibre/maplibre-react-native",
+      [
+        "@maplibre/maplibre-react-native",
         {
           "ios": {
             "version": "10.4.2"
           }
         }
-      ]
+      ],
+      "@react-native-firebase/app"
     ],
     "experiments": {
       "typedRoutes": true
