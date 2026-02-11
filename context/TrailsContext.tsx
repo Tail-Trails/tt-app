@@ -129,13 +129,23 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
       };
 
       const accessToken = session.accessToken;
+      // If photo is a local URI or a File object, create the trail first without photo,
+      // then upload the file to /uploads with `trail_id` and patch the trail with the returned URL.
+      const isLocalStringPhoto = typeof body.photo === 'string' && body.photo && !body.photo.startsWith('http');
+      const isFilePhoto = typeof body.photo === 'object' && body.photo !== null; // e.g. File on web
+
+      const createBody = { ...body };
+      if (isLocalStringPhoto || isFilePhoto) {
+        createBody.photo = undefined;
+      }
+
       const resp = await fetch(`${API_URL}/trail/me`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(createBody),
       });
 
       if (!resp.ok) {
@@ -147,6 +157,72 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
       const data = await resp.json();
       // Assume API returns created trail that matches our Trail type
       setTrails((prev: Trail[]) => [data, ...prev]);
+
+      // If we had a local photo, upload it now and patch the trail with the returned URL
+      if (isLocalStringPhoto || isFilePhoto) {
+        try {
+          // Build form data for upload
+          const form = new FormData();
+          if (isFilePhoto) {
+            // web File object
+            // @ts-ignore
+            form.append('file', body.photo);
+            // @ts-ignore
+            form.append('filename', body.photo.name || `trail_${Date.now()}.jpg`);
+          } else {
+            const uri = body.photo as string;
+            const uriParts = uri.split('/');
+            const fileName = uriParts[uriParts.length - 1] || `trail_${Date.now()}.jpg`;
+            const extMatch = fileName.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
+            const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
+            const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+            // @ts-ignore
+            form.append('file', { uri, name: fileName, type: mimeType });
+            form.append('filename', fileName);
+          }
+
+          form.append('trail_id', data.id);
+          form.append('dog_id', '');
+          form.append('user_id', '');
+
+          const uploadResp = await fetch(`${API_URL}/uploads`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'accept': 'application/json',
+            },
+            body: form as any,
+          });
+
+          if (!uploadResp.ok) {
+            console.error('Trail photo upload failed during create:', await uploadResp.text());
+          } else {
+            const uploadData = await uploadResp.json();
+            const publicUrl = uploadData.public_url || uploadData.publicUrl || uploadData.url;
+            if (publicUrl) {
+              // Patch trail with new photo URL
+              const patchResp = await fetch(`${API_URL}/trail/${data.id}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ ...data, photo: publicUrl }),
+              });
+
+              if (patchResp.ok) {
+                const patched = await patchResp.json();
+                setTrails(prev => prev.map(t => t.id === patched.id ? patched : t));
+              } else {
+                console.error('Failed to patch trail with uploaded photo');
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Error uploading trail photo after create:', err);
+        }
+      }
+
       return data as Trail;
     } catch (error) {
       console.error('Failed to save trail:', error);

@@ -15,6 +15,7 @@ import {
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
+import { API_URL } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useAccount } from '@/context/AccountContext';
 import { useDogs } from '@/context/DogsContext';
@@ -34,7 +35,17 @@ const Icon = require('../../assets/images/icon.png');
 type ProfileTab = 'created' | 'saved' | 'reviews';
 
 export default function ProfileScreen() {
-  const { user, signOut } = useAuth();
+  const auth = useAuth();
+  if (!auth) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </View>
+    );
+  }
+  const { user, signOut, session } = auth;
   const { userProfile, updateAccount, isLoading: isAccountLoading } = useAccount();
   const { dogProfile, isDogProfileLoading } = useDogs();
   const { trails, savedTrails, isLoading: isTrailsLoading, saveTrailBookmark, removeTrailBookmark, isTrailSaved } = useTrails();
@@ -222,16 +233,61 @@ export default function ProfileScreen() {
 
     setIsSaving(true);
     try {
+      let finalPhoto: string | undefined;
+
+      // If editedPhoto is a string but not a remote URL, upload it to the server first
+      if (typeof editedPhoto === 'string' && editedPhoto && !editedPhoto.startsWith('http')) {
+        if (!session?.accessToken || !user?.id) throw new Error('No active session for upload');
+
+        const form = new FormData();
+
+        // Build file object for RN/Expo fetch
+        const uriParts = editedPhoto.split('/');
+        const fileName = uriParts[uriParts.length - 1] || `photo_${Date.now()}.jpg`;
+        const extMatch = fileName.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
+        const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
+        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+
+        // Append file and auxiliary fields to match curl example
+        // @ts-ignore - React Native FormData file
+        form.append('file', { uri: editedPhoto, name: fileName, type: mimeType });
+        form.append('filename', fileName);
+        form.append('dog_id', '');
+        form.append('trail_id', '');
+        form.append('user_id', user.id);
+
+        const uploadResp = await fetch(`${API_URL}/uploads`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.accessToken}`,
+            'accept': 'application/json',
+            // Do NOT set Content-Type; let fetch set the multipart boundary
+          },
+          body: form as any,
+        });
+
+        if (!uploadResp.ok) {
+          const errText = await uploadResp.text();
+          throw new Error(`Upload failed: ${uploadResp.status} ${errText}`);
+        }
+
+        const uploadData = await uploadResp.json();
+        finalPhoto = uploadData.public_url || uploadData.publicUrl || uploadData.url;
+        if (!finalPhoto) throw new Error('Upload did not return a public URL');
+      } else if (typeof editedPhoto === 'string' && editedPhoto.startsWith('http')) {
+        finalPhoto = editedPhoto;
+      }
+
+      // Update account with name and (if present) the uploaded photo URL
       await updateAccount({
         name: editedName.trim(),
-        // Only send photo if it's a string (uploaded/remote URL). Bundled assets are numbers and shouldn't be sent.
-        photo: typeof editedPhoto === 'string' && editedPhoto ? editedPhoto : undefined,
+        photo: finalPhoto,
       });
-      
+
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
-      
+
       setShowEditModal(false);
       Alert.alert('Success', 'Profile updated successfully!');
     } catch (error: any) {

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Text, View, StyleSheet, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, TextInput, Modal, ScrollView } from 'react-native';
 
 import TrailMap from '@/components/TrailMap';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as Haptics from 'expo-haptics';
@@ -549,7 +551,7 @@ export default function RecordScreen() {
     };
 
     try {
-      await saveTrail(toSave);
+      const saved = await saveTrail(toSave);
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
@@ -570,13 +572,34 @@ export default function RecordScreen() {
       await AsyncStorage.removeItem('recording_max_speed');
       await AsyncStorage.removeItem('recording_start_time');
       await AsyncStorage.removeItem('recording_last_update');
-
-      const savedId = (toSave as any).id || null;
-      if (savedId) router.push(`/trail/${savedId}`);
-      else Alert.alert('Success', 'Trail saved successfully!');
+      // Redirect to profile tab after saving
+      router.push('/(tabs)/profile');
     } catch (err) {
       console.error('Save failed', err);
       Alert.alert('Error', 'Failed to save trail');
+    }
+  };
+
+  const pickImage = async () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow access to your photo library');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setFormPhoto(result.assets[0].uri);
     }
   };
 
@@ -823,12 +846,20 @@ export default function RecordScreen() {
                 style={[styles.input, { height: 100 }]}
                 multiline
               />
-              <TextInput
-                placeholder="Photo URL (optional)"
-                value={formPhoto}
-                onChangeText={setFormPhoto}
-                style={styles.input}
-              />
+              <TouchableOpacity onPress={pickImage} style={[styles.input, { padding: 12, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }] }>
+                {formPhoto ? (
+                  <>
+                    <Image source={{ uri: formPhoto }} style={{ width: 80, height: 60, borderRadius: 8, marginRight: 12 }} />
+                    <Text style={{ flex: 1 }}>{formName || 'Selected image'}</Text>
+                    <Upload size={18} color={colors.primary} />
+                  </>
+                ) : (
+                  <>
+                    <Upload size={18} color={colors.primary} />
+                    <Text style={{ marginLeft: 8, color: colors.primary }}>Add Photo (optional)</Text>
+                  </>
+                )}
+              </TouchableOpacity>
 
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
                 <TouchableOpacity style={styles.modalButton} onPress={cancelSave}>

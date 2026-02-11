@@ -2,7 +2,7 @@
   "expo": {
     "name": "TailTrails",
     "slug": "dog-walk-tracker-x2nouww",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tail-trails",

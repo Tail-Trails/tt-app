@@ -1,0 +1,2303 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "tailtrails-api",
+        "description": "General API for the TailTrails frontend.",
+        "contact": {
+            "name": "tailtrails-api",
+            "url": "https://github.com/Tail-Trails/tt-api",
+            "email": "contact@jamestwose.com"
+        },
+        "version": "0.0.1"
+    },
+    "paths": {
+        "/account/me": {
+            "get": {
+                "tags": [
+                    "account"
+                ],
+                "summary": "Get My Profile",
+                "operationId": "get_my_profile_account_me_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenDataSchema"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "account"
+                ],
+                "summary": "Update My Profile",
+                "operationId": "update_my_profile_account_me_put",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TokenDataSchema"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenDataSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/firebase": {
+            "post": {
+                "tags": [
+                    "Oauth 2"
+                ],
+                "summary": "Login",
+                "description": "Login using a Firebase ID token. Ensures local user exists and returns token/user data.\n\nParameters:\n    request (Request): The incoming HTTP request containing the Firebase access token in JSON body.\n    db (AsyncSession): The database session dependency.\nReturns:\n    TokenSchema: The access token and user data.\nRaises:\n    HTTPException: If token verification or user retrieval/creation fails.",
+                "operationId": "login_auth_firebase_post",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenSchema"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dog": {
+            "get": {
+                "tags": [
+                    "dog"
+                ],
+                "summary": "List Dogs",
+                "operationId": "list_dogs_dog_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/DogSchema"
+                                    },
+                                    "type": "array",
+                                    "title": "Response List Dogs Dog Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "dog"
+                ],
+                "summary": "Create Dog",
+                "operationId": "create_dog_dog_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateDogSchema"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DogSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dog/{dog_id}": {
+            "get": {
+                "tags": [
+                    "dog"
+                ],
+                "summary": "Get Dog",
+                "operationId": "get_dog_dog__dog_id__get",
+                "parameters": [
+                    {
+                        "name": "dog_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Dog Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DogSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "dog"
+                ],
+                "summary": "Update Dog",
+                "operationId": "update_dog_dog__dog_id__put",
+                "parameters": [
+                    {
+                        "name": "dog_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Dog Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateDogSchema"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DogSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/trail": {
+            "get": {
+                "tags": [
+                    "trails"
+                ],
+                "summary": "Get Trails",
+                "description": "Get all trails.",
+                "operationId": "get_trails_trail_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/TrailSchema"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Get Trails Trail Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/trail/nearby": {
+            "get": {
+                "tags": [
+                    "trails"
+                ],
+                "summary": "Get Nearby Trails",
+                "description": "Get all nearby trails for the current authenticated user.",
+                "operationId": "get_nearby_trails_trail_nearby_get",
+                "parameters": [
+                    {
+                        "name": "latitude",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "title": "Latitude"
+                        }
+                    },
+                    {
+                        "name": "longitude",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "number",
+                            "title": "Longitude"
+                        }
+                    },
+                    {
+                        "name": "distance_km",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "default": 10.0,
+                            "title": "Distance Km"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TrailSchema"
+                                    },
+                                    "title": "Response Get Nearby Trails Trail Nearby Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/trail/me": {
+            "get": {
+                "tags": [
+                    "trails"
+                ],
+                "summary": "Get My Trails",
+                "description": "Get all trails created by the current authenticated user.",
+                "operationId": "get_my_trails_trail_me_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/TrailSchema"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Get My Trails Trail Me Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "trails"
+                ],
+                "summary": "Create My Trail",
+                "description": "Create a new trail for the current authenticated user.",
+                "operationId": "create_my_trail_trail_me_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateTrailSchema"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TrailSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/trail/{trail_id}": {
+            "get": {
+                "tags": [
+                    "trails"
+                ],
+                "summary": "Get Trail",
+                "description": "Get a trail by its ID.",
+                "operationId": "get_trail_trail__trail_id__get",
+                "parameters": [
+                    {
+                        "name": "trail_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Trail Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TrailSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "trails"
+                ],
+                "summary": "Delete Trail",
+                "description": "Delete a trail by its ID.",
+                "operationId": "delete_trail_trail__trail_id__delete",
+                "parameters": [
+                    {
+                        "name": "trail_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Trail Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "trails"
+                ],
+                "summary": "Update Trail",
+                "description": "Update a trail by its ID.",
+                "operationId": "update_trail_trail__trail_id__put",
+                "parameters": [
+                    {
+                        "name": "trail_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Trail Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateTrailSchema"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TrailSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get My Profile",
+                "operationId": "get_my_profile_admin_users_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/TokenDataSchema"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Get My Profile Admin Users Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/dogs": {
+            "get": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List Dogs",
+                "operationId": "list_dogs_admin_dogs_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/DogSchema"
+                                    },
+                                    "type": "array",
+                                    "title": "Response List Dogs Admin Dogs Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/dog/{dog_id}": {
+            "get": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get Dog",
+                "operationId": "get_dog_admin_dog__dog_id__get",
+                "parameters": [
+                    {
+                        "name": "dog_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Dog Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DogSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Update Dog",
+                "operationId": "update_dog_admin_dog__dog_id__put",
+                "parameters": [
+                    {
+                        "name": "dog_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Dog Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateDogSchema"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DogSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/dog": {
+            "post": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Create Dog",
+                "operationId": "create_dog_admin_dog_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateDogSchema"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DogSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/trails": {
+            "get": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get Trails",
+                "description": "Get all trails.",
+                "operationId": "get_trails_admin_trails_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/TrailSchema"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Get Trails Admin Trails Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/trail": {
+            "post": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Create Trail",
+                "description": "Create a new trail for the current authenticated user.",
+                "operationId": "create_trail_admin_trail_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateTrailSchema"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TrailSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/trails/{trail_id}": {
+            "get": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get Trail",
+                "description": "Get a trail by its ID.",
+                "operationId": "get_trail_admin_trails__trail_id__get",
+                "parameters": [
+                    {
+                        "name": "trail_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Trail Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TrailSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Delete Trail",
+                "description": "Delete a trail by its ID.",
+                "operationId": "delete_trail_admin_trails__trail_id__delete",
+                "parameters": [
+                    {
+                        "name": "trail_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Trail Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful Response"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Update Trail",
+                "description": "Update a trail by its ID.",
+                "operationId": "update_trail_admin_trails__trail_id__put",
+                "parameters": [
+                    {
+                        "name": "trail_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Trail Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateTrailSchema"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TrailSchema"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/map/style.json": {
+            "get": {
+                "tags": [
+                    "map"
+                ],
+                "summary": "Get Map Style",
+                "description": "Get the map style configuration.",
+                "operationId": "get_map_style_map_style_json_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": true,
+                                    "type": "object",
+                                    "title": "Response Get Map Style Map Style Json Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/uploads/presign": {
+            "post": {
+                "tags": [
+                    "uploads"
+                ],
+                "summary": "Presign Upload",
+                "operationId": "presign_upload_uploads_presign_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PresignRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PresignResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/uploads": {
+            "post": {
+                "tags": [
+                    "uploads"
+                ],
+                "summary": "Upload file (server-side to R2)",
+                "description": "Accepts a multipart file upload and streams it to the configured R2 bucket.\nReturns a `public_url` which points to /uploads/proxy/{key} (the proxy route you already have).",
+                "operationId": "upload_file_uploads_post",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_upload_file_uploads_post"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/uploads/proxy/{key}": {
+            "get": {
+                "tags": [
+                    "uploads"
+                ],
+                "summary": "Proxy Object",
+                "operationId": "proxy_object_uploads_proxy__key__get",
+                "parameters": [
+                    {
+                        "name": "key",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "description": "Object key in the bucket, e.g. users/123/img.png",
+                            "title": "Key"
+                        },
+                        "description": "Object key in the bucket, e.g. users/123/img.png"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "summary": "Root",
+                "description": "Root endpoint.",
+                "operationId": "root__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "summary": "Health Check",
+                "description": "Health check endpoint.",
+                "operationId": "health_check_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Body_upload_file_uploads_post": {
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "title": "File"
+                    },
+                    "filename": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Filename"
+                    },
+                    "dog_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Dog Id"
+                    },
+                    "trail_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Trail Id"
+                    },
+                    "user_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "file"
+                ],
+                "title": "Body_upload_file_uploads_post"
+            },
+            "CreateDogSchema": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "nickname": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Nickname"
+                    },
+                    "size": {
+                        "type": "string",
+                        "title": "Size"
+                    },
+                    "age": {
+                        "type": "integer",
+                        "title": "Age"
+                    },
+                    "photo": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Photo"
+                    },
+                    "personalityTags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Personalitytags",
+                        "default": []
+                    },
+                    "vaccines": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Vaccines",
+                        "default": []
+                    },
+                    "recallReliability": {
+                        "type": "string",
+                        "title": "Recallreliability"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "size",
+                    "age",
+                    "recallReliability"
+                ],
+                "title": "CreateDogSchema",
+                "description": "Schema for creating a dog."
+            },
+            "CreateTrailSchema": {
+                "properties": {
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "distance": {
+                        "type": "number",
+                        "title": "Distance"
+                    },
+                    "duration": {
+                        "type": "number",
+                        "title": "Duration"
+                    },
+                    "path": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "prefixItems": [
+                                        {
+                                            "type": "number"
+                                        },
+                                        {
+                                            "type": "number"
+                                        }
+                                    ],
+                                    "type": "array",
+                                    "maxItems": 2,
+                                    "minItems": 2
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Path"
+                    },
+                    "photo": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Photo"
+                    },
+                    "city": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "City"
+                    },
+                    "country": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Country"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "tags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Tags",
+                        "default": []
+                    },
+                    "elevation": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Elevation"
+                    },
+                    "surfaceType": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Surfacetype"
+                    },
+                    "difficulty": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Difficulty"
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Location"
+                    },
+                    "pace": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Pace"
+                    },
+                    "speed": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Speed"
+                    },
+                    "maxElevation": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Maxelevation"
+                    },
+                    "rating": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Rating"
+                    },
+                    "review": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Review"
+                    },
+                    "environmentTags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Environmenttags",
+                        "default": []
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "distance",
+                    "duration"
+                ],
+                "title": "CreateTrailSchema",
+                "description": "Schema for creating a trail."
+            },
+            "DogSchema": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "nickname": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Nickname"
+                    },
+                    "size": {
+                        "type": "string",
+                        "title": "Size"
+                    },
+                    "age": {
+                        "type": "integer",
+                        "title": "Age"
+                    },
+                    "photo": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Photo"
+                    },
+                    "personalityTags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Personalitytags",
+                        "default": []
+                    },
+                    "vaccines": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Vaccines",
+                        "default": []
+                    },
+                    "recallReliability": {
+                        "type": "string",
+                        "title": "Recallreliability"
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "userId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Userid"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Createdat"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updatedat"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "size",
+                    "age",
+                    "recallReliability",
+                    "id",
+                    "userId",
+                    "createdAt",
+                    "updatedAt"
+                ],
+                "title": "DogSchema",
+                "description": "Schema for dog data with ID and timestamps."
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "PresignRequest": {
+                "properties": {
+                    "filename": {
+                        "type": "string",
+                        "title": "Filename"
+                    },
+                    "event_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Event Id"
+                    },
+                    "speaker_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Speaker Id"
+                    },
+                    "content_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Content Type",
+                        "default": "application/octet-stream"
+                    },
+                    "expires_in_seconds": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Expires In Seconds",
+                        "default": 3600
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "filename"
+                ],
+                "title": "PresignRequest"
+            },
+            "PresignResponse": {
+                "properties": {
+                    "upload_url": {
+                        "type": "string",
+                        "title": "Upload Url"
+                    },
+                    "public_url": {
+                        "type": "string",
+                        "title": "Public Url"
+                    },
+                    "method": {
+                        "type": "string",
+                        "title": "Method",
+                        "default": "PUT"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "upload_url",
+                    "public_url"
+                ],
+                "title": "PresignResponse"
+            },
+            "TokenDataSchema": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "email": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "email"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Email"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "title": "TokenDataSchema",
+                "description": "Schema for token data."
+            },
+            "TokenSchema": {
+                "properties": {
+                    "accessToken": {
+                        "type": "string",
+                        "title": "Accesstoken"
+                    },
+                    "tokenType": {
+                        "type": "string",
+                        "title": "Tokentype"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/TokenDataSchema"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "accessToken",
+                    "tokenType",
+                    "user"
+                ],
+                "title": "TokenSchema",
+                "description": "Schema for token data."
+            },
+            "TrailSchema": {
+                "properties": {
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "distance": {
+                        "type": "number",
+                        "title": "Distance"
+                    },
+                    "duration": {
+                        "type": "number",
+                        "title": "Duration"
+                    },
+                    "path": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "prefixItems": [
+                                        {
+                                            "type": "number"
+                                        },
+                                        {
+                                            "type": "number"
+                                        }
+                                    ],
+                                    "type": "array",
+                                    "maxItems": 2,
+                                    "minItems": 2
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Path"
+                    },
+                    "photo": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Photo"
+                    },
+                    "city": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "City"
+                    },
+                    "country": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Country"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "tags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Tags",
+                        "default": []
+                    },
+                    "elevation": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Elevation"
+                    },
+                    "surfaceType": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Surfacetype"
+                    },
+                    "difficulty": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Difficulty"
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Location"
+                    },
+                    "pace": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Pace"
+                    },
+                    "speed": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Speed"
+                    },
+                    "maxElevation": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Maxelevation"
+                    },
+                    "rating": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Rating"
+                    },
+                    "review": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Review"
+                    },
+                    "environmentTags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Environmenttags",
+                        "default": []
+                    },
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Id"
+                    },
+                    "userId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Userid"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Createdat"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updatedat"
+                    },
+                    "startLatitude": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Startlatitude"
+                    },
+                    "startLongitude": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Startlongitude"
+                    },
+                    "distanceFromUser": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Distancefromuser"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "distance",
+                    "duration",
+                    "id",
+                    "userId",
+                    "createdAt",
+                    "updatedAt"
+                ],
+                "title": "TrailSchema",
+                "description": "Schema for trail data with ID and timestamps."
+            },
+            "UpdateDogSchema": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "nickname": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Nickname"
+                    },
+                    "size": {
+                        "type": "string",
+                        "title": "Size"
+                    },
+                    "age": {
+                        "type": "integer",
+                        "title": "Age"
+                    },
+                    "photo": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Photo"
+                    },
+                    "personalityTags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Personalitytags",
+                        "default": []
+                    },
+                    "vaccines": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Vaccines",
+                        "default": []
+                    },
+                    "recallReliability": {
+                        "type": "string",
+                        "title": "Recallreliability"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "size",
+                    "age",
+                    "recallReliability"
+                ],
+                "title": "UpdateDogSchema",
+                "description": "Schema for updating a dog."
+            },
+            "UpdateTrailSchema": {
+                "properties": {
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "distance": {
+                        "type": "number",
+                        "title": "Distance"
+                    },
+                    "duration": {
+                        "type": "number",
+                        "title": "Duration"
+                    },
+                    "path": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "prefixItems": [
+                                        {
+                                            "type": "number"
+                                        },
+                                        {
+                                            "type": "number"
+                                        }
+                                    ],
+                                    "type": "array",
+                                    "maxItems": 2,
+                                    "minItems": 2
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Path"
+                    },
+                    "photo": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Photo"
+                    },
+                    "city": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "City"
+                    },
+                    "country": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Country"
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "tags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Tags",
+                        "default": []
+                    },
+                    "elevation": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Elevation"
+                    },
+                    "surfaceType": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Surfacetype"
+                    },
+                    "difficulty": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Difficulty"
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Location"
+                    },
+                    "pace": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Pace"
+                    },
+                    "speed": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Speed"
+                    },
+                    "maxElevation": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Maxelevation"
+                    },
+                    "rating": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Rating"
+                    },
+                    "review": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Review"
+                    },
+                    "environmentTags": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Environmenttags",
+                        "default": []
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "distance",
+                    "duration"
+                ],
+                "title": "UpdateTrailSchema",
+                "description": "Schema for updating a trail."
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    },
+                    "input": {
+                        "title": "Input"
+                    },
+                    "ctx": {
+                        "type": "object",
+                        "title": "Context"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        }
+    }
+}

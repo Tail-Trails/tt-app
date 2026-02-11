@@ -59,6 +59,8 @@ export default function RecordScreenWeb() {
   const [formName, setFormName] = useState<string>('');
   const [formDescription, setFormDescription] = useState<string>('');
   const [formPhoto, setFormPhoto] = useState<string | undefined>(undefined);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [formPhotoFile, setFormPhotoFile] = useState<File | undefined>(undefined);
 
   useEffect(() => {
     // On web, check permissions via the Permissions API when available
@@ -282,7 +284,7 @@ export default function RecordScreenWeb() {
       ...(draftTrail as Trail),
       name: formName || (draftTrail as any).name || 'Untitled Trail',
       description: formDescription,
-      photo: formPhoto,
+      photo: formPhotoFile || formPhoto,
     };
 
     try {
@@ -305,9 +307,8 @@ export default function RecordScreenWeb() {
       await AsyncStorage.removeItem(START_TIME_KEY);
       await AsyncStorage.removeItem(LAST_UPDATE_KEY);
 
-      const savedId = (toSave as any).id || null;
-      if (savedId) router.push(`/trail/${savedId}`);
-      else Alert.alert('Success', 'Trail saved successfully!');
+      // Redirect to profile tab after saving
+      router.push('/(tabs)/profile');
     } catch (err) {
       console.error('Save failed', err);
       Alert.alert('Error', 'Failed to save trail');
@@ -482,8 +483,27 @@ export default function RecordScreenWeb() {
               <TextInput placeholder="Trail name" value={formName} onChangeText={setFormName} style={styles.input} />
               <Text style={{ fontSize: 14, marginTop: 8 }}>Description</Text>
               <TextInput placeholder="Description" value={formDescription} onChangeText={setFormDescription} style={[styles.input, { height: 100 }]} multiline />
-              <Text style={{ fontSize: 14, marginTop: 8 }}>Photo URL (optional)</Text>
-              <TextInput placeholder="Photo URL" value={formPhoto} onChangeText={setFormPhoto as any} style={styles.input} />
+              <Text style={{ fontSize: 14, marginTop: 8 }}>Photo (optional)</Text>
+              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                <TouchableOpacity style={[styles.modalButton, { paddingHorizontal: 12 }]} onPress={() => fileInputRef.current?.click()}>
+                  <Text style={styles.modalButtonText}>Choose File</Text>
+                </TouchableOpacity>
+                <TextInput placeholder="Or paste image URL" value={formPhoto} onChangeText={setFormPhoto as any} style={[styles.input, { flex: 1 }]} />
+              </View>
+              <input
+                ref={fileInputRef as any}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={(e: any) => {
+                  const f = e.target.files && e.target.files[0];
+                  if (f) {
+                    setFormPhotoFile(f);
+                    const url = URL.createObjectURL(f);
+                    setFormPhoto(url);
+                  }
+                }}
+              />
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
                 <TouchableOpacity style={styles.modalButton} onPress={cancelSave}><Text style={styles.modalButtonText}>Cancel</Text></TouchableOpacity>
                 <TouchableOpacity style={[styles.modalButton, styles.modalButtonPrimary]} onPress={submitSave}><Text style={[styles.modalButtonText, { color: '#fff' }]}>Save Trail</Text></TouchableOpacity>
