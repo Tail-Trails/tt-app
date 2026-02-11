@@ -107,13 +107,24 @@
           }
         }
       ],
-      "@react-native-firebase/app"
+      "@react-native-firebase/app",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
+      "@react-native-firebase/auth",
+      "./plugins/patch-podfile"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
       "router": {},
+      "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "603763351756-ekakr88vbtlkqv620q7h8j2h3amq0fem.apps.googleusercontent.com",
       "eas": {
         "projectId": "31ef470c-e5bd-45af-8bdc-f12b99e6db0b"
       }

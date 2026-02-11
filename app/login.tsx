@@ -4,9 +4,37 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/context/AuthContext';
 import { firebaseAuthExchange } from '@/lib/api';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import Constants from 'expo-constants';
 import { Image } from 'expo-image';
 import colors from '@/constants/colors';
-import { firebaseAuth, signInWithEmailAndPassword } from '@/lib/firebase';
+import { getFirebaseAuth, signInWithEmailAndPassword, signInWithGoogle } from '@/lib/firebase';
+
+WebBrowser.maybeCompleteAuthSession();
+
+function normalizeToken(token: any): string | null {
+  if (!token) return null;
+  if (typeof token === 'string') return token;
+  // Expo / native may return ArrayBuffer-like or { data: number[] }
+  try {
+    if (token instanceof ArrayBuffer) {
+      const view = new Uint8Array(token);
+      let s = '';
+      for (let i = 0; i < view.length; i++) s += String.fromCharCode(view[i]);
+      return decodeURIComponent(escape(s));
+    }
+    if (token && typeof token === 'object' && Array.isArray((token as any).data)) {
+      const arr = (token as any).data as number[];
+      let s = '';
+      for (let i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]);
+      return decodeURIComponent(escape(s));
+    }
+    return String(token);
+  } catch (err) {
+    return String(token);
+  }
+}
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -14,6 +42,44 @@ export default function LoginScreen() {
   const [email, setEmail] = React.useState<string>('');
   const [password, setPassword] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
+
+  const extra = (Constants.expoConfig && (Constants.expoConfig.extra as any)) || {};
+    const [request, response, promptAsync] = Google.useAuthRequest({
+      webClientId: extra.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
+      clientId: extra.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+      iosClientId: extra.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+      androidClientId: extra.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+      scopes: ['profile', 'email'],
+      // request an access token so we can sign into Firebase client-side
+      responseType: 'token',
+    });
+
+  React.useEffect(() => {
+    (async () => {
+      if (response?.type === 'success') {
+        try {
+          setIsLoading(true);
+            // normalize potential ArrayBuffer/bytes to string
+            const rawToken = response.authentication?.accessToken || response.authentication?.idToken;
+            const tokenStr = normalizeToken(rawToken);
+            if (!tokenStr) throw new Error('No access token from Google');
+            // Sign into Firebase with the Google token to obtain a Firebase ID token (JWT)
+            const fb = await signInWithGoogle(getFirebaseAuth(), tokenStr);
+            const session = await firebaseAuthExchange(fb.idToken);
+          await signInWithToken(session);
+          if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+          router.replace('/');
+        } catch (err: any) {
+          console.error('Google sign-in error', err);
+          Alert.alert('Google Sign-In Error', err?.message || String(err));
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    })();
+  }, [response]);
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -31,7 +97,7 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       const credential = await signInWithEmailAndPassword(
-        firebaseAuth,
+        getFirebaseAuth(),
         email.trim().toLowerCase(),
         password
       );
@@ -108,6 +174,27 @@ export default function LoginScreen() {
             ) : (
               <Text style={styles.buttonText}>Sign In</Text>
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, { marginTop: 8, backgroundColor: '#db4437' }]}
+            onPress={async () => {
+              try {
+                if (Platform.OS !== 'web') {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                }
+                setIsLoading(true);
+                // Use the native flow (no proxy) in development client / standalone builds.
+                await promptAsync();
+              } catch (err: any) {
+                console.error('Prompt Google Auth error', err);
+                Alert.alert('Error', err?.message || String(err));
+                setIsLoading(false);
+              }
+            }}
+            disabled={!request || isLoading}
+          >
+            <Text style={styles.buttonText}>Sign in with Google</Text>
           </TouchableOpacity>
 
           <View style={styles.footer}>

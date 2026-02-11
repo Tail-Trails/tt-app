@@ -28,3 +28,5 @@ key.properties
 keystore.properties
 .DS_Store
 build-*
+secrets/
+GoogleService-Info.plist
