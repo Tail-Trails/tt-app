@@ -7,7 +7,7 @@ export interface UserProfile {
   id: string;
   user_id: string;
   name: string | null;
-  photo: string | null;
+  image: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -43,7 +43,7 @@ export const [AccountContext, useAccount] = createContextHook(() => {
     }
   }, [session?.accessToken]);
 
-  const updateAccount = useCallback(async (updates: Partial<Pick<UserProfile, 'name' | 'photo'>>) => {
+  const updateAccount = useCallback(async (updates: Partial<Pick<UserProfile, 'name' | 'image'>>) => {
     if (!session?.accessToken) throw new Error('No active session');
 
     try {

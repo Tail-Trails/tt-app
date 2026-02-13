@@ -21,8 +21,8 @@ import { useAccount } from '@/context/AccountContext';
 import { useDogs } from '@/context/DogsContext';
 import { useTrails } from '@/context/TrailsContext';
 
-import { Mail, LogOut, Dog, Camera, X, MapPin, Star, BarChart3, Bookmark } from 'lucide-react-native';
-import colors from '@/constants/colors';
+import { Mail, LogOut, Dog, Camera, X, MapPin, Star, BarChart3, Bookmark, LucideTableOfContents } from 'lucide-react-native';
+import theme from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './profile.styles';
 import { useRouter } from 'expo-router';
@@ -40,7 +40,7 @@ export default function ProfileScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={theme.backgroundPrimary} />
         </View>
       </View>
     );
@@ -59,10 +59,11 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
+
   React.useEffect(() => {
     const defaultName = userProfile?.name || user?.email?.split('@')[0] || '';
-    // Use profile photo if available, otherwise use bundled app icon as default
-    const defaultPhoto = userProfile?.photo || Icon;
+    // Use profile image if available, otherwise use bundled app icon as default
+    const defaultPhoto = userProfile?.image || Icon;
     setEditedName(defaultName);
     setEditedPhoto(defaultPhoto);
   }, [user, userProfile]);
@@ -192,7 +193,7 @@ export default function ProfileScreen() {
     }
     setShowEditModal(false);
     const defaultName = userProfile?.name || user?.email?.split('@')[0] || '';
-    const defaultPhoto = userProfile?.photo || Icon;
+    const defaultPhoto = userProfile?.image || Icon;
     setEditedName(defaultName);
     setEditedPhoto(defaultPhoto);
   };
@@ -278,10 +279,10 @@ export default function ProfileScreen() {
         finalPhoto = editedPhoto;
       }
 
-      // Update account with name and (if present) the uploaded photo URL
+      // Update account with name and (if present) the uploaded image URL
       await updateAccount({
         name: editedName.trim(),
-        photo: finalPhoto,
+        image: finalPhoto,
       });
 
       if (Platform.OS !== 'web') {
@@ -331,33 +332,40 @@ export default function ProfileScreen() {
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{userProfile?.name || editedName || 'Account Holder'}</Text>
             <View style={styles.userEmailRow}>
-              <Mail size={14} color={colors.primary} />
+              <Mail size={14} color={theme.accentPrimary} />
               <Text style={styles.userEmail}>{user?.email || 'Not available'}</Text>
             </View>
           </View>
+          <TouchableOpacity
+            style={styles.settingsButton}
+            onPress={() => router.push('/settings')}
+            accessibilityLabel="Open settings"
+          >
+            <LucideTableOfContents size={20} color={theme.accentSecondary} />
+          </TouchableOpacity>
         </View>
       </View>
 
       {isDogProfileLoading ? (
         <View style={styles.dogCardContainer}>
           <View style={styles.loadingDogCard}>
-            <ActivityIndicator size="large" color={colors.paleYellow} />
+            <ActivityIndicator size="large" color={theme.accentPrimary} />
           </View>
         </View>
       ) : dogProfile ? (
         <View style={styles.dogCardContainer}>
           <TouchableOpacity style={styles.dogCard} onPress={handleEditDogProfile}>
             <View style={styles.dogPhotoContainer}>
-              {dogProfile.photo ? (
+              {dogProfile.image ? (
                 <Image
-                  source={dogProfile.photo}
+                  source={dogProfile.image}
                   style={styles.dogPhoto}
                   contentFit="cover"
                   cachePolicy="memory-disk"
                 />
               ) : (
                 <View style={[styles.dogPhoto, styles.dogPhotoPlaceholder]}>
-                  <Dog size={40} color={colors.muted} />
+                  <Dog size={40} color={theme.accentPrimary} />
                 </View>
               )}
             </View>
@@ -384,21 +392,12 @@ export default function ProfileScreen() {
                 <Text style={styles.statLabel}>Total Dist.</Text>
               </View>
             </View>
-
-            <View style={styles.dogInfoRow}>
-              <View style={styles.dogInfoBadge}>
-                <Text style={styles.dogInfoText}>{dogProfile.age} years</Text>
-              </View>
-              <View style={styles.dogInfoBadge}>
-                <Text style={styles.dogInfoText}>Size {dogProfile.size}</Text>
-              </View>
-            </View>
           </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.dogCardContainer}>
           <View style={styles.noDogCard}>
-            <Dog size={48} color={colors.muted} />
+            <Dog size={48} color={theme.textMuted} />
             <Text style={styles.noDogText}>No dog profile yet</Text>
             <TouchableOpacity
               style={styles.addDogButton}
@@ -437,7 +436,7 @@ export default function ProfileScreen() {
       <View style={styles.trailsSection}>
         {isTrailsLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
+            <ActivityIndicator size="large" color={theme.backgroundPrimary} />
           </View>
         ) : displayedTrails.length > 0 ? (
           displayedTrails.map((trail) => {
@@ -477,7 +476,7 @@ export default function ProfileScreen() {
                 <Animated.View style={{ transform: [{ scale: anim }] }}>
                   <Bookmark 
                     size={20} 
-                    color={isSaved ? "#000" : colors.muted} 
+                    color={isSaved ? "#000" : theme.textMuted} 
                     fill={isSaved ? "#000" : "none"}
                     strokeWidth={2} 
                   />
@@ -494,17 +493,17 @@ export default function ProfileScreen() {
                 <View style={styles.trailBadges}>
                   {trail.difficulty && (
                     <View style={styles.trailBadge}>
-                      <BarChart3 size={14} color={colors.paleYellow} strokeWidth={2.5} />
+                      <BarChart3 size={14} color={theme.accentPrimary} strokeWidth={2.5} />
                       <Text style={styles.trailBadgeText}>{trail.difficulty}</Text>
                     </View>
                   )}
                   <View style={styles.trailBadge}>
-                    <MapPin size={14} color={colors.paleYellow} strokeWidth={2.5} />
+                    <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
                     <Text style={styles.trailBadgeText}>{formatDistance(trail.distance)}</Text>
                   </View>
                   {trail.rating && (
                     <View style={styles.trailBadge}>
-                      <Star size={14} color={colors.accent} fill={colors.accent} strokeWidth={2} />
+                      <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
                       <Text style={styles.trailBadgeText}>{trail.rating.toFixed(1)}</Text>
                     </View>
                   )}
@@ -515,7 +514,7 @@ export default function ProfileScreen() {
           })
         ) : (
           <View style={styles.emptyContainer}>
-            <MapPin size={48} color={colors.light.tabIconDefault} />
+            <MapPin size={48} color={theme.textMuted} />
             <Text style={styles.emptyText}>
               {selectedTab === 'created' 
                 ? 'No trails created yet'
@@ -533,10 +532,10 @@ export default function ProfileScreen() {
         disabled={isLoading}
       >
         {isLoading ? (
-          <ActivityIndicator color={colors.light.tabIconSelected} />
+          <ActivityIndicator color={theme.backgroundPrimary} />
         ) : (
           <>
-            <LogOut size={20} color={colors.light.tabIconSelected} />
+            <LogOut size={20} color={theme.backgroundPrimary} />
             <Text style={styles.signOutText}>Sign Out</Text>
           </>
         )}
@@ -555,7 +554,7 @@ export default function ProfileScreen() {
               style={styles.closeButton}
               onPress={handleCloseEditModal}
             >
-              <X size={24} color={colors.primary} />
+              <X size={24} color={theme.backgroundPrimary} />
             </TouchableOpacity>
           </View>
 
@@ -578,7 +577,7 @@ export default function ProfileScreen() {
                   </View>
                 )}
                 <View style={styles.cameraOverlay}>
-                  <Camera size={24} color={colors.light.tabIconSelected} />
+                  <Camera size={24} color={theme.accentPrimary} />
                 </View>
               </TouchableOpacity>
               <Text style={styles.photoHint}>Tap to change photo</Text>
@@ -591,7 +590,7 @@ export default function ProfileScreen() {
                 value={editedName}
                 onChangeText={setEditedName}
                 placeholder="Enter your name"
-                placeholderTextColor={colors.light.tabIconDefault}
+                placeholderTextColor={theme.textMuted}
               />
             </View>
 
@@ -611,7 +610,7 @@ export default function ProfileScreen() {
               disabled={isSaving}
             >
               {isSaving ? (
-                <ActivityIndicator color={colors.light.tabIconSelected} />
+                <ActivityIndicator color={theme.accentPrimary} />
               ) : (
                 <Text style={styles.saveButtonText}>Save Changes</Text>
               )}

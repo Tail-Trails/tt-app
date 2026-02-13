@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 
 import { MapPin, Search, Heart, Umbrella, Bookmark, Star, X, BarChart3, Navigation, ChevronLeft, ChevronUp, ChevronDown, Icon } from 'lucide-react-native';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 import * as maplibregl from 'maplibre-gl';
 
 import { Trail } from '@/types/trail';
@@ -338,7 +338,7 @@ export default function ExploreWebScreen() {
               onPress={handleSearchBarPress}
               activeOpacity={0.7}
             >
-              <Search size={20} color={colors.muted} />
+              <Search size={20} color={theme.textMuted} />
               <Text style={styles.searchPlaceholder}>Find trails</Text>
             </TouchableOpacity>
             {Platform.OS === 'web' && (

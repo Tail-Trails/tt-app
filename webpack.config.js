@@ -20,6 +20,10 @@ module.exports = async function (env, argv) {
     '../../../../app': path.resolve(__dirname, 'app'),
     '../../../app': path.resolve(__dirname, 'app'),
     '@': path.resolve(__dirname),
+    // Shim native-only modules on web to avoid bundling errors
+    'lottie-react-native': path.resolve(__dirname, 'web', 'shims', 'lottie-shim.js'),
+    '@react-native-firebase/app': path.resolve(__dirname, 'web', 'shims', 'rn-firebase-shim.js'),
+    '@react-native-firebase/auth': path.resolve(__dirname, 'web', 'shims', 'rn-firebase-shim.js'),
     // Provide a shim for nanoid to avoid ESM/CJS interop issues in the web bundle
     'nanoid': path.resolve(__dirname, 'web', 'nanoid-shim.js'),
     // Some consumers import the non-secure submodule directly (e.g. expo-router)
@@ -44,6 +48,14 @@ module.exports = async function (env, argv) {
   config.plugins.push(
     new webpack.NormalModuleReplacementPlugin(/nanoid\/non-secure/, path.resolve(__dirname, 'web', 'nanoid-non-secure.js')),
     new webpack.NormalModuleReplacementPlugin(/^nanoid$/, path.resolve(__dirname, 'web', 'nanoid-shim.js'))
+  );
+
+  // Replace some native-only modules or internal react-native paths with web shims
+  config.plugins.push(
+    new webpack.NormalModuleReplacementPlugin(/^lottie-react-native$/, path.resolve(__dirname, 'web', 'shims', 'lottie-shim.js')),
+    new webpack.NormalModuleReplacementPlugin(/^@react-native-firebase\/app$/, path.resolve(__dirname, 'web', 'shims', 'rn-firebase-shim.js')),
+    new webpack.NormalModuleReplacementPlugin(/^@react-native-firebase\/auth$/, path.resolve(__dirname, 'web', 'shims', 'rn-firebase-shim.js')),
+    new webpack.NormalModuleReplacementPlugin(/react-native\/Libraries\/vendor\/emitter\/EventEmitter/, path.resolve(__dirname, 'web', 'shims', 'EventEmitter.js'))
   );
 
   // You can customize the webpack config here if needed

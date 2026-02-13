@@ -1,10 +1,10 @@
 import { StyleSheet } from 'react-native';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: theme.backgroundSecondaryVarient,
   },
   scrollView: {
     flex: 1,
@@ -19,13 +19,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: colors.accent,
+    color: theme.accentPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: colors.lightGreen,
+    color: theme.accentPrimary,
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3d4520',
   },
   progressDotActive: {
-    backgroundColor: colors.accent,
+    backgroundColor: theme.accentPrimary,
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -57,15 +57,15 @@ const styles = StyleSheet.create({
   },
   tagSelected: {
     backgroundColor: 'rgba(255, 254, 119, 0.15)',
-    borderColor: colors.accent,
+    borderColor: theme.accentPrimary,
   },
   tagText: {
     fontSize: 15,
     fontWeight: '500' as const,
-    color: colors.lightGreen,
+    color: theme.accentPrimary,
   },
   tagTextSelected: {
-    color: colors.accent,
+    color: theme.accentPrimary,
     fontWeight: '600' as const,
   },
   sectionHeader: {
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: colors.accent,
+    color: theme.accentPrimary,
   },
   section: {
     marginBottom: 24,
@@ -83,12 +83,12 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 17,
     fontWeight: '600' as const,
-    color: colors.accent,
+    color: theme.accentPrimary,
     marginBottom: 4,
   },
   helperText: {
     fontSize: 14,
-    color: colors.lightGreen,
+    color: theme.accentPrimary,
     marginBottom: 12,
   },
   recallContainer: {
@@ -107,15 +107,15 @@ const styles = StyleSheet.create({
   },
   recallOptionSelected: {
     backgroundColor: 'rgba(255, 254, 119, 0.15)',
-    borderColor: colors.accent,
+    borderColor: theme.accentPrimary,
   },
   recallText: {
     fontSize: 14,
     fontWeight: '500' as const,
-    color: colors.lightGreen,
+    color: theme.accentPrimary,
   },
   recallTextSelected: {
-    color: colors.accent,
+    color: theme.accentPrimary,
     fontWeight: '600' as const,
   },
   footer: {
@@ -137,16 +137,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 18,
     borderWidth: 1.5,
-    borderColor: colors.accent,
+    borderColor: theme.accentPrimary,
   },
   backButtonText: {
     fontSize: 17,
     fontWeight: '600' as const,
-    color: colors.accent,
+    color: theme.accentPrimary,
   },
   finishButton: {
     flex: 1,
-    backgroundColor: colors.accent,
+    backgroundColor: theme.accentPrimary,
     borderRadius: 12,
     padding: 18,
     alignItems: 'center',

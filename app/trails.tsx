@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { StyleSheet, View, FlatList, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 import { useRouter } from 'expo-router';
 import { MapPin, Clock } from 'lucide-react-native';
 import { useTrails } from '@/context/TrailsContext';
@@ -19,17 +19,17 @@ export default function TrailsScreen() {
     >
       <View style={styles.trailHeader}>
         <View style={styles.iconContainer}>
-          <MapPin size={24} color={colors.primary} />
+          <MapPin size={24} color={theme.backgroundPrimary} />
         </View>
         <View style={styles.trailInfo}>
           <Text style={styles.trailDate}>{formatDate(item.date)}</Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <MapPin size={16} color={colors.muted} />
+              <MapPin size={16} color={theme.textMuted} />
               <Text style={styles.statText}>{formatDistance(item.distance)}</Text>
             </View>
             <View style={styles.statItem}>
-              <Clock size={16} color={colors.muted} />
+              <Clock size={16} color={theme.textMuted} />
               <Text style={styles.statText}>{formatDuration(item.duration)}</Text>
             </View>
           </View>
@@ -40,7 +40,7 @@ export default function TrailsScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <MapPin size={64} color={colors.border} />
+      <MapPin size={64} color={theme.borderSubtle} />
       <Text style={styles.emptyTitle}>No trails yet</Text>
       <Text style={styles.emptyText}>
         Start recording your first dog walk to see it here!
@@ -72,7 +72,7 @@ export default function TrailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.backgroundSecondary,
   },
   list: {
     padding: 16,
@@ -85,14 +85,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: theme.backgroundSecondary,
   },
   trailItem: {
-    backgroundColor: colors.white,
+    backgroundColor: theme.textPrimary,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-  shadowColor: colors.black,
+  shadowColor: theme.backgroundSecondaryVarient,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   trailDate: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: colors.darkGreen,
+    color: theme.textPrimary,
     marginBottom: 6,
   },
   statsRow: {
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 14,
-    color: colors.muted,
+    color: theme.textMuted,
     fontWeight: '500' as const,
   },
   emptyContainer: {
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: colors.muted,
+    color: theme.textMuted,
     textAlign: 'center',
     lineHeight: 24,
   },

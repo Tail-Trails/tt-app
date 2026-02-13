@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Text, View, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { Text, View, TextInput, Pressable, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/context/AuthContext';
@@ -8,8 +8,9 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import Constants from 'expo-constants';
 import { Image } from 'expo-image';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 import { getFirebaseAuth, signInWithEmailAndPassword, signInWithGoogle } from '@/lib/firebase';
+import styles from './auth.styles';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -43,29 +44,55 @@ export default function LoginScreen() {
   const [password, setPassword] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
-  const extra = (Constants.expoConfig && (Constants.expoConfig.extra as any)) || {};
-    const [request, response, promptAsync] = Google.useAuthRequest({
-      webClientId: extra.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
-      clientId: extra.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
-      iosClientId: extra.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-      androidClientId: extra.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-      scopes: ['profile', 'email'],
-      // request an access token so we can sign into Firebase client-side
-      responseType: 'token',
-    });
+  const _extraFromConstants = (Constants.expoConfig && (Constants.expoConfig.extra as any)) || (Constants.manifest && (Constants.manifest.extra as any)) || {};
+  const extra = {
+    EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID: _extraFromConstants.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID ?? process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
+    EXPO_PUBLIC_GOOGLE_CLIENT_ID: _extraFromConstants.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+    EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: _extraFromConstants.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID: _extraFromConstants.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+  } as any;
+
+  if (typeof window !== 'undefined' && !extra.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID) {
+    // Helpful developer warning when running on web without a webClientId
+    // (Expo's Constants.expoConfig.extra isn't always populated on web/dev server).
+    // eslint-disable-next-line no-console
+    console.warn('Google web client id (EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID) is not defined. Google auth on web requires a webClientId.');
+  }
+
+  // const [request, response, promptAsync] = Google.useAuthRequest({
+  //   webClientId: extra.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
+  //   clientId: extra.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+  //   iosClientId: extra.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+  //   androidClientId: extra.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+  //   scopes: ['profile', 'email'],
+  //   // request an access token so we can sign into Firebase client-side
+  //   responseType: 'token',
+  // });
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    // Use the env variables directly with fallback to your 'extra' logic
+    webClientId: '447944956309-t92ug0tqs40adop6mnvifqbmfsi7dtj6.apps.googleusercontent.com',
+    // webClientId: process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID || extra.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || extra.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || extra.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    // Note: 'clientId' is usually the proxy/default ID
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || extra.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+    scopes: ['profile', 'email'],
+    responseType: 'token',
+  });
 
   React.useEffect(() => {
     (async () => {
       if (response?.type === 'success') {
         try {
           setIsLoading(true);
-            // normalize potential ArrayBuffer/bytes to string
-            const rawToken = response.authentication?.accessToken || response.authentication?.idToken;
-            const tokenStr = normalizeToken(rawToken);
-            if (!tokenStr) throw new Error('No access token from Google');
-            // Sign into Firebase with the Google token to obtain a Firebase ID token (JWT)
-            const fb = await signInWithGoogle(getFirebaseAuth(), tokenStr);
-            const session = await firebaseAuthExchange(fb.idToken);
+          // normalize potential ArrayBuffer/bytes to string
+          const rawToken = response.authentication?.accessToken || response.authentication?.idToken;
+          const tokenStr = normalizeToken(rawToken);
+          if (!tokenStr) throw new Error('No access token from Google');
+          // Sign into Firebase with the Google token to obtain a Firebase ID token (JWT)
+          const fb = await signInWithGoogle(getFirebaseAuth(), tokenStr);
+          const session = await firebaseAuthExchange(fb.idToken);
           await signInWithToken(session);
           if (Platform.OS !== 'web') {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -82,6 +109,7 @@ export default function LoginScreen() {
   }, [response]);
 
   const handleSignIn = async () => {
+    console.log('handleSignIn invoked', { email, password });
     if (!email || !password) {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -127,7 +155,7 @@ export default function LoginScreen() {
       <View style={styles.content}>
         <View style={styles.header}>
           <Image
-            source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/dae4myluqaizgiwvqbwx1' }}
+            source={{ uri: 'https://api.tailtrails.club/assets/logo' }}
             style={styles.logo}
             contentFit="contain"
           />
@@ -164,9 +192,17 @@ export default function LoginScreen() {
             />
           </View>
 
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
+          <Pressable
+            style={({ pressed }) => [styles.button, isLoading && styles.buttonDisabled, pressed && styles.buttonPressed]}
             onPress={handleSignIn}
+            onKeyDown={(e: any) => {
+              // allow Enter key activation on web
+              const k = e?.nativeEvent?.key || e?.key;
+              if (k === 'Enter') {
+                handleSignIn();
+              }
+            }}
+            accessibilityRole="button"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -174,10 +210,10 @@ export default function LoginScreen() {
             ) : (
               <Text style={styles.buttonText}>Sign In</Text>
             )}
-          </TouchableOpacity>
+          </Pressable>
 
-          <TouchableOpacity
-            style={[styles.button, { marginTop: 8, backgroundColor: '#db4437' }]}
+          {/* <Pressable
+            style={({ pressed }) => [styles.button, { marginTop: 8, backgroundColor: '#db4437' }, pressed && styles.buttonPressed]}
             onPress={async () => {
               try {
                 if (Platform.OS !== 'web') {
@@ -193,9 +229,10 @@ export default function LoginScreen() {
               }
             }}
             disabled={!request || isLoading}
+            accessibilityRole="button"
           >
             <Text style={styles.buttonText}>Sign in with Google</Text>
-          </TouchableOpacity>
+          </Pressable> */}
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don&apos;t have an account? </Text>
@@ -213,101 +250,3 @@ export default function LoginScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  logo: {
-    width: 100,
-    height: 100,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700' as const,
-  color: colors.light.text,
-    marginTop: 16,
-  },
-  subtitle: {
-    fontSize: 16,
-  color: colors.muted,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  form: {
-    width: '100%',
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: '#5d6b4a',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#a8ad8e',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: '#1a1f0a',
-  },
-  helperText: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 8,
-  },
-  button: {
-    backgroundColor: '#5d6b4a',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: '#fff',
-  },
-  secondaryButton: {
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: '#5d6b4a',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  linkText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: '#5d6b4a',
-  },
-});

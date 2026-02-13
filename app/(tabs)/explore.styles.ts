@@ -1,18 +1,18 @@
 import { StyleSheet } from 'react-native';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 
 export default StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
   },
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
   },
 
   stickyHeader: {
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
     paddingBottom: 8,
   },
   stickySearchContainer: {
@@ -27,36 +27,36 @@ export default StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-  backgroundColor: colors.surface,
+    backgroundColor: theme.backgroundSecondary,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 28,
     gap: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: theme.borderSubtle,
   },
   demoButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: theme.backgroundPrimary,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 24,
   },
   demoButtonText: {
-     color: colors.white,
+    color: theme.textPrimary,
     fontWeight: 'bold',
   },
   searchPlaceholder: {
     fontSize: 16,
-    color: colors.muted,
+    color: theme.textMuted,
     fontWeight: '400' as const,
   },
 
   largeTrailCard: {
-  backgroundColor: colors.white,
+    backgroundColor: theme.textPrimary,
     borderRadius: 24,
     overflow: 'hidden',
     marginBottom: 20,
-  shadowColor: '#000',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 16,
@@ -66,7 +66,7 @@ export default StyleSheet.create({
   largeTrailImage: {
     width: '100%',
     height: 260,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.backgroundSecondary,
   },
   bookmarkButton: {
     position: 'absolute',
@@ -78,7 +78,7 @@ export default StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
-  shadowColor: colors.black,
+    shadowColor: theme.backgroundSecondaryVarient,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -102,7 +102,7 @@ export default StyleSheet.create({
   overlayTrailName: {
     fontSize: 28,
     fontWeight: '700' as const,
-  color: colors.white,
+    color: theme.textPrimary,
     marginBottom: 6,
     lineHeight: 34,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -111,7 +111,7 @@ export default StyleSheet.create({
   },
   overlayLocation: {
     fontSize: 16,
-  color: colors.white,
+    color: theme.textPrimary,
     marginBottom: 16,
     opacity: 0.95,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -140,7 +140,7 @@ export default StyleSheet.create({
     textTransform: 'capitalize' as const,
   },
   categoriesSection: {
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
     paddingTop: 8,
     paddingBottom: 16,
   },
@@ -154,20 +154,20 @@ export default StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 28,
-  backgroundColor: colors.white,
+    backgroundColor: theme.textPrimary,
     borderWidth: 0,
     gap: 8,
   },
   categoryButtonActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: theme.backgroundPrimary,
   },
   categoryText: {
     fontSize: 16,
     fontWeight: '500' as const,
-    color: colors.muted,
+    color: theme.textMuted,
   },
   categoryTextActive: {
-  color: colors.white,
+    color: theme.textPrimary,
   },
   categoryTrailsSection: {
     paddingHorizontal: 16,
@@ -183,7 +183,7 @@ export default StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: colors.muted,
+    color: theme.textMuted,
   },
   emptyContainer: {
     paddingVertical: 60,
@@ -193,18 +193,18 @@ export default StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: colors.muted,
+    color: theme.textMuted,
     textAlign: 'center',
     lineHeight: 24,
   },
   placeholderImage: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.darkGreen,
+    backgroundColor: theme.textPrimary,
   },
   searchModalContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
   },
   searchModalHeader: {
     flexDirection: 'row',
@@ -214,13 +214,13 @@ export default StyleSheet.create({
     paddingBottom: 16,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: theme.borderSubtle,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.paleYellow,
+    backgroundColor: theme.accentPrimary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -228,18 +228,18 @@ export default StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: theme.textPrimary,
     borderRadius: 28,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: colors.muted,
+    borderColor: theme.textMuted,
     gap: 12,
   },
   searchModalInput: {
     flex: 1,
     fontSize: 16,
-    color: colors.darkGreen,
+    color: theme.textPrimary,
     padding: 0,
     fontWeight: '400' as const,
   },
@@ -247,7 +247,7 @@ export default StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: colors.border,
+    backgroundColor: theme.borderSubtle,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -261,7 +261,7 @@ export default StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     gap: 16,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.backgroundSecondary,
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 12,
@@ -270,7 +270,7 @@ export default StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.paleYellow,
+    backgroundColor: theme.accentPrimary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -280,12 +280,12 @@ export default StyleSheet.create({
   locationTitle: {
     fontSize: 17,
     fontWeight: '600' as const,
-    color: colors.darkGreen,
+    color: theme.textPrimary,
     marginBottom: 4,
   },
   locationSubtitle: {
     fontSize: 14,
-    color: colors.muted,
+    color: theme.textMuted,
     fontWeight: '400' as const,
   },
   suggestionItem: {
@@ -294,7 +294,7 @@ export default StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     gap: 16,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.backgroundSecondary,
     borderRadius: 16,
     marginHorizontal: 16,
     marginBottom: 12,
@@ -303,7 +303,7 @@ export default StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.border,
+    backgroundColor: theme.borderSubtle,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -313,12 +313,12 @@ export default StyleSheet.create({
   suggestionTitle: {
     fontSize: 17,
     fontWeight: '600' as const,
-    color: colors.darkGreen,
+    color: theme.textPrimary,
     marginBottom: 4,
   },
   suggestionSubtitle: {
     fontSize: 14,
-    color: colors.muted,
+    color: theme.textMuted,
     fontWeight: '400' as const,
   },
 });

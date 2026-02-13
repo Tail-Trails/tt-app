@@ -1,4 +1,4 @@
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 import { forwardRef, useMemo } from 'react';
 import * as MapLibreGL from '@maplibre/maplibre-react-native';
 // MapLibre's react-native types may not include all runtime props (styleURL etc.).
@@ -23,6 +23,10 @@ const MLMapView: any = (MapLibreGL as any).MapView;
   }
 
   const DEFAULT_STYLE = 'https://api.tailtrails.club/map/style.json';
+  // const DEFAULT_STYLE = 'https://provaccination-apophthegmatical-sindy.ngrok-free.dev/map/style.json';
+  // const DEFAULT_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
+  // const DEFAULT_STYLE = 'https://tiles.openfreemap.org/styles/positron';
+
 
   function latDeltaToZoom(latDelta?: number) {
     if (!latDelta) return 14;
@@ -65,7 +69,7 @@ const MLMapView: any = (MapLibreGL as any).MapView;
     }, [coords]);
 
     // Use hosted style URL by default for native; allow override via `mapStyleURL` prop.
-    const defaultStyleUri = DEFAULT_STYLE;
+    const activeStyleURI = useMemo(() => mapStyleURL ?? DEFAULT_STYLE, [mapStyleURL]);
 
     const zoom = useMemo(() => {
       const latDelta = initialRegion?.latitudeDelta;
@@ -74,9 +78,10 @@ const MLMapView: any = (MapLibreGL as any).MapView;
 
     return (
       <MLMapView
+        key={activeStyleURI}
         ref={ref}
         style={style}
-        styleURL={mapStyleURL ?? defaultStyleUri}
+        mapStyle={activeStyleURI}
         zoomEnabled={zoomEnabled}
         scrollEnabled={scrollEnabled}
         attributionEnabled={false}
@@ -86,7 +91,7 @@ const MLMapView: any = (MapLibreGL as any).MapView;
           <MapLibreGL.Camera
             centerCoordinate={center}
             zoomLevel={zoom}
-            animationMode={'flyTo'}
+            // animationMode={'flyTo'}
           />
         )}
 
@@ -94,7 +99,7 @@ const MLMapView: any = (MapLibreGL as any).MapView;
           <MapLibreGL.ShapeSource id="routeSource" shape={geojson}>
             <MapLibreGL.LineLayer
               id="routeLine"
-              style={{ lineColor: colors.primary, lineWidth: 4 }}
+              style={{ lineColor: theme.backgroundPrimary, lineWidth: 4 }}
             />
           </MapLibreGL.ShapeSource>
         )}

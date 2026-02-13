@@ -26,4 +26,5 @@ export interface Trail {
   rating?: number;
   review?: string;
   environment_tags?: string[];
+  createdAt?: string | Date | number;
 }

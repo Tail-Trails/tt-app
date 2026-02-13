@@ -4,7 +4,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import styles from './AnimatedTabBar.styles';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 
 
 console.log('[init] components/AnimatedTabBar.tsx loaded');
@@ -75,22 +75,14 @@ export function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarP
 
           const animatedValue = animatedValues[index];
 
-          const containerWidth = animatedValue.interpolate({
-            inputRange: [0, 1],
-            outputRange: [44, 100],
-          });
-
-          const backgroundColor = animatedValue.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['rgba(40, 46, 16, 0.6)', 'rgba(40, 46, 16, 0.9)'],
-          });
-
-          const textOpacity = animatedValue.interpolate({
-            inputRange: [0, 0.5, 1],
-            outputRange: [0, 0, 1],
-          });
-
-          const iconColor = isFocused ? colors.accent : colors.muted || colors.light.tabIconDefault;
+          // Always render the tab with icon above and label below.
+          // Keep a small animation for selection, but use a fixed button width so
+          // labels remain visible across all tabs.
+          const buttonWidth = 72;
+          const backgroundColor = theme.backgroundPrimary; // No animation for background color, keep it consistent
+          const textOpacity = 1; // labels are always visible now
+          const iconColor = isFocused ? theme.accentPrimary : theme.textMuted;
+          const textColor = isFocused ? theme.accentPrimary : theme.textMuted;
 
           return (
             <Animated.View
@@ -98,7 +90,7 @@ export function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarP
               style={[
                 styles.tabButton,
                 {
-                  width: containerWidth,
+                  width: buttonWidth,
                   backgroundColor,
                 },
               ]}
@@ -119,9 +111,7 @@ export function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarP
                     })}
                   </View>
                   <Animated.View style={{ opacity: textOpacity }}>
-                    {isFocused && (
-                      <Text style={styles.label}>{String(label)}</Text>
-                    )}
+                    <Text style={[styles.label, isFocused && styles.labelActive]}>{String(label)}</Text>
                   </Animated.View>
                 </View>
               </TouchableOpacity>

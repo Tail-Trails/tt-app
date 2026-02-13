@@ -1,18 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
 import { useRouter, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-
 import React, { useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-
 import { AuthContext, useAuth } from '@/context/AuthContext';
 import { AccountContext } from '@/context/AccountContext';
 import { TrailsContext } from '@/context/TrailsContext';
-
 import { DogsContext, useDogs } from '@/context/DogsContext';
-import { ThemeProvider } from '@/context/ThemeContext';
 import LottieLoader from '@/components/LottieLoader';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -79,15 +74,13 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <AuthContext>
         <AccountContext>
-          <ThemeProvider>
-            <DogsContext>
-              <TrailsContext>
-                <GestureHandlerRootView style={styles.container}>
-                  <RootLayoutNav />
-                </GestureHandlerRootView>
-              </TrailsContext>
-            </DogsContext>
-          </ThemeProvider>
+          <DogsContext>
+            <TrailsContext>
+              <GestureHandlerRootView style={styles.container}>
+                <RootLayoutNav />
+              </GestureHandlerRootView>
+            </TrailsContext>
+          </DogsContext>
         </AccountContext>
       </AuthContext>
     </QueryClientProvider>

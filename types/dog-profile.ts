@@ -52,7 +52,7 @@ export interface DogProfile {
   nickname?: string;
   size: DogSize;
   age: number;
-  photo?: string;
+  image?: string;
   personality_tags: string[];
   vaccines?: Vaccine[];
   recall_reliability?: RecallReliability;

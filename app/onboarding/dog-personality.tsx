@@ -16,7 +16,7 @@ export default function DogPersonalityScreen() {
     nickname?: string;
     age: string;
     size: string;
-    photo?: string;
+    image?: string;
     isEditing?: string;
   }>();
   const { user } = useAuth();
@@ -66,7 +66,7 @@ export default function DogPersonalityScreen() {
         nickname: params.nickname || undefined,
         size: params.size as any,
         age: parseInt(params.age, 10),
-        photo: params.photo || undefined,
+        image: params.image || undefined,
         personality_tags: selectedTags,
         recall_reliability: recallReliability,
       };

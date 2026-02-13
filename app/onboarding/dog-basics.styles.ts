@@ -1,10 +1,10 @@
 import { StyleSheet } from 'react-native';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
   },
   content: {
     padding: 24,
@@ -16,13 +16,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: colors.accent,
+    color: theme.accentPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: colors.lightGreen,
+    color: theme.accentPrimary,
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3d4520',
   },
   progressDotActive: {
-    backgroundColor: colors.accent,
+    backgroundColor: theme.accentPrimary,
   },
   photoContainer: {
     width: 140,
@@ -54,14 +54,14 @@ const styles = StyleSheet.create({
   photoPlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: colors.mediumGreen,
+    backgroundColor: theme.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
   },
   photoPlaceholderText: {
     fontSize: 14,
-    color: colors.lightGreen,
+    color: theme.accentPrimary,
     fontWeight: '500' as const,
   },
   photoOverlay: {
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.accent,
+    backgroundColor: theme.accentPrimary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -81,20 +81,20 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: colors.accent,
+    color: theme.accentPrimary,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: colors.accent,
+    color: theme.accentPrimary,
     borderWidth: 1,
     borderColor: '#3d4520',
   },
   pickerButton: {
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   },
   pickerButtonText: {
     fontSize: 16,
-    color: colors.accent,
+    color: theme.accentPrimary,
   },
   pickerButtonTextPlaceholder: {
     color: '#5a6040',
@@ -128,14 +128,14 @@ const styles = StyleSheet.create({
   },
   pickerOptionText: {
     fontSize: 16,
-    color: colors.lightGreen,
+    color: theme.accentPrimary,
   },
   pickerOptionTextSelected: {
-    color: colors.accent,
+    color: theme.accentPrimary,
     fontWeight: '600' as const,
   },
   nextButton: {
-    backgroundColor: colors.accent,
+    backgroundColor: theme.accentPrimary,
     borderRadius: 12,
     padding: 18,
     alignItems: 'center',
@@ -144,7 +144,15 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontSize: 17,
     fontWeight: '600' as const,
-    color: colors.darkGreen,
+    color: theme.backgroundPrimary,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.backgroundPrimary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

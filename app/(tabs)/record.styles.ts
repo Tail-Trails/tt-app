@@ -1,10 +1,10 @@
 import { StyleSheet, Platform } from 'react-native';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
   },
   map: {
     ...StyleSheet.absoluteFillObject,
@@ -13,57 +13,57 @@ export default StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
     padding: 20,
   },
   webText: {
     marginTop: 16,
     fontSize: 16,
-    color: colors.muted,
+    color: theme.textMuted,
     textAlign: 'center',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: colors.muted,
+    color: theme.textMuted,
   },
   permissionContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
     padding: 32,
   },
   permissionTitle: {
     marginTop: 16,
     fontSize: 20,
     fontWeight: '700' as const,
-    color: colors.darkGreen,
+    color: theme.textPrimary,
     textAlign: 'center',
   },
   permissionText: {
     marginTop: 8,
     fontSize: 16,
-    color: colors.muted,
+    color: theme.textMuted,
     textAlign: 'center',
   },
   permissionButton: {
     marginTop: 24,
     paddingHorizontal: 32,
     paddingVertical: 16,
-    backgroundColor: colors.primary,
+    backgroundColor: theme.backgroundPrimary,
     borderRadius: 12,
   },
   permissionButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: theme.textMuted,
   },
   statsContainer: {
     position: 'absolute',
@@ -72,12 +72,46 @@ export default StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
   },
+  compactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  compactStats: {
+    flexDirection: 'row',
+    gap: 12,
+    flex: 1,
+  },
+  compactStatBox: {
+    backgroundColor: theme.backgroundSecondary,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    minWidth: 110,
+  },
+  stopButtonCompact: {
+    marginLeft: 12,
+    backgroundColor: '#111',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  stopButtonCompactText: {
+    color: '#fff',
+    fontWeight: '700' as const,
+    marginLeft: 6,
+  },
   statBox: {
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 16,
     padding: 16,
-  shadowColor: '#000',
+    shadowColor: theme.borderSubtle,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -85,13 +119,13 @@ export default StyleSheet.create({
   },
   statLabel: {
     fontSize: 13,
-    color: colors.muted,
+    color: theme.textMuted,
     fontWeight: '500' as const,
     marginBottom: 4,
   },
   statValue: {
     fontSize: 24,
-    color: colors.darkGreen,
+    color: theme.textPrimary,
     fontWeight: '700' as const,
   },
   controlContainer: {
@@ -106,7 +140,7 @@ export default StyleSheet.create({
     gap: 12,
     paddingHorizontal: 32,
     paddingVertical: 20,
-  backgroundColor: colors.primary,
+    backgroundColor: theme.accentSecondary,
     borderRadius: 50,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -115,18 +149,18 @@ export default StyleSheet.create({
     elevation: 8,
   },
   recordButtonActive: {
-    backgroundColor: '#dc2626',
+    backgroundColor: theme.accentSecondary,
   },
   recordButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: theme.backgroundPrimary,
   },
   bottomSheet: {
     position: 'absolute',
     left: 0,
     right: 0,
-  backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     shadowColor: '#000',
@@ -147,7 +181,7 @@ export default StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: colors.border,
+    backgroundColor: theme.borderSubtle,
     borderRadius: 2,
   },
   bottomSheetContent: {
@@ -163,14 +197,14 @@ export default StyleSheet.create({
   },
   statItem: {
     width: '31%',
-    backgroundColor: colors.surface,
+    backgroundColor: theme.backgroundSecondary,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
   },
   statItemLabel: {
     fontSize: 11,
-  color: colors.muted,
+    color: theme.textMuted,
     fontWeight: '600' as const,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
@@ -178,7 +212,7 @@ export default StyleSheet.create({
   },
   statItemValue: {
     fontSize: 18,
-    color: colors.darkGreen,
+    color: theme.textPrimary,
     fontWeight: '700' as const,
   },
   expandedContent: {
@@ -186,7 +220,7 @@ export default StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: theme.borderSubtle,
     marginVertical: 16,
   },
   optionRow: {
@@ -194,7 +228,7 @@ export default StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.backgroundSecondary,
     borderRadius: 12,
     marginBottom: 12,
   },
@@ -213,18 +247,18 @@ export default StyleSheet.create({
   optionTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: colors.darkGreen,
+    color: theme.textPrimary,
     marginBottom: 2,
   },
   optionSubtitle: {
     fontSize: 13,
-    color: colors.muted,
+    color: theme.textMuted,
   },
   optionBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
-    backgroundColor: colors.border,
+    backgroundColor: theme.borderSubtle,
   },
   optionBadgeActive: {
     backgroundColor: 'rgba(93, 107, 74, 0.15)',
@@ -232,10 +266,10 @@ export default StyleSheet.create({
   optionBadgeText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: colors.muted,
+    color: theme.textMuted,
   },
   optionBadgeTextActive: {
-    color: colors.primary,
+    color: theme.backgroundPrimary,
   },
   modalOverlay: {
     flex: 1,
@@ -257,7 +291,7 @@ export default StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: '#1f2937',
+    color: theme.backgroundPrimary,
     marginBottom: 12,
   },
   input: {
@@ -268,6 +302,7 @@ export default StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     marginTop: 8,
+    color: theme.backgroundPrimary,
   },
   modalButton: {
     flex: 1,
@@ -290,11 +325,11 @@ export default StyleSheet.create({
   recenterButton: {
     position: 'absolute',
     top: 60,
-    right: 20,
+    left: 20,
     width: 48,
     height: 48,
     borderRadius: 24,
-  backgroundColor: '#ffffff',
+    backgroundColor: theme.backgroundSecondary,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

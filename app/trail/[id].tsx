@@ -24,7 +24,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Trail } from '@/types/trail';
 
 import { formatDistance, formatDuration } from '@/utils/distance';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './[id].styles';
 
@@ -321,7 +321,7 @@ export default function TrailDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={theme.backgroundPrimary} />
         <Text style={styles.loadingText}>Loading trail...</Text>
       </View>
     );
@@ -371,7 +371,7 @@ export default function TrailDetailScreen() {
           <Share2 size={22} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton} onPress={handleSave}>
-          <Bookmark size={22} fill={isSaved ? colors.darkGreen : 'none'} />
+          <Bookmark size={22} fill={isSaved ? theme.textPrimary : 'none'} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton} onPress={handleMore}>
           <MoreVertical size={22} />
@@ -408,9 +408,9 @@ export default function TrailDetailScreen() {
                   disabled={isUploadingPhoto}
                 >
                   {isUploadingPhoto ? (
-                    <ActivityIndicator color={colors.white} size="small" />
+                    <ActivityIndicator color={theme.textPrimary} size="small" />
                   ) : (
-                    <Camera size={20} color={colors.white} />
+                    <Camera size={20} color={theme.textPrimary} />
                   )}
                 </TouchableOpacity>
               )}
@@ -422,11 +422,11 @@ export default function TrailDetailScreen() {
               disabled={isUploadingPhoto}
             >
               {isUploadingPhoto ? (
-                <ActivityIndicator size="large" color={colors.primary} />
+                <ActivityIndicator size="large" color={theme.backgroundPrimary} />
               ) : (
                 <>
                   <View style={styles.addPhotoIcon}>
-                    <Camera size={32} color={colors.primary} />
+                    <Camera size={32} color={theme.backgroundPrimary} />
                   </View>
                   <Text style={styles.addPhotoText}>Add a photo</Text>
                   <Text style={styles.addPhotoSubtext}>Make your trail memorable</Text>
@@ -462,19 +462,19 @@ export default function TrailDetailScreen() {
                     style={[styles.iconButton, styles.cancelIconButton]}
                     onPress={handleCancelEdit}
                   >
-                    <X size={18} color={colors.darkGreen} />
+                    <X size={18} color={theme.textPrimary} />
                   </TouchableOpacity>
                 </View>
               </View>
             ) : (
               <View style={styles.titleRow}>
-                <Text style={styles.title}>{trail.name || `Trail ${new Date(trail.createdAt).toLocaleDateString()}`}</Text>
+                <Text style={styles.title}>{trail.name || `Trail ${new Date(trail.createdAt ?? trail.date).toLocaleDateString()}`}</Text>
               </View>
             )}
             
             {trail.city && (
               <View style={styles.locationRow}>
-                <MapPin size={16} color={colors.lightGreen} />
+                <MapPin size={16} color={theme.textPrimary} />
                 <Text style={styles.location}>{trail.city}, {trail.country || 'Unknown'}</Text>
               </View>
             )}
@@ -502,7 +502,7 @@ export default function TrailDetailScreen() {
           <View style={styles.statsSection}>
             <View style={styles.statCard}>
                 <View style={styles.statIconContainer}>
-                <MapPin size={20} color={colors.white} strokeWidth={2.5} />
+                <MapPin size={20} color={theme.textPrimary} strokeWidth={2.5} />
               </View>
               <Text style={styles.statLabel}>Distance</Text>
               <Text style={styles.statValue}>{formatDistance(trail.distance)}</Text>
@@ -510,7 +510,7 @@ export default function TrailDetailScreen() {
 
             <View style={styles.statCard}>
                 <View style={styles.statIconContainer}>
-                <Clock size={20} color={colors.white} strokeWidth={2.5} />
+                <Clock size={20} color={theme.textPrimary} strokeWidth={2.5} />
               </View>
               <Text style={styles.statLabel}>Duration</Text>
               <Text style={styles.statValue}>{formatDuration(trail.duration)}</Text>
@@ -519,7 +519,7 @@ export default function TrailDetailScreen() {
             {trail.difficulty && (
               <View style={styles.statCard}>
                 <View style={styles.statIconContainer}>
-                  <IconOrEmoji IconComponent={TrendingUp} emoji="⛰️" size={20} color={colors.white} />
+                  <IconOrEmoji IconComponent={TrendingUp} emoji="⛰️" size={20} color={theme.textPrimary} />
                 </View>
                 <Text style={styles.statLabel}>Difficulty</Text>
                 <Text style={styles.statValue}>{trail.difficulty}</Text>
@@ -530,7 +530,7 @@ export default function TrailDetailScreen() {
           {trail.environment_tags && trail.environment_tags.length > 0 && !isEditingDetails && (
             <View style={styles.tagsSection}>
               <View style={styles.sectionHeader}>
-                <IconOrEmoji IconComponent={Tag} emoji="🏷️" size={18} color={colors.darkGreen} />
+                <IconOrEmoji IconComponent={Tag} emoji="🏷️" size={18} color={theme.textPrimary} />
                 <Text style={styles.sectionTitle}>Environment</Text>
               </View>
               <View style={styles.tagsGrid}>
@@ -553,7 +553,7 @@ export default function TrailDetailScreen() {
                 setIsEditingDetails(true);
               }}
             >
-              <Edit3 size={18} color={colors.primary} />
+              <Edit3 size={18} color={theme.backgroundPrimary} />
               <Text style={styles.editDetailsText}>Edit Trail Details</Text>
             </TouchableOpacity>
           )}
@@ -659,7 +659,7 @@ export default function TrailDetailScreen() {
                   style={[styles.actionButton, styles.cancelActionButton]}
                   onPress={handleCancelDetailsEdit}
                 >
-                  <X size={20} color={colors.darkGreen} />
+                  <X size={20} color={theme.textPrimary} />
                   <Text style={styles.cancelActionText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -675,7 +675,7 @@ export default function TrailDetailScreen() {
 
             <View style={styles.mapSection}>
             <View style={styles.sectionHeader}>
-              <IconOrEmoji IconComponent={Navigation} emoji="🧭" size={18} color={colors.darkGreen} />
+              <IconOrEmoji IconComponent={Navigation} emoji="🧭" size={18} color={theme.textPrimary} />
               <Text style={styles.sectionTitle}>Route Map</Text>
             </View>
             <View style={styles.mapContainer}>
@@ -688,7 +688,7 @@ export default function TrailDetailScreen() {
               />
             </View>
             <TouchableOpacity style={styles.directionsButton} onPress={handleGetDirections}>
-              <Navigation size={18} color="#fff" />
+              <IconOrEmoji IconComponent={Navigation} emoji="🧭" size={18} color="#fff" />
               <Text style={styles.directionsButtonText}>Get Directions</Text>
             </TouchableOpacity>
           </View>
@@ -699,7 +699,7 @@ export default function TrailDetailScreen() {
             {trail.maxElevation !== undefined && (
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                    <IconOrEmoji IconComponent={TrendingUp} emoji="⛰️" size={18} color={colors.primary} />
+                    <IconOrEmoji IconComponent={TrendingUp} emoji="⛰️" size={18} color={theme.backgroundPrimary} />
                   </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Elevation Gain</Text>
@@ -711,7 +711,7 @@ export default function TrailDetailScreen() {
             {trail.pace && (
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <IconOrEmoji IconComponent={Activity} emoji="🏃" size={18} color={colors.primary} />
+                  <IconOrEmoji IconComponent={Activity} emoji="🏃" size={18} color={theme.backgroundPrimary} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Pace</Text>
@@ -723,7 +723,7 @@ export default function TrailDetailScreen() {
             {trail.speed && (
               <View style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <IconOrEmoji IconComponent={Activity} emoji="⚡" size={18} color={colors.primary} />
+                  <IconOrEmoji IconComponent={Activity} emoji="⚡" size={18} color={theme.backgroundPrimary} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Max Speed</Text>
@@ -734,12 +734,12 @@ export default function TrailDetailScreen() {
 
             <View style={styles.detailRow}>
               <View style={styles.detailIcon}>
-                <IconOrEmoji IconComponent={Calendar} emoji="📅" size={18} color={colors.primary} />
+                <IconOrEmoji IconComponent={Calendar} emoji="📅" size={18} color={theme.backgroundPrimary} />
               </View>
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Date & Time</Text>
                 <Text style={styles.detailValue}>
-                  {new Date(trail.createdAt).toLocaleString('en-US', {
+                  {new Date(trail.createdAt ?? trail.date).toLocaleString('en-US', {
                     weekday: 'short',
                     year: 'numeric',
                     month: 'short',

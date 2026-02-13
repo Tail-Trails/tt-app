@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 
 export default StyleSheet.create({
   container: {
@@ -10,7 +10,7 @@ export default StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: colors.tabBarBg,
+    backgroundColor: theme.backgroundPrimary,
     borderRadius: 0,
     paddingVertical: 8,
     paddingHorizontal: 8,
@@ -25,8 +25,8 @@ export default StyleSheet.create({
     gap: 6,
   },
   tabButton: {
-    height: 44,
-    borderRadius: 22,
+    height: 64,
+    borderRadius: 16,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
@@ -38,10 +38,10 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   tabContent: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 4,
     paddingHorizontal: 0,
   },
   iconWrapper: {
@@ -51,8 +51,11 @@ export default StyleSheet.create({
     justifyContent: 'center',
   },
   label: {
-    color: colors.accent,
+    color: theme.textMuted,
     fontSize: 13,
     fontWeight: '600',
+  },
+  labelActive: {
+    color: theme.accentPrimary,
   },
 });

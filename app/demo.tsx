@@ -6,7 +6,7 @@ import { Stack } from 'expo-router';
 import TrailMap from '@/components/TrailMap';
 
 import { Clock, MapPin, Navigation, ArrowLeft, TrendingUp } from 'lucide-react-native';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 
 import { formatDistance, formatDuration } from '@/utils/distance';
 import { useRouter } from 'expo-router';
@@ -81,17 +81,17 @@ export default function DemoTrailScreen() {
 
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Navigation size={20} color={colors.primary} />
+            <Navigation size={20} color={theme.backgroundPrimary} />
             <Text style={styles.statValue}>{formatDistance(DEMO_TRAIL.distance)}</Text>
             <Text style={styles.statLabel}>Distance</Text>
           </View>
           <View style={styles.statItem}>
-            <Clock size={20} color={colors.primary} />
+            <Clock size={20} color={theme.backgroundPrimary} />
             <Text style={styles.statValue}>{formatDuration(DEMO_TRAIL.duration)}</Text>
             <Text style={styles.statLabel}>Time</Text>
           </View>
           <View style={styles.statItem}>
-            <TrendingUp size={20} color={colors.primary} />
+            <TrendingUp size={20} color={theme.backgroundPrimary} />
             <Text style={styles.statValue}>{DEMO_TRAIL.maxElevation}m</Text>
             <Text style={styles.statLabel}>Elevation</Text>
           </View>
@@ -113,14 +113,14 @@ export default function DemoTrailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: theme.backgroundPrimary,
   },
   scrollView: {
     flex: 1,
   },
   header: {
     height: 200,
-    backgroundColor: colors.primary,
+    backgroundColor: theme.backgroundPrimary,
     justifyContent: 'flex-end',
     padding: 20,
   },
@@ -159,9 +159,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 20,
-  backgroundColor: colors.surface,
+  backgroundColor: theme.backgroundSecondary,
   borderBottomWidth: 1,
-  borderBottomColor: colors.border,
+  borderBottomColor: theme.borderSubtle,
   },
   statItem: {
     alignItems: 'center',

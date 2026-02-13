@@ -10,7 +10,7 @@ import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
 
 import { MapPin, Search, Heart, Umbrella, Bookmark, Star, X, BarChart3, Navigation, Icon, ChevronLeft } from 'lucide-react-native';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 import { useTrails } from '@/context/TrailsContext';
 import { Trail } from '@/types/trail';
 import { formatDistance } from '@/utils/distance';
@@ -282,7 +282,7 @@ export default function ExploreScreen() {
               onPress={handleSearchBarPress}
               activeOpacity={0.7}
             >
-              <Search size={20} color={colors.muted} />
+                      <Search size={20} color={theme.textMuted} />
               <Text style={styles.searchPlaceholder}>Find trails</Text>
             </TouchableOpacity>
             {Platform.OS === 'web' && (
@@ -316,7 +316,7 @@ export default function ExploreScreen() {
                   >
                     <Icon
                       size={20}
-                      color={isSelected ? colors.light.tabIconSelected : colors.muted}
+                      color={isSelected ? theme.accentPrimary : theme.textMuted}
                       strokeWidth={2}
                     />
                     <Text
@@ -337,7 +337,7 @@ export default function ExploreScreen() {
       <View style={styles.categoryTrailsSection}>
         {isLoadingNearby ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.muted} />
+            <ActivityIndicator size="large" color={theme.textMuted} />
             <Text style={styles.loadingText}>Loading trails...</Text>
           </View>
         ) : filteredTrails.length > 0 ? (
@@ -383,7 +383,7 @@ export default function ExploreScreen() {
                 <Animated.View style={{ transform: [{ scale: anim }] }}>
                   <Bookmark 
                     size={20} 
-                    color={isSaved ? '#000' : colors.muted} 
+                    color={isSaved ? '#000' : theme.textMuted} 
                     fill={isSaved ? '#000' : 'none'}
                     strokeWidth={2} 
                   />
@@ -398,23 +398,23 @@ export default function ExploreScreen() {
                 <View style={styles.overlayBadges}>
                   {trail.difficulty && (
                     <View style={styles.badge}>
-                      <BarChart3 size={14} color={colors.paleYellow} strokeWidth={2.5} />
+                      <BarChart3 size={14} color={theme.accentPrimary} strokeWidth={2.5} />
                       <Text style={styles.badgeText}>{trail.difficulty}</Text>
                     </View>
                   )}
                   <View style={styles.badge}>
-                    <MapPin size={14} color={colors.paleYellow} strokeWidth={2.5} />
+                    <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
                     <Text style={styles.badgeText}>{formatDistance(trail.distance)}</Text>
                   </View>
                   {typeof (trail as any).distance_from_user === 'number' && (
                     <View style={styles.badge}>
-                      <MapPin size={14} color={colors.paleYellow} strokeWidth={2.5} />
+                      <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
                       <Text style={styles.badgeText}>{formatDistance((trail as any).distance_from_user)}</Text>
                     </View>
                   )}
                   {trail.rating && (
                     <View style={styles.badge}>
-                      <Star size={14} color={colors.accent} fill={colors.accent} strokeWidth={2} />
+                      <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
                       <Text style={styles.badgeText}>{trail.rating.toFixed(1)}</Text>
                     </View>
                   )}

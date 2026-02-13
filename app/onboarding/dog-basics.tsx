@@ -7,9 +7,9 @@ import { useDogs } from '@/context/DogsContext';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 
-import { ChevronDown, Camera, Upload } from 'lucide-react-native';
+import { ChevronDown, Camera, Upload, X } from 'lucide-react-native';
+import theme from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import colors from '@/constants/colors';
 import styles from './dog-basics.styles';
 
 import { DogSize, DOG_SIZES } from '@/types/dog-profile';
@@ -33,7 +33,7 @@ export default function DogBasicsScreen() {
       setNickname(dogProfile.nickname || '');
       setAge(dogProfile.age.toString());
       setSize(dogProfile.size);
-      setPhoto(dogProfile.photo || null);
+      setPhoto(dogProfile.image || null);
     }
   }, [dogProfile]);
 
@@ -135,7 +135,7 @@ export default function DogBasicsScreen() {
         nickname: nickname.trim(),
         age: parsedAge.toString(),
         size,
-        photo: photo || '',
+        image: photo || '',
         isEditing: dogProfile ? 'true' : 'false',
       },
     });
@@ -145,6 +145,13 @@ export default function DogBasicsScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}>
+        <TouchableOpacity
+          style={[styles.closeButton, { position: 'absolute', right: 16, top: insets.top + 12 }]}
+          onPress={() => router.back()}
+          accessibilityLabel="Close"
+        >
+          <X size={20} color={theme.accentPrimary} />
+        </TouchableOpacity>
         <View style={styles.header}>
           <Text style={styles.title}>{dogProfile ? 'Edit dog profile' : 'Tell us about your dog'}</Text>
           <Text style={styles.subtitle}>{dogProfile ? 'Update your dog\'s information' : 'Let\'s start with the basics'}</Text>
@@ -269,5 +276,3 @@ export default function DogBasicsScreen() {
     </>
   );
 }
-
-// styles extracted to app/onboarding/dog-basics.styles.ts

@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Square, Play, MapPin, Watch, Bell, ChevronUp, Navigation, ChevronDown, Upload } from 'lucide-react-native';
 import styles from './record.styles';
-import colors from '@/constants/colors';
+import theme from '@/constants/colors';
 import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -32,37 +32,37 @@ if (Platform.OS !== 'web') {
     if (data) {
       const { locations } = data as any;
       const location = locations[0];
-      
+
       if (location) {
         console.log('Background location update:', location.coords);
-        
+
         try {
           const coordsStr = await AsyncStorage.getItem('recording_coordinates');
           const coords = coordsStr ? JSON.parse(coordsStr) : [];
-          
+
           const newCoord = {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
           };
-          
+
           coords.push(newCoord);
           await AsyncStorage.setItem('recording_coordinates', JSON.stringify(coords));
-          
+
           if (location.coords.altitude) {
             const currentElevation = Math.max(0, location.coords.altitude);
             const maxElevationStr = await AsyncStorage.getItem('recording_max_elevation');
             const maxElevation = maxElevationStr ? parseFloat(maxElevationStr) : 0;
-            
+
             if (currentElevation > maxElevation) {
               await AsyncStorage.setItem('recording_max_elevation', currentElevation.toString());
             }
           }
-          
+
           if (location.coords.speed && location.coords.speed > 0) {
             const currentSpeed = location.coords.speed * 3.6;
             const maxSpeedStr = await AsyncStorage.getItem('recording_max_speed');
             const maxSpeed = maxSpeedStr ? parseFloat(maxSpeedStr) : 0;
-            
+
             if (currentSpeed > maxSpeed) {
               await AsyncStorage.setItem('recording_max_speed', currentSpeed.toString());
             }
@@ -99,7 +99,8 @@ export default function RecordScreen() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const bottomSheetHeight = Dimensions.get('window').height * 0.5;
-  const collapsedHeight = 280;
+  // Collapsed bottom sheet height (reduced for a slimmer compact overlay)
+  const collapsedHeight = 40;
   const navbarHeight = Platform.OS === 'ios' ? 100 : 92;
   const bottomSheetAnim = useRef(new Animated.Value(collapsedHeight)).current;
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -121,11 +122,11 @@ export default function RecordScreen() {
     if (Platform.OS !== 'web') {
       requestPermissions();
       loadRecordingState();
-      
+
       const interval = setInterval(() => {
         loadRecordingState();
       }, 1000);
-      
+
       return () => {
         clearInterval(interval);
         if (locationSubscription.current) {
@@ -148,12 +149,12 @@ export default function RecordScreen() {
         const coords = JSON.parse(coordsStr);
         setCoordinates(coords);
       }
-      
+
       const maxElevationStr = await AsyncStorage.getItem('recording_max_elevation');
       if (maxElevationStr) {
         setMaxElevation(parseFloat(maxElevationStr));
       }
-      
+
       const maxSpeedStr = await AsyncStorage.getItem('recording_max_speed');
       if (maxSpeedStr) {
         setMaxSpeed(parseFloat(maxSpeedStr));
@@ -175,15 +176,15 @@ export default function RecordScreen() {
   const requestPermissions = async () => {
     try {
       console.log('Requesting location permissions...');
-      
+
       const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
       console.log('Foreground permission status:', foregroundStatus);
-      
+
       if (foregroundStatus === 'granted') {
         try {
           const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
           console.log('Background permission status:', backgroundStatus);
-          
+
           if (backgroundStatus !== 'granted') {
             Alert.alert(
               'Background Location Required',
@@ -194,9 +195,9 @@ export default function RecordScreen() {
         } catch (bgError: any) {
           console.warn('Background permission error (non-critical):', bgError.message);
         }
-        
+
         setHasPermission(true);
-        
+
         try {
           const location = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced,
@@ -221,7 +222,7 @@ export default function RecordScreen() {
     } catch (error: any) {
       console.error('Permission error:', error);
       const errorMessage = error.message || 'Failed to get location permission';
-      
+
       if (errorMessage.includes('NSLocation') || errorMessage.includes('Info.plist')) {
         Alert.alert(
           'Configuration Error',
@@ -231,7 +232,7 @@ export default function RecordScreen() {
       } else {
         Alert.alert('Error', errorMessage);
       }
-      
+
       setHasPermission(false);
     } finally {
       setIsLoadingPermission(false);
@@ -258,11 +259,11 @@ export default function RecordScreen() {
       await AsyncStorage.removeItem('recording_max_elevation');
       await AsyncStorage.removeItem('recording_max_speed');
       await AsyncStorage.removeItem('recording_last_update');
-      
+
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      
+
       // do not perform reverse geocoding — only keep coordinates
       setStartLocation(null);
 
@@ -312,7 +313,7 @@ export default function RecordScreen() {
           };
           console.log('Foreground position update:', coord, 'Accuracy:', location.coords.accuracy);
           setCurrentLocation(coord);
-          
+
           setCoordinates(prev => {
             const newCoords = [...prev, coord];
             console.log('Total coordinates:', newCoords.length, 'Distance:', calculateTotalDistance(newCoords), 'm');
@@ -321,7 +322,7 @@ export default function RecordScreen() {
             });
             return newCoords;
           });
-          
+
           if (location.coords.altitude) {
             const currentElevation = Math.max(0, location.coords.altitude);
             setElevation(currentElevation);
@@ -330,7 +331,7 @@ export default function RecordScreen() {
               await AsyncStorage.setItem('recording_max_elevation', currentElevation.toString());
             }
           }
-          
+
           if (location.coords.speed && location.coords.speed > 0) {
             const currentSpeed = location.coords.speed * 3.6;
             setSpeed(currentSpeed);
@@ -357,13 +358,13 @@ export default function RecordScreen() {
     } catch (error: any) {
       console.error('Recording error:', error);
       let errorMessage = 'Failed to start recording. Please try again.';
-      
+
       if (error.message?.includes('rate limit')) {
         errorMessage = 'Please wait a moment before starting a new recording. Location service is temporarily limited.';
       } else if (error.message?.includes('Background location') || error.message?.includes('UIBackgroundModes')) {
         errorMessage = 'Background location tracking requires a custom development build. Please build the app with EAS or use foreground-only mode.';
       }
-      
+
       Alert.alert('Error', errorMessage);
       setIsRecording(false);
     }
@@ -374,7 +375,7 @@ export default function RecordScreen() {
       const distance = calculateTotalDistance(coordinates);
       const distanceKm = distance / 1000;
       const durationMin = duration / 60;
-      
+
       if (distanceKm > 0) {
         const paceMinPerKm = durationMin / distanceKm;
         const minutes = Math.floor(paceMinPerKm);
@@ -397,7 +398,7 @@ export default function RecordScreen() {
       },
       onPanResponderMove: (_, gestureState) => {
         const newValue = initialHeight.current - gestureState.dy;
-        
+
         if (newValue >= collapsedHeight && newValue <= bottomSheetHeight) {
           bottomSheetAnim.setValue(newValue);
         }
@@ -406,10 +407,10 @@ export default function RecordScreen() {
         if (Platform.OS !== 'web') {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
-        
+
         const threshold = (bottomSheetHeight + collapsedHeight) / 2;
         const currentValue = (bottomSheetAnim as any)._value;
-        
+
         if (gestureState.dy < -50) {
           expandBottomSheet();
         } else if (gestureState.dy > 50) {
@@ -459,7 +460,7 @@ export default function RecordScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
     console.log('Stopping recording...');
-    
+
     try {
       const hasTask = await TaskManager.isTaskRegisteredAsync(LOCATION_TRACKING_TASK);
       if (hasTask) {
@@ -468,7 +469,7 @@ export default function RecordScreen() {
     } catch (error) {
       console.error('Error stopping background location:', error);
     }
-    
+
     if (locationSubscription.current) {
       locationSubscription.current.remove();
       locationSubscription.current = null;
@@ -481,10 +482,10 @@ export default function RecordScreen() {
 
     const coordsStr = await AsyncStorage.getItem('recording_coordinates');
     const finalCoords = coordsStr ? JSON.parse(coordsStr) : coordinates;
-    
+
     const maxElevationStr = await AsyncStorage.getItem('recording_max_elevation');
     const finalMaxElevation = maxElevationStr ? parseFloat(maxElevationStr) : maxElevation;
-    
+
     const maxSpeedStr = await AsyncStorage.getItem('recording_max_speed');
     const finalMaxSpeed = maxSpeedStr ? parseFloat(maxSpeedStr) : maxSpeed;
 
@@ -505,7 +506,7 @@ export default function RecordScreen() {
     }
 
     const distance = calculateTotalDistance(finalCoords);
-    
+
     const distanceKm = distance / 1000;
     const durationMin = finalDuration / 60;
     let finalPace = '0:00';
@@ -515,7 +516,7 @@ export default function RecordScreen() {
       const seconds = Math.round((paceMinPerKm - minutes) * 60);
       finalPace = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
-    
+
     const trail: Trail = {
       id: Date.now().toString(),
       date: Date.now(),
@@ -612,20 +613,11 @@ export default function RecordScreen() {
   if (isLoadingPermission && Platform.OS !== 'web') {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={theme.backgroundPrimary} />
         <Text style={styles.loadingText}>Checking permissions...</Text>
       </View>
     );
   }
-
-  // if (Platform.OS === 'web') {
-  //   return (
-  //     <View style={styles.webContainer}>
-  //       <MapPin size={64} color="#666" />
-  //       <Text style={styles.webText}>GPS walk tracking is only available on mobile.</Text>
-  //     </View>
-  //   );
-  // }
 
   if (!hasPermission) {
     return (
@@ -635,8 +627,8 @@ export default function RecordScreen() {
         <Text style={styles.permissionText}>
           This app needs access to your location to track your dog walks.
         </Text>
-        <TouchableOpacity 
-          style={styles.permissionButton} 
+        <TouchableOpacity
+          style={styles.permissionButton}
           onPress={() => {
             if (Platform.OS !== 'web') {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -651,11 +643,11 @@ export default function RecordScreen() {
   }
 
   const distance = calculateTotalDistance(coordinates);
-  
+
   const progress = existingTrail && isRecording && coordinates.length > 0 && existingTrail.coordinates.length > 0
     ? Math.min((distance / existingTrail.distance) * 100, 100)
     : 0;
-  
+
   const showProgress = !!existingTrail;
 
   const recenterMap = async () => {
@@ -692,6 +684,9 @@ export default function RecordScreen() {
     }
   };
 
+  // adjust bottom sheet content padding when collapsed so compact stats aren't pushed out
+  const contentPaddingBottom = isExpanded ? navbarHeight : 12;
+
   return (
     <View style={styles.container}>
       {currentLocation && (
@@ -716,7 +711,7 @@ export default function RecordScreen() {
         onPress={recenterMap}
         activeOpacity={0.8}
       >
-        <Navigation size={24} color={colors.primary} />
+        <Navigation size={24} color={theme.accentPrimary} />
       </TouchableOpacity>
 
       <Animated.View
@@ -743,8 +738,31 @@ export default function RecordScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.bottomSheetContent}>
-          <View style={styles.statsGrid}>
+        <View style={[styles.bottomSheetContent, { paddingBottom: contentPaddingBottom }] }>
+          {/* Overlay states:
+              - not recording: show only the large Start Trail button
+              - recording & collapsed: show compact time/distance + stop button
+              - recording & expanded: show full stats grid + stop button
+          */}
+          {!isRecording ? null : !isExpanded ? (
+            <View style={styles.compactRow}>
+              <View style={styles.compactStats}>
+                <View style={styles.compactStatBox}>
+                  <Text style={styles.statItemLabel}>Time</Text>
+                  <Text style={styles.statItemValue}>{formatDuration(duration)}</Text>
+                </View>
+                <View style={styles.compactStatBox}>
+                  <Text style={styles.statItemLabel}>Distance</Text>
+                  <Text style={styles.statItemValue}>{formatDistance(distance)}</Text>
+                </View>
+              </View>
+              <TouchableOpacity style={styles.stopButtonCompact} onPress={stopRecording} activeOpacity={0.8}>
+                <Square size={18} color="#fff" fill="#fff" />
+                <Text style={styles.stopButtonCompactText}>Stop</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.statsGrid}>
             <View style={styles.statItem}>
               <Text style={styles.statItemLabel}>Time</Text>
               <Text style={styles.statItemValue}>{formatDuration(duration)}</Text>
@@ -771,56 +789,33 @@ export default function RecordScreen() {
                 <Text style={styles.statItemValue}>{progress.toFixed(0)}%</Text>
               </View>
             )}
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.recordButton,
-              isRecording && styles.recordButtonActive,
-            ]}
-            onPress={isRecording ? stopRecording : startRecording}
-            activeOpacity={0.8}
-          >
-            {isRecording ? (
-              <>
-                <Square size={24} color="#fff" fill="#fff" />
-                <Text style={styles.recordButtonText}>Stop & Save</Text>
-              </>
-            ) : (
-              <>
-                <Play size={24} color="#fff" fill="#fff" />
-                <Text style={styles.recordButtonText}>Start Trail</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          {isExpanded && (
-            <View style={styles.expandedContent}>
-              <View style={styles.divider} />
-
-              <TouchableOpacity
-                style={styles.optionRow}
-                onPress={() => {
-                  if (Platform.OS !== 'web') {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }
-                  Alert.alert('Alerts', 'Configure alerts for distance milestones and pace notifications.');
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={styles.optionIconContainer}>
-                  <Bell size={24} color="#5d6b4a" />
-                </View>
-                <View style={styles.optionTextContainer}>
-                  <Text style={styles.optionTitle}>Alerts</Text>
-                  {/* <Text style={styles.optionSubtitle}>Coming</Text> */}
-                </View>
-                <View style={[styles.optionBadge, styles.optionBadgeActive]}>
-                  <Text style={[styles.optionBadgeText, styles.optionBadgeTextActive]}>Coming Soon</Text>
-                </View>
-              </TouchableOpacity>
             </View>
           )}
+
+          {/* Primary control area */}
+          {!isRecording ? (
+            <View style={styles.controlContainer}>
+              <TouchableOpacity
+                style={styles.recordButton}
+                onPress={startRecording}
+                activeOpacity={0.8}
+              >
+                <Play size={24} color={theme.backgroundPrimary} fill={theme.backgroundPrimary} />
+                <Text style={styles.recordButtonText}>Start Trail</Text>
+              </TouchableOpacity>
+            </View>
+          ) : isExpanded ? (
+            <View style={styles.controlContainer}>
+              <TouchableOpacity
+                style={styles.recordButton}
+                onPress={stopRecording}
+                activeOpacity={0.8}
+              >
+                <Square size={20} color={theme.backgroundPrimary} fill={theme.backgroundPrimary} />
+                <Text style={styles.recordButtonText}>Stop & Save</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </View>
       </Animated.View>
       <Modal
@@ -838,25 +833,27 @@ export default function RecordScreen() {
                 value={formName}
                 onChangeText={setFormName}
                 style={styles.input}
+                placeholderTextColor={theme.backgroundPrimary}
               />
               <TextInput
                 placeholder="Description"
                 value={formDescription}
                 onChangeText={setFormDescription}
                 style={[styles.input, { height: 100 }]}
+                placeholderTextColor={theme.backgroundPrimary}
                 multiline
               />
-              <TouchableOpacity onPress={pickImage} style={[styles.input, { padding: 12, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }] }>
+              <TouchableOpacity onPress={pickImage} style={[styles.input, { padding: 12, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }]}>
                 {formPhoto ? (
                   <>
                     <Image source={{ uri: formPhoto }} style={{ width: 80, height: 60, borderRadius: 8, marginRight: 12 }} />
                     <Text style={{ flex: 1 }}>{formName || 'Selected image'}</Text>
-                    <Upload size={18} color={colors.primary} />
+                    <Upload size={18} color={theme.backgroundPrimary} />
                   </>
                 ) : (
                   <>
-                    <Upload size={18} color={colors.primary} />
-                    <Text style={{ marginLeft: 8, color: colors.primary }}>Add Photo (optional)</Text>
+                    <Upload size={18} color={theme.backgroundPrimary} />
+                    <Text style={{ marginLeft: 8, color: theme.backgroundPrimary }}>Add Photo (optional)</Text>
                   </>
                 )}
               </TouchableOpacity>

@@ -73,11 +73,14 @@ export const [DogsContext, useDogs] = createContextHook(() => {
     // If photo is a local URI (not a remote URL), we first create the dog without the photo,
     // then upload the photo with the returned dog ID and update the dog with the uploaded URL.
     let createPayload: any = { ...profile };
-    const isLocalPhoto = typeof profile.photo === 'string' && profile.photo && !profile.photo.startsWith('http');
-    if (isLocalPhoto) {
-      createPayload.photo = undefined;
+    // remove any legacy `photo` key if present
+    if (createPayload.photo) delete createPayload.photo;
+    const isLocalImage = typeof profile.image === 'string' && profile.image && !profile.image.startsWith('http');
+    if (isLocalImage) {
+      createPayload.image = undefined;
     }
 
+    console.log('createDogProfile - payload to create:', createPayload);
     const response = await fetch(`${API_URL}/dog`, {
       method: 'POST',
       headers: {
@@ -96,9 +99,9 @@ export const [DogsContext, useDogs] = createContextHook(() => {
     setDogProfiles(prev => [...prev, data]);
     setActiveDogId(data.id);
     // If we had a local photo, upload it now and patch the dog with the returned URL
-    if (isLocalPhoto && typeof profile.photo === 'string') {
+    if (isLocalImage && typeof profile.image === 'string') {
       try {
-        const uri = profile.photo as string;
+        const uri = profile.image as string;
         const uriParts = uri.split('/');
         const fileName = uriParts[uriParts.length - 1] || `dog_${Date.now()}.jpg`;
         const extMatch = fileName.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
@@ -123,26 +126,26 @@ export const [DogsContext, useDogs] = createContextHook(() => {
         });
 
         if (!uploadResp.ok) {
-          console.error('Dog photo upload failed during create:', await uploadResp.text());
+          console.error('Dog image upload failed during create:', await uploadResp.text());
         } else {
           const uploadData = await uploadResp.json();
           const publicUrl = uploadData.public_url || uploadData.publicUrl || uploadData.url;
           if (publicUrl) {
-            // Patch dog with new photo URL
-            const patchResp = await fetch(`${API_URL}/dog/${data.id}`, {
+            // Patch dog with new image URL
+              const patchResp = await fetch(`${API_URL}/dog/${data.id}`, {
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${session.accessToken}`,
               },
-              body: JSON.stringify({ ...data, photo: publicUrl }),
+                body: JSON.stringify({ ...data, image: publicUrl }),
             });
 
             if (patchResp.ok) {
               const patched = await patchResp.json();
               setDogProfiles(prev => prev.map(d => d.id === patched.id ? patched : d));
             } else {
-              console.error('Failed to patch dog with uploaded photo');
+              console.error('Failed to patch dog with uploaded image');
             }
           }
         }
@@ -158,10 +161,13 @@ export const [DogsContext, useDogs] = createContextHook(() => {
     if (!session) throw new Error('No session');
     if (!profile.id) throw new Error('Dog ID is required for update');
     // If photo is a local URI, upload it first with dog_id, then update the profile with the returned URL
+    console.log('updateDogProfile - incoming profile:', profile);
     let profileToSend = { ...profile } as any;
-    if (typeof profile.photo === 'string' && profile.photo && !profile.photo.startsWith('http')) {
+    // remove any legacy `photo` key before sending
+    if (profileToSend.photo) delete profileToSend.photo;
+    if (typeof profile.image === 'string' && profile.image && !profile.image.startsWith('http')) {
       try {
-        const uri = profile.photo as string;
+        const uri = profile.image as string;
         const uriParts = uri.split('/');
         const fileName = uriParts[uriParts.length - 1] || `dog_${Date.now()}.jpg`;
         const extMatch = fileName.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
@@ -193,13 +199,14 @@ export const [DogsContext, useDogs] = createContextHook(() => {
         const uploadData = await uploadResp.json();
         const publicUrl = uploadData.public_url || uploadData.publicUrl || uploadData.url;
         if (!publicUrl) throw new Error('Upload did not return a public URL');
-        profileToSend.photo = publicUrl;
+        profileToSend.image = publicUrl;
       } catch (err) {
         console.error('Error uploading dog photo during update:', err);
         throw err;
       }
     }
 
+    console.log('updateDogProfile - profileToSend before PUT:', profileToSend);
     const response = await fetch(`${API_URL}/dog/${profile.id}`, {
       method: 'PUT',
       headers: {
