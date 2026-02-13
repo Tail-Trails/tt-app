@@ -1,0 +1,1 @@
+const React=require("react");function LottieView(e){return null}module.exports=LottieView,module.exports.default=LottieView;
