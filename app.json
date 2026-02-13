@@ -38,7 +38,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.tailtrails.app",
+      "package": "com.tailtrailsclub.app",
+      "googleServicesFile": "./google-services.json",
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyAn3mei2obx2g6PZFahuexvYBt2T7_1alQ"
