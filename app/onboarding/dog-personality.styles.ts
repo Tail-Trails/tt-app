@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import theme from '@/constants/colors';
+import { Typography } from '@/constants/typography';
 
 const styles = StyleSheet.create({
   container: {
@@ -17,15 +18,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700' as const,
-    color: theme.accentPrimary,
+    ...Typography.h2(theme.accentPrimary),
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    color: theme.accentPrimary,
+    ...Typography.body(theme.accentPrimary),
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -60,35 +58,30 @@ const styles = StyleSheet.create({
     borderColor: theme.accentPrimary,
   },
   tagText: {
-    fontSize: 15,
-    fontWeight: '500' as const,
-    color: theme.accentPrimary,
+    ...Typography.label(theme.accentPrimary),
+    paddingHorizontal: 4,
   },
   tagTextSelected: {
-    color: theme.accentPrimary,
-    fontWeight: '600' as const,
+    ...Typography.label(theme.accentPrimary),
+    fontWeight: '700' as any,
+    paddingHorizontal: 4,
   },
   sectionHeader: {
     marginTop: 32,
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 24,
-    fontWeight: '700' as const,
-    color: theme.accentPrimary,
+    ...Typography.h2(theme.accentPrimary),
   },
   section: {
     marginBottom: 24,
   },
   label: {
-    fontSize: 17,
-    fontWeight: '600' as const,
-    color: theme.accentPrimary,
+    ...Typography.label(theme.accentPrimary),
     marginBottom: 4,
   },
   helperText: {
-    fontSize: 14,
-    color: theme.accentPrimary,
+    ...Typography.caption(theme.accentPrimary),
     marginBottom: 12,
   },
   recallContainer: {
@@ -110,13 +103,13 @@ const styles = StyleSheet.create({
     borderColor: theme.accentPrimary,
   },
   recallText: {
-    fontSize: 14,
-    fontWeight: '500' as const,
-    color: theme.accentPrimary,
+    ...Typography.label(theme.accentPrimary),
+    paddingHorizontal: 4,
   },
   recallTextSelected: {
-    color: theme.accentPrimary,
-    fontWeight: '600' as const,
+    ...Typography.label(theme.accentPrimary),
+    fontWeight: '700' as any,
+    paddingHorizontal: 4,
   },
   footer: {
     flexDirection: 'row',
@@ -140,9 +133,8 @@ const styles = StyleSheet.create({
     borderColor: theme.accentPrimary,
   },
   backButtonText: {
-    fontSize: 17,
-    fontWeight: '600' as const,
-    color: theme.accentPrimary,
+    ...Typography.label(theme.accentPrimary),
+    paddingHorizontal: 4,
   },
   finishButton: {
     flex: 1,
@@ -151,14 +143,14 @@ const styles = StyleSheet.create({
     padding: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 56,
   },
   finishButtonDisabled: {
     opacity: 0.6,
   },
   finishButtonText: {
-    fontSize: 17,
-    fontWeight: '600' as const,
-    color: '#1a1f0a',
+    ...Typography.button('#1a1f0a'),
+    paddingHorizontal: 4,
   },
 });
 

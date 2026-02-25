@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import theme from '@/constants/colors';
+import { Typography } from '@/constants/typography';
 
 export default StyleSheet.create({
   container: {
@@ -22,9 +23,7 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700' as const,
-    color: theme.accentPrimary,
+    ...Typography.h2(theme.accentPrimary),
   },
   content: {
     padding: 16,
@@ -41,9 +40,7 @@ export default StyleSheet.create({
     elevation: 3,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: theme.accentPrimary,
+    ...Typography.h2(theme.accentPrimary),
     marginBottom: 12,
   },
   row: {
@@ -55,8 +52,8 @@ export default StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.02)',
   },
   rowText: {
-    fontSize: 15,
-    color: theme.accentPrimary,
+    ...Typography.label(theme.accentPrimary),
+    flex: 1,
   },
   logoutCard: {
     backgroundColor: theme.backgroundSecondary,
@@ -68,7 +65,6 @@ export default StyleSheet.create({
     justifyContent: 'space-between',
   },
   logoutText: {
-    fontSize: 15,
-    color: theme.accentPrimary,
+    ...Typography.label(theme.accentPrimary),
   },
 });

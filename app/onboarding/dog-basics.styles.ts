@@ -1,5 +1,6 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import theme from '@/constants/colors';
+import { Typography } from '@/constants/typography';
 
 const styles = StyleSheet.create({
   container: {
@@ -14,15 +15,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700' as const,
-    color: theme.accentPrimary,
+    ...Typography.h2(theme.accentPrimary),
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    color: theme.accentPrimary,
+    ...Typography.body(theme.accentPrimary),
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -60,9 +58,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   photoPlaceholderText: {
-    fontSize: 14,
-    color: theme.accentPrimary,
-    fontWeight: '500' as const,
+    ...Typography.label(theme.accentPrimary),
   },
   photoOverlay: {
     position: 'absolute',
@@ -79,19 +75,27 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   label: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: theme.accentPrimary,
+    ...Typography.label(theme.accentPrimary),
     marginBottom: 8,
+    paddingHorizontal: Platform.OS === 'android' ? 4 : 0,
   },
   input: {
     backgroundColor: theme.backgroundPrimary,
     borderRadius: 12,
     padding: 16,
-    fontSize: 16,
     color: theme.accentPrimary,
     borderWidth: 1,
     borderColor: '#3d4520',
+    fontSize: 16,
+    ...Platform.select({
+      android: {
+        includeFontPadding: true,
+        textAlignVertical: 'center',
+        minHeight: 56,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+      },
+    }),
   },
   pickerButton: {
     backgroundColor: theme.backgroundPrimary,
@@ -104,8 +108,7 @@ const styles = StyleSheet.create({
     borderColor: '#3d4520',
   },
   pickerButtonText: {
-    fontSize: 16,
-    color: theme.accentPrimary,
+    ...Typography.body(theme.accentPrimary),
   },
   pickerButtonTextPlaceholder: {
     color: '#5a6040',
@@ -127,12 +130,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 254, 119, 0.15)',
   },
   pickerOptionText: {
-    fontSize: 16,
-    color: theme.accentPrimary,
+    ...Typography.body(theme.accentPrimary),
   },
   pickerOptionTextSelected: {
-    color: theme.accentPrimary,
-    fontWeight: '600' as const,
+    ...Typography.body(theme.accentPrimary),
+    fontWeight: '600' as any,
   },
   nextButton: {
     backgroundColor: theme.accentPrimary,
@@ -142,9 +144,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   nextButtonText: {
-    fontSize: 17,
-    fontWeight: '600' as const,
-    color: theme.backgroundPrimary,
+    ...Typography.button(theme.backgroundPrimary),
   },
   closeButton: {
     width: 40,

@@ -1,5 +1,6 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import theme from '@/constants/colors';
+import { Typography } from '@/constants/typography';
 
 export default StyleSheet.create({
   container: {
@@ -27,7 +28,8 @@ export default StyleSheet.create({
   tabButton: {
     height: 64,
     borderRadius: 16,
-    overflow: 'hidden',
+    // Change 'hidden' to 'visible' if clipping persists
+    overflow: Platform.OS === 'android' ? 'visible' : 'hidden', 
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -42,7 +44,9 @@ export default StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    paddingHorizontal: 0,
+    // Add a tiny bit of horizontal padding so the text isn't 
+    // pushed against the very edge of the flex container
+    paddingHorizontal: Platform.OS === 'android' ? 4 : 0,
   },
   iconWrapper: {
     width: 22,
@@ -51,9 +55,16 @@ export default StyleSheet.create({
     justifyContent: 'center',
   },
   label: {
-    color: theme.textMuted,
-    fontSize: 13,
-    fontWeight: '600',
+    ...Typography.label(theme.textMuted),
+    // keep Android-specific layout fixes
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        paddingRight: 2,
+        textAlign: 'center',
+        minWidth: 60,
+      },
+    }),
   },
   labelActive: {
     color: theme.accentPrimary,

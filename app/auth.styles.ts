@@ -1,5 +1,6 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import theme from '@/constants/colors';
+import { Typography } from '@/constants/typography';
 
 const styles = StyleSheet.create({
   container: {
@@ -20,16 +21,17 @@ const styles = StyleSheet.create({
     height: 100,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700' as const,
-    color: theme.textPrimary,
+    ...Typography.h2(theme.textPrimary),
     marginTop: 16,
+    textAlign: 'center',
+    paddingHorizontal: 8,
   },
   subtitle: {
-    fontSize: 16,
-    color: theme.textMuted,
+    ...Typography.body(theme.textMuted),
     marginTop: 8,
     textAlign: 'center',
+    // Subtle buffer for multi-line text
+    paddingHorizontal: Platform.OS === 'android' ? 8 : 0,
   },
   form: {
     width: '100%',
@@ -38,10 +40,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: theme.textMuted,
+    ...Typography.label(theme.textMuted),
     marginBottom: 8,
+    paddingHorizontal: Platform.OS === 'android' ? 4 : 0,
   },
   input: {
     backgroundColor: theme.backgroundPrimary,
@@ -49,32 +50,56 @@ const styles = StyleSheet.create({
     borderColor: theme.borderSubtle,
     borderRadius: 12,
     padding: 16,
-    fontSize: 16,
     color: theme.textPrimary,
+    fontSize: 16,
+    // Fix for text getting cut off inside the input field itself on Android
+    ...Platform.select({
+      android: {
+        includeFontPadding: true,
+        textAlignVertical: 'center',
+        minHeight: 56, // Ensure enough vertical space
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        paddingRight: 20, 
+      },
+      ios: {
+        paddingRight: 16,
+      },
+    }),
   },
   helperText: {
-    fontSize: 12,
-    color: theme.textMuted,
+    ...Typography.caption(theme.textMuted),
     marginTop: 8,
+    paddingRight: Platform.OS === 'android' ? 4 : 0,
   },
   button: {
     backgroundColor: theme.accentSecondary,
     borderRadius: 12,
-    padding: 16,
+    paddingVertical: 18, // Slightly taller buttons for better text fit
+    paddingHorizontal: 16,
     alignItems: 'center',
     marginTop: 12,
+    // Ensure the button container doesn't clip its own text
+    overflow: 'visible', 
+    minHeight: 56, // Standard accessible button height
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonPressed: {
-    transform: [{ scale: 0.997 }],
+    transform: [{ scale: 0.98 }], // Slightly more pronounced scale
     opacity: 0.95,
   },
   buttonText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: theme.backgroundPrimary,
+    ...Typography.button(theme.backgroundPrimary),
+    paddingHorizontal: 4,
+    textAlign: 'center',
+    // Prevent clipping on Android
+    ...Platform.select({
+      android: {
+        includeFontPadding: true,
+      }
+    })
   },
   secondaryButton: {
     padding: 16,
@@ -82,24 +107,27 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: theme.accentPrimary,
+    ...Typography.label(theme.accentPrimary),
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 24,
+    // Prevent the footer from squeezing the link text
+    flexWrap: 'wrap',
   },
   footerText: {
-    fontSize: 14,
-    color: theme.textMuted,
+    ...Typography.label(theme.textMuted),
+    paddingRight: Platform.OS === 'android' ? 4 : 0,
+    paddingVertical: 4,
   },
   linkText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: theme.accentPrimary,
+    ...Typography.label(theme.accentPrimary),
+    paddingHorizontal: 4,
+    paddingVertical: 4,
   },
 });
 

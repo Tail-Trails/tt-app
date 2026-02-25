@@ -1,5 +1,6 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import theme from '@/constants/colors';
+import { Typography } from '@/constants/typography';
 
 export default StyleSheet.create({
   safeContainer: {
@@ -42,13 +43,11 @@ export default StyleSheet.create({
     borderRadius: 24,
   },
   demoButtonText: {
-    color: theme.textPrimary,
-    fontWeight: 'bold',
+    ...Typography.label(theme.textPrimary),
+    fontWeight: '700' as any,
   },
   searchPlaceholder: {
-    fontSize: 16,
-    color: theme.textMuted,
-    fontWeight: '400' as const,
+    ...Typography.body(theme.textMuted),
   },
 
   largeTrailCard: {
@@ -100,9 +99,7 @@ export default StyleSheet.create({
     paddingBottom: 20,
   },
   overlayTrailName: {
-    fontSize: 28,
-    fontWeight: '700' as const,
-    color: theme.textPrimary,
+    ...Typography.h2(theme.textPrimary),
     marginBottom: 6,
     lineHeight: 34,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -110,8 +107,7 @@ export default StyleSheet.create({
     textShadowRadius: 4,
   },
   overlayLocation: {
-    fontSize: 16,
-    color: theme.textPrimary,
+    ...Typography.body(theme.textPrimary),
     marginBottom: 16,
     opacity: 0.95,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -134,9 +130,8 @@ export default StyleSheet.create({
     gap: 6,
   },
   badgeText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: '#fff',
+    ...Typography.label('#fff'),
+    paddingHorizontal: Platform.OS === 'android' ? 4 : 0,
     textTransform: 'capitalize' as const,
   },
   categoriesSection: {
@@ -151,20 +146,28 @@ export default StyleSheet.create({
   categoryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
+    justifyContent: 'center',
+    paddingHorizontal: 20, // Increase this for better touch targets
+    paddingVertical: 12,
     borderRadius: 28,
     backgroundColor: theme.textPrimary,
-    borderWidth: 0,
-    gap: 8,
+    // THE FIX: Prevent the button from being squeezed
+    alignSelf: 'flex-start', 
+    minHeight: 48,
+  },
+
+  categoryText: {
+    ...Typography.caption(theme.textMuted),
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        paddingRight: 10,
+        minWidth: 50,
+      },
+    }),
   },
   categoryButtonActive: {
     backgroundColor: theme.backgroundPrimary,
-  },
-  categoryText: {
-    fontSize: 16,
-    fontWeight: '500' as const,
-    color: theme.textMuted,
   },
   categoryTextActive: {
     color: theme.textPrimary,
@@ -182,8 +185,7 @@ export default StyleSheet.create({
     gap: 16,
   },
   loadingText: {
-    fontSize: 14,
-    color: theme.textMuted,
+    ...Typography.caption(theme.textMuted),
   },
   emptyContainer: {
     paddingVertical: 60,
@@ -192,8 +194,7 @@ export default StyleSheet.create({
     paddingHorizontal: 32,
   },
   emptyText: {
-    fontSize: 16,
-    color: theme.textMuted,
+    ...Typography.body(theme.textMuted),
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -238,10 +239,8 @@ export default StyleSheet.create({
   },
   searchModalInput: {
     flex: 1,
-    fontSize: 16,
-    color: theme.textPrimary,
+    ...Typography.body(theme.textPrimary),
     padding: 0,
-    fontWeight: '400' as const,
   },
   clearButton: {
     width: 24,
@@ -278,15 +277,11 @@ export default StyleSheet.create({
     flex: 1,
   },
   locationTitle: {
-    fontSize: 17,
-    fontWeight: '600' as const,
-    color: theme.textPrimary,
+    ...Typography.label(theme.textPrimary),
     marginBottom: 4,
   },
   locationSubtitle: {
-    fontSize: 14,
-    color: theme.textMuted,
-    fontWeight: '400' as const,
+    ...Typography.caption(theme.textMuted),
   },
   suggestionItem: {
     flexDirection: 'row',
@@ -311,14 +306,10 @@ export default StyleSheet.create({
     flex: 1,
   },
   suggestionTitle: {
-    fontSize: 17,
-    fontWeight: '600' as const,
-    color: theme.textPrimary,
+    ...Typography.label(theme.textPrimary),
     marginBottom: 4,
   },
   suggestionSubtitle: {
-    fontSize: 14,
-    color: theme.textMuted,
-    fontWeight: '400' as const,
+    ...Typography.caption(theme.textMuted),
   },
 });

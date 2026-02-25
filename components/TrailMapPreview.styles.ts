@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import theme from '@/constants/colors';
+import { Typography } from '@/constants/typography';
 
 export default StyleSheet.create({
   container: {
@@ -17,13 +18,11 @@ export default StyleSheet.create({
     padding: 12,
   },
   text: {
-    color: theme.backgroundPrimary,
-    fontWeight: 'bold',
-    fontSize: 16,
+    ...Typography.body(theme.backgroundPrimary),
+    fontWeight: '700' as any,
   },
   subtext: {
-    color: theme.textMuted,
-    fontSize: 12,
+    ...Typography.caption(theme.textMuted),
     marginTop: 4,
   },
 });

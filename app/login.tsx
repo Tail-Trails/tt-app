@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Text, View, TextInput, Pressable, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, TextInput, Pressable, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { Text } from '@/components';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/context/AuthContext';
@@ -44,7 +45,7 @@ export default function LoginScreen() {
   const [password, setPassword] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
-  const _extraFromConstants = (Constants.expoConfig && (Constants.expoConfig.extra as any)) || (Constants.manifest && (Constants.manifest.extra as any)) || {};
+  const _extraFromConstants = ((Constants as any).expoConfig?.extra) || ((Constants as any).manifest?.extra) || {};
   const extra = {
     EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID: _extraFromConstants.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID ?? process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
     EXPO_PUBLIC_GOOGLE_CLIENT_ID: _extraFromConstants.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
@@ -94,7 +95,7 @@ export default function LoginScreen() {
           const fb = await signInWithGoogle(getFirebaseAuth(), tokenStr);
           const session = await firebaseAuthExchange(fb.idToken);
           await signInWithToken(session);
-          if (Platform.OS !== 'web') {
+          if (true) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           }
           router.replace('/');
@@ -111,14 +112,14 @@ export default function LoginScreen() {
   const handleSignIn = async () => {
     console.log('handleSignIn invoked', { email, password });
     if (!email || !password) {
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
       Alert.alert('Error', 'Please enter your email and password');
       return;
     }
 
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
@@ -132,12 +133,12 @@ export default function LoginScreen() {
       const idToken = await credential.user.getIdToken();
       const session = await firebaseAuthExchange(idToken);
       await signInWithToken(session);
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
       router.replace('/');
     } catch (error: any) {
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
       console.error('Firebase sign-in error:', error);
@@ -147,13 +148,24 @@ export default function LoginScreen() {
     }
   };
 
+  const webKeyProps: any = typeof window !== 'undefined'
+    ? {
+        onKeyDown: (e: any) => {
+          const k = e?.nativeEvent?.key || e?.key;
+          if (k === 'Enter') {
+            handleSignIn();
+          }
+        },
+      }
+    : {};
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.content}>
-        <View style={styles.header}>
+          <View style={styles.header}>
           <Image
             source={{ uri: 'https://api.tailtrails.club/assets/logo' }}
             style={styles.logo}
@@ -175,6 +187,7 @@ export default function LoginScreen() {
               keyboardType="email-address"
               autoComplete="email"
               editable={!isLoading}
+              placeholderTextColor={theme.textMuted}
             />
           </View>
 
@@ -189,55 +202,30 @@ export default function LoginScreen() {
               autoCapitalize="none"
               autoComplete="password"
               editable={!isLoading}
+              placeholderTextColor={theme.textMuted}
             />
           </View>
 
           <Pressable
             style={({ pressed }) => [styles.button, isLoading && styles.buttonDisabled, pressed && styles.buttonPressed]}
             onPress={handleSignIn}
-            onKeyDown={(e: any) => {
-              // allow Enter key activation on web
-              const k = e?.nativeEvent?.key || e?.key;
-              if (k === 'Enter') {
-                handleSignIn();
-              }
-            }}
+            {...webKeyProps}
             accessibilityRole="button"
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={theme.backgroundPrimary} />
             ) : (
               <Text style={styles.buttonText}>Sign In</Text>
             )}
           </Pressable>
 
-          {/* <Pressable
-            style={({ pressed }) => [styles.button, { marginTop: 8, backgroundColor: '#db4437' }, pressed && styles.buttonPressed]}
-            onPress={async () => {
-              try {
-                if (Platform.OS !== 'web') {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                }
-                setIsLoading(true);
-                // Use the native flow (no proxy) in development client / standalone builds.
-                await promptAsync();
-              } catch (err: any) {
-                console.error('Prompt Google Auth error', err);
-                Alert.alert('Error', err?.message || String(err));
-                setIsLoading(false);
-              }
-            }}
-            disabled={!request || isLoading}
-            accessibilityRole="button"
-          >
-            <Text style={styles.buttonText}>Sign in with Google</Text>
-          </Pressable> */}
+          {/* ... */}
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don&apos;t have an account? </Text>
+            <Text style={styles.footerText}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => {
-              if (Platform.OS !== 'web') {
+              if (true) {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
               router.push('/signup');

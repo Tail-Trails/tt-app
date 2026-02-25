@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Text, View, StyleSheet, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, TextInput, Modal, ScrollView } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, TextInput, Modal, ScrollView } from 'react-native';
+import { Text } from '@/components';
 
 import TrailMap from '@/components/TrailMap';
 import { Image } from 'expo-image';
@@ -23,7 +24,7 @@ import { formatDistance, calculateTotalDistance, formatDuration } from '@/utils/
 
 const LOCATION_TRACKING_TASK = 'background-location-task';
 
-if (Platform.OS !== 'web') {
+if (true) {
   TaskManager.defineTask(LOCATION_TRACKING_TASK, async ({ data, error }: { data: any; error: any }) => {
     if (error) {
       console.error('Background location error:', error);
@@ -118,8 +119,13 @@ export default function RecordScreen() {
   const [formTags, setFormTags] = useState<string[]>([]);
   const [formDifficulty, setFormDifficulty] = useState<string | undefined>(undefined);
 
+  // Follow-only mode state when viewing an existing trail (via ?trailId=)
+  const [followMode, setFollowMode] = useState<boolean>(!!existingTrail);
+  const [userLocationFollow, setUserLocationFollow] = useState<Coordinate | null>(null);
+  const followLocationRef = useRef<Location.LocationSubscription | null>(null);
+
   useEffect(() => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       requestPermissions();
       loadRecordingState();
 
@@ -141,6 +147,66 @@ export default function RecordScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // If opened with an existing trail, enable follow mode and show the trail coordinates
+  useEffect(() => {
+    if (existingTrail) {
+      setFollowMode(true);
+    }
+  }, [existingTrail]);
+
+  // Start/stop following user location when followMode changes
+  useEffect(() => {
+    let active = true;
+
+    const startFollow = async () => {
+      if (!hasPermission) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission required', 'Location permission is required to follow the trail');
+          return;
+        }
+        setHasPermission(true);
+      }
+
+      try {
+        const sub = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.Balanced,
+            distanceInterval: 2,
+            timeInterval: 1000,
+          },
+          (loc) => {
+            if (!active) return;
+            const coord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
+            setUserLocationFollow(coord);
+            setCurrentLocation(coord);
+          }
+        );
+        followLocationRef.current = sub;
+      } catch (err) {
+        console.error('Follow watchPosition error', err);
+      }
+    };
+
+    if (followMode) {
+      startFollow();
+    } else {
+      if (followLocationRef.current) {
+        followLocationRef.current.remove();
+        followLocationRef.current = null;
+      }
+      setUserLocationFollow(null);
+    }
+
+    return () => {
+      active = false;
+      if (followLocationRef.current) {
+        followLocationRef.current.remove();
+        followLocationRef.current = null;
+      }
+    };
+  }, [followMode, hasPermission]);
 
   const loadRecordingState = async () => {
     try {
@@ -242,7 +308,7 @@ export default function RecordScreen() {
   // removed getReverseGeocode to avoid geocoding rate limits; we don't need city/country
 
   const startRecording = async () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
     console.log('Starting recording...');
@@ -404,7 +470,7 @@ export default function RecordScreen() {
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (Platform.OS !== 'web') {
+        if (true) {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
 
@@ -445,7 +511,7 @@ export default function RecordScreen() {
   };
 
   const toggleBottomSheet = () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     if (isExpanded) {
@@ -456,7 +522,7 @@ export default function RecordScreen() {
   };
 
   const stopRecording = async () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
     console.log('Stopping recording...');
@@ -553,7 +619,7 @@ export default function RecordScreen() {
 
     try {
       const saved = await saveTrail(toSave);
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
       setShowSaveModal(false);
@@ -582,7 +648,7 @@ export default function RecordScreen() {
   };
 
   const pickImage = async () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
@@ -610,7 +676,7 @@ export default function RecordScreen() {
   };
 
 
-  if (isLoadingPermission && Platform.OS !== 'web') {
+  if (isLoadingPermission && true) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.backgroundPrimary} />
@@ -630,7 +696,7 @@ export default function RecordScreen() {
         <TouchableOpacity
           style={styles.permissionButton}
           onPress={() => {
-            if (Platform.OS !== 'web') {
+            if (true) {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             }
             requestPermissions();
@@ -651,7 +717,7 @@ export default function RecordScreen() {
   const showProgress = !!existingTrail;
 
   const recenterMap = async () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     if (mapRef.current) {
@@ -692,7 +758,7 @@ export default function RecordScreen() {
       {currentLocation && (
         <TrailMap
           ref={mapRef}
-          coordinates={coordinates}
+          coordinates={existingTrail && !isRecording ? existingTrail.coordinates : coordinates}
           style={styles.map}
           initialRegion={{
             latitude: currentLocation.latitude,
@@ -700,8 +766,9 @@ export default function RecordScreen() {
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
           }}
+          userLocation={userLocationFollow}
           showsUserLocation
-          followsUserLocation={isRecording}
+          followsUserLocation={followMode || isRecording}
           showsMyLocationButton={false}
         />
       )}
@@ -795,14 +862,32 @@ export default function RecordScreen() {
           {/* Primary control area */}
           {!isRecording ? (
             <View style={styles.controlContainer}>
-              <TouchableOpacity
-                style={styles.recordButton}
-                onPress={startRecording}
-                activeOpacity={0.8}
-              >
-                <Play size={24} color={theme.backgroundPrimary} fill={theme.backgroundPrimary} />
-                <Text style={styles.recordButtonText}>Start Trail</Text>
-              </TouchableOpacity>
+              {existingTrail ? (
+                // Viewing an existing trail: show a simple close/back control
+                <TouchableOpacity
+                  style={styles.recordButton}
+                  onPress={() => {
+                    if (followLocationRef.current) {
+                      followLocationRef.current.remove();
+                      followLocationRef.current = null;
+                    }
+                    setFollowMode(false);
+                    router.back();
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.recordButtonText}>Close</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.recordButton}
+                  onPress={startRecording}
+                  activeOpacity={0.8}
+                >
+                  <Play size={24} color={theme.backgroundPrimary} fill={theme.backgroundPrimary} />
+                  <Text style={styles.recordButtonText}>Start Trail</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ) : isExpanded ? (
             <View style={styles.controlContainer}>

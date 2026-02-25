@@ -12,6 +12,7 @@ const MLMapView: any = (MapLibreGL as any).MapView;
     zoomEnabled?: boolean;
     showsUserLocation?: boolean;
     followsUserLocation?: boolean;
+    userLocation?: { latitude: number; longitude: number } | null;
     showsMyLocationButton?: boolean;
     initialRegion?: {
       latitude: number;
@@ -43,6 +44,7 @@ const MLMapView: any = (MapLibreGL as any).MapView;
     zoomEnabled = true,
     showsUserLocation = false,
     followsUserLocation = false,
+    userLocation = null,
     showsMyLocationButton = false,
     initialRegion,
     mapStyleURL,
@@ -87,12 +89,19 @@ const MLMapView: any = (MapLibreGL as any).MapView;
         attributionEnabled={false}
       >
         {showsUserLocation && <MapLibreGL.UserLocation />}
-        {center && (
+
+        {followsUserLocation && userLocation ? (
           <MapLibreGL.Camera
-            centerCoordinate={center}
+            centerCoordinate={[userLocation.longitude, userLocation.latitude]}
             zoomLevel={zoom}
-            // animationMode={'flyTo'}
           />
+        ) : (
+          center && (
+            <MapLibreGL.Camera
+              centerCoordinate={center}
+              zoomLevel={zoom}
+            />
+          )
         )}
 
         {geojson && (
@@ -102,6 +111,12 @@ const MLMapView: any = (MapLibreGL as any).MapView;
               style={{ lineColor: theme.backgroundPrimary, lineWidth: 4 }}
             />
           </MapLibreGL.ShapeSource>
+        )}
+        {userLocation && (
+          <MapLibreGL.PointAnnotation
+            id="userMarker"
+            coordinate={[userLocation.longitude, userLocation.latitude]}
+          />
         )}
       </MLMapView>
     );

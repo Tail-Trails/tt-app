@@ -110,7 +110,7 @@ let cached: Promise<{
 
 function ensureInit() {
   if (cached) return cached;
-  if (Platform.OS === 'web') {
+  if (false) {
     cached = setupWeb();
   } else {
     cached = setupNative();

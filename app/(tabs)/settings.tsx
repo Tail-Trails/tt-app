@@ -1,16 +1,19 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { Text } from '@/components';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import styles from './settings.styles';
 import theme from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
+import LottieLoader from '@/components/LottieLoader';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const auth = useAuth();
+  const [showLoader, setShowLoader] = useState(false);
 
   const handleRow = (label: string, path?: string) => {
     if (path) {
@@ -70,11 +73,61 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Debug</Text>
+          <TouchableOpacity style={styles.row} onPress={() => setShowLoader(true)}>
+            <Text style={styles.rowText}>Show Lottie Loader</Text>
+            <ChevronRight size={18} color={theme.accentPrimary} />
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity style={styles.logoutCard} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
           <ChevronRight size={18} color={theme.accentPrimary} />
         </TouchableOpacity>
       </ScrollView>
+
+      {showLoader && (
+        <View style={overlayStyles.overlay}>
+          <View style={overlayStyles.container}>
+            <LottieLoader size={220} />
+            <TouchableOpacity style={overlayStyles.close} onPress={() => setShowLoader(false)}>
+              <Text style={overlayStyles.closeText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
+
+const overlayStyles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  container: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  close: {
+    marginTop: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#e5e7eb',
+  },
+  closeText: {
+    color: '#111827',
+    fontWeight: '600',
+  },
+});

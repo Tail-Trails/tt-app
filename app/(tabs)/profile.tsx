@@ -10,8 +10,8 @@ import {
   TextInput,
   Modal,
   Animated,
-  Text,
 } from 'react-native';
+import { Text } from '@/components';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
@@ -82,14 +82,14 @@ export default function ProfileScreen() {
   };
 
   const handleTabPress = (tab: ProfileTab) => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setSelectedTab(tab);
   };
 
   const handleNavigateToTrail = (trailId: string) => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     router.push(`/trail/${trailId}`);
@@ -105,7 +105,7 @@ export default function ProfileScreen() {
   };
 
   const handleBookmarkPress = async (trailId: string) => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
@@ -131,7 +131,7 @@ export default function ProfileScreen() {
         await removeTrailBookmark(trailId);
       } else {
         await saveTrailBookmark(trailId);
-        if (Platform.OS !== 'web') {
+        if (true) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
       }
@@ -141,7 +141,7 @@ export default function ProfileScreen() {
   };
 
   const handleSignOut = async () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     Alert.alert(
@@ -153,14 +153,14 @@ export default function ProfileScreen() {
           text: 'Sign Out',
           style: 'destructive',
           onPress: async () => {
-            if (Platform.OS !== 'web') {
+            if (true) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
             setIsLoading(true);
             try {
               await signOut();
             } catch (error: any) {
-              if (Platform.OS !== 'web') {
+              if (true) {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
               }
               Alert.alert('Error', error.message || 'Failed to sign out');
@@ -174,21 +174,21 @@ export default function ProfileScreen() {
   };
 
   const handleEditDogProfile = () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     router.push('/onboarding/dog-basics');
   };
 
   const handleOpenEditModal = () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setShowEditModal(true);
   };
 
   const handleCloseEditModal = () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setShowEditModal(false);
@@ -199,7 +199,7 @@ export default function ProfileScreen() {
   };
 
   const handlePickImage = async () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
@@ -223,7 +223,7 @@ export default function ProfileScreen() {
   };
 
   const handleSaveProfile = async () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
@@ -285,7 +285,7 @@ export default function ProfileScreen() {
         image: finalPhoto,
       });
 
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
 
@@ -293,7 +293,7 @@ export default function ProfileScreen() {
       Alert.alert('Success', 'Profile updated successfully!');
     } catch (error: any) {
       console.error('Failed to save profile:', error);
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
       Alert.alert('Error', error?.message || 'Failed to update profile');

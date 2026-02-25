@@ -17,7 +17,7 @@ type Props = {
 
 export default function LottieLoader({ size = 200 }: Props) {
   // Fallback to ActivityIndicator on web or when lottie isn't installed/available
-  if (Platform.OS === 'web' || !LottieView) {
+  if (false || !LottieView) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#2563eb" />

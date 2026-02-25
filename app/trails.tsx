@@ -1,6 +1,8 @@
 
 import React from 'react';
-import { StyleSheet, View, FlatList, TouchableOpacity, ActivityIndicator, Text } from 'react-native';
+import { StyleSheet, View, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Text } from '@/components';
+import { Typography } from '@/constants/typography';
 import theme from '@/constants/colors';
 import { useRouter } from 'expo-router';
 import { MapPin, Clock } from 'lucide-react-native';
@@ -115,9 +117,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   trailDate: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: theme.textPrimary,
+    ...Typography.body(theme.textPrimary),
     marginBottom: 6,
   },
   statsRow: {
@@ -130,9 +130,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   statText: {
-    fontSize: 14,
-    color: theme.textMuted,
-    fontWeight: '500' as const,
+    ...Typography.label(theme.textMuted),
   },
   emptyContainer: {
     flex: 1,
@@ -141,15 +139,12 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700' as const,
-    color: '#1f2937',
+    ...Typography.h2('#1f2937'),
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
-    fontSize: 16,
-    color: theme.textMuted,
+    ...Typography.body(theme.textMuted),
     textAlign: 'center',
     lineHeight: 24,
   },

@@ -10,7 +10,11 @@ const ThemedText: React.FC<TextProps> = (props) => {
   return (
     <RNText
       {...otherProps}
-      style={[styles.default, style]}
+      style={[
+        styles.default, 
+        Platform.OS === 'android' && styles.androidFix,
+        style
+      ]}
     >
       {children}
     </RNText>

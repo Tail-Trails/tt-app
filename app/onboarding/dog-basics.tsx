@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, StyleSheet, TouchableOpacity, TextInput, Image, Alert, ScrollView, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, Image, Alert, ScrollView, Platform, ActivityIndicator } from 'react-native';
+import { Text } from '@/components';
 
 import { useRouter, Stack } from 'expo-router';
 
@@ -38,7 +39,7 @@ export default function DogBasicsScreen() {
   }, [dogProfile]);
 
   const pickImage = async () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
@@ -60,14 +61,14 @@ export default function DogBasicsScreen() {
 
     if (!result.canceled && result.assets[0]) {
       setPhoto(result.assets[0].uri);
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     }
   };
 
   const takePhoto = async () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
@@ -88,7 +89,7 @@ export default function DogBasicsScreen() {
 
     if (!result.canceled && result.assets[0]) {
       setPhoto(result.assets[0].uri);
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     }
@@ -123,7 +124,7 @@ export default function DogBasicsScreen() {
       return;
     }
 
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
@@ -216,7 +217,7 @@ export default function DogBasicsScreen() {
           <TouchableOpacity
             style={styles.pickerButton}
             onPress={() => {
-              if (Platform.OS !== 'web') {
+              if (true) {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
               setShowSizePicker(!showSizePicker);
@@ -235,7 +236,7 @@ export default function DogBasicsScreen() {
                   key={s}
                   style={[styles.pickerOption, size === s && styles.pickerOptionSelected]}
                   onPress={() => {
-                    if (Platform.OS !== 'web') {
+                    if (true) {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     }
                     setSize(s);

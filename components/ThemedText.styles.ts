@@ -5,7 +5,9 @@ export default StyleSheet.create({
     // Put any default font styles here (like color or family)
   },
   androidFix: {
-    paddingRight: 2,
-    includeFontPadding: false,
+    includeFontPadding: true,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    textAlignVertical: 'center',
   },
 });

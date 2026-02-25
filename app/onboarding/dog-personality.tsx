@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, TouchableOpacity, ScrollView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, TouchableOpacity, ScrollView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { Text } from '@/components';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ChevronLeft } from 'lucide-react-native';
@@ -36,7 +37,7 @@ export default function DogPersonalityScreen() {
   }, [dogProfile, isEditing]);
 
   const toggleTag = (tag: string) => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
@@ -51,7 +52,7 @@ export default function DogPersonalityScreen() {
       return;
     }
 
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
@@ -79,7 +80,7 @@ export default function DogPersonalityScreen() {
         await createDogProfile(profileData);
       }
 
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
 
@@ -151,7 +152,7 @@ export default function DogPersonalityScreen() {
                     recallReliability === option && styles.recallOptionSelected,
                   ]}
                   onPress={() => {
-                    if (Platform.OS !== 'web') {
+                    if (true) {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     }
                     setRecallReliability(option);

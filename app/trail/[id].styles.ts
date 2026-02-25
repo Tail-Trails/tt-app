@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import theme from '@/constants/colors';
+import { Typography } from '@/constants/typography';
 
 const styles = StyleSheet.create({
     container: {
@@ -47,9 +48,7 @@ const styles = StyleSheet.create({
     },
     loadingText: {
         marginTop: 16,
-        fontSize: 16,
-        color: theme.accentPrimary,
-        fontWeight: '500' as const,
+        ...Typography.body(theme.accentPrimary),
     },
     heroSection: {
         position: 'relative',
@@ -106,14 +105,11 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     addPhotoText: {
-        fontSize: 18,
-        fontWeight: '600' as const,
-        color: theme.textPrimary,
+        ...Typography.h2(theme.textPrimary),
         marginBottom: 4,
     },
     addPhotoSubtext: {
-        fontSize: 14,
-        color: theme.backgroundSecondary,
+        ...Typography.caption(theme.backgroundSecondary),
     },
     contentWrapper: {
         backgroundColor: theme.backgroundPrimary,
@@ -128,6 +124,15 @@ const styles = StyleSheet.create({
     titleSection: {
         marginBottom: 20,
     },
+    dateRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 8,
+    },
+    dateText: {
+        ...Typography.body(theme.backgroundSecondary),
+    },
     titleRow: {
         flexDirection: 'row',
         alignItems: 'flex-start',
@@ -136,10 +141,27 @@ const styles = StyleSheet.create({
     },
     title: {
         flex: 1,
-        fontSize: 32,
-        fontWeight: '700' as const,
-        color: theme.textPrimary,
+        ...Typography.h1(theme.textPrimary),
         lineHeight: 40,
+    },
+    authorRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        marginTop: 8,
+        marginBottom: 16,
+    },
+    avatar: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: theme.backgroundSecondary,
+    },
+    avatarText: {
+        ...Typography.label(theme.accentPrimary),
+    },
+    authorName: {
+        ...Typography.body(theme.backgroundPrimary),
     },
     editIconButton: {
         width: 40,
@@ -154,9 +176,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     nameInput: {
-        fontSize: 28,
-        fontWeight: '700' as const,
-        color: theme.textPrimary,
+        ...Typography.h2(theme.textPrimary),
         backgroundColor: theme.textPrimary,
         borderWidth: 2,
         borderColor: theme.backgroundPrimary,
@@ -165,8 +185,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     nameInputInDetails: {
-        fontSize: 16,
-        color: theme.textPrimary,
+        ...Typography.body(theme.textPrimary),
         backgroundColor: theme.backgroundPrimary,
         borderWidth: 1,
         borderColor: theme.accentPrimary,
@@ -197,9 +216,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     location: {
-        fontSize: 16,
-        color: theme.backgroundSecondary,
-        fontWeight: '500' as const,
+        ...Typography.body(theme.backgroundSecondary),
     },
     ratingRow: {
         flexDirection: 'row',
@@ -214,8 +231,7 @@ const styles = StyleSheet.create({
         borderColor: theme.borderSubtle,
     },
     reviewText: {
-        fontSize: 16,
-        color: theme.backgroundPrimary,
+        ...Typography.body(theme.backgroundPrimary),
         lineHeight: 24,
     },
     statsSection: {
@@ -247,15 +263,11 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     statLabel: {
-        fontSize: 13,
-        color: theme.backgroundSecondary,
-        fontWeight: '500' as const,
+        ...Typography.caption(theme.backgroundSecondary),
         marginBottom: 4,
     },
     statValue: {
-        fontSize: 20,
-        color: theme.backgroundPrimary,
-        fontWeight: '700' as const,
+        ...Typography.h2(theme.accentPrimary),
     },
     tagsSection: {
         backgroundColor: theme.backgroundSecondary,
@@ -275,9 +287,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     sectionTitle: {
-        fontSize: 18,
-        fontWeight: '700' as const,
-        color: theme.backgroundPrimary,
+        ...Typography.h2(theme.backgroundPrimary),
     },
     tagsGrid: {
         flexDirection: 'row',
@@ -291,9 +301,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     tagText: {
-        fontSize: 14,
-        fontWeight: '500' as const,
-        color: theme.backgroundSecondary,
+        ...Typography.label(theme.backgroundSecondary),
     },
     editDetailsButton: {
         flexDirection: 'row',
@@ -309,9 +317,7 @@ const styles = StyleSheet.create({
         borderColor: theme.backgroundPrimary,
     },
     editDetailsText: {
-        fontSize: 16,
-        fontWeight: '600' as const,
-        color: theme.backgroundPrimary,
+        ...Typography.label(theme.backgroundPrimary),
     },
     editSection: {
         backgroundColor: theme.backgroundSecondary,
@@ -325,9 +331,7 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     editSectionTitle: {
-        fontSize: 16,
-        fontWeight: '700' as const,
-        color: theme.textPrimary,
+        ...Typography.h2(theme.textPrimary),
         marginBottom: 12,
     },
     ratingStars: {
@@ -343,8 +347,7 @@ const styles = StyleSheet.create({
         borderColor: theme.accentPrimary,
         borderRadius: 12,
         padding: 16,
-        fontSize: 15,
-        color: theme.textPrimary,
+        ...Typography.body(theme.textPrimary),
         minHeight: 120,
     },
     difficultyOptions: {
@@ -366,9 +369,7 @@ const styles = StyleSheet.create({
         borderColor: theme.backgroundPrimary,
     },
     difficultyChipText: {
-        fontSize: 15,
-        fontWeight: '600' as const,
-        color: theme.backgroundSecondary,
+        ...Typography.label(theme.backgroundSecondary),
     },
     difficultyChipTextSelected: {
         color: theme.textPrimary,
@@ -386,9 +387,7 @@ const styles = StyleSheet.create({
         borderColor: theme.backgroundPrimary,
     },
     editTagChipText: {
-        fontSize: 14,
-        fontWeight: '500' as const,
-        color: theme.backgroundSecondary,
+        ...Typography.label(theme.backgroundSecondary),
     },
     editTagChipTextSelected: {
         color: theme.textPrimary,
@@ -413,17 +412,13 @@ const styles = StyleSheet.create({
         borderColor: theme.accentPrimary,
     },
     cancelActionText: {
-        fontSize: 16,
-        fontWeight: '600' as const,
-        color: theme.textPrimary,
+        ...Typography.label(theme.textPrimary),
     },
     saveActionButton: {
         backgroundColor: theme.backgroundPrimary,
     },
     saveActionText: {
-        fontSize: 16,
-        fontWeight: '600' as const,
-        color: theme.textPrimary,
+        ...Typography.label(theme.textPrimary),
     },
     mapSection: {
         marginBottom: 20,
@@ -447,8 +442,7 @@ const styles = StyleSheet.create({
     },
     webMapText: {
         marginTop: 12,
-        fontSize: 14,
-        color: theme.backgroundSecondary,
+        ...Typography.caption(theme.backgroundSecondary),
     },
     directionsButton: {
         flexDirection: 'row',
@@ -466,9 +460,7 @@ const styles = StyleSheet.create({
         elevation: 4,
     },
     directionsButtonText: {
-        fontSize: 16,
-        fontWeight: '700' as const,
-        color: theme.textPrimary,
+        ...Typography.label(theme.textPrimary),
     },
     detailsSection: {
         backgroundColor: theme.backgroundSecondary,
@@ -481,9 +473,7 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     detailsTitle: {
-        fontSize: 18,
-        fontWeight: '700' as const,
-        color: theme.backgroundPrimary,
+        ...Typography.h2(theme.backgroundPrimary),
         marginBottom: 16,
     },
     detailRow: {
@@ -506,15 +496,82 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     detailLabel: {
-        fontSize: 13,
-        fontWeight: '600' as const,
-        color: theme.backgroundSecondary,
+        ...Typography.caption(theme.backgroundSecondary),
         marginBottom: 2,
     },
     detailValue: {
-        fontSize: 16,
-        color: theme.backgroundPrimary,
-        fontWeight: '500' as const,
+        ...Typography.body(theme.backgroundPrimary),
+    },
+    startButton: {
+        flex: 1,
+        backgroundColor: theme.accentPrimary,
+        borderRadius: 16,
+        paddingVertical: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.16,
+        shadowRadius: 12,
+        elevation: 6,
+    },
+    startButtonText: {
+        ...Typography.h2(theme.backgroundPrimary),
+    },
+    reviewsCard: {
+        width: 140,
+        backgroundColor: theme.backgroundSecondary,
+        borderRadius: 16,
+        padding: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    reviewsTitle: {
+        ...Typography.label(theme.backgroundSecondary),
+        marginBottom: 8,
+    },
+    reviewStars: {
+        flexDirection: 'row',
+        gap: 6,
+    },
+    /* Map modal / fullscreen map styles */
+    mapModal: {
+        flex: 1,
+        backgroundColor: theme.backgroundPrimary,
+    },
+    mapModalHeader: {
+        height: 64,
+        paddingHorizontal: 16,
+        justifyContent: 'center',
+    },
+    mapModalClose: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'transparent',
+    },
+    fullscreenMapContainer: {
+        flex: 1,
+        backgroundColor: theme.borderSubtle,
+    },
+    fullscreenMap: {
+        width: '100%',
+        height: '100%',
+    },
+    mapModalFooter: {
+        padding: 16,
+        backgroundColor: theme.backgroundPrimary,
+    },
+    beginNavButton: {
+        backgroundColor: theme.accentPrimary,
+        borderRadius: 16,
+        paddingVertical: 14,
+        alignItems: 'center',
+    },
+    beginNavText: {
+        ...Typography.h2(theme.backgroundPrimary),
     },
 });
 

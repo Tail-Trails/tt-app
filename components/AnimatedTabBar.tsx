@@ -1,11 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { TouchableOpacity, View, StyleSheet, Animated, Text, Platform } from 'react-native';
+import { TouchableOpacity, View, StyleSheet, Animated, Platform } from 'react-native';
+import { Text } from '@/components';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import styles from './AnimatedTabBar.styles';
 import theme from '@/constants/colors';
-
 
 console.log('[init] components/AnimatedTabBar.tsx loaded');
 
@@ -58,7 +58,7 @@ export function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarP
           const isFocused = state.index === index;
 
           const onPress = () => {
-            if (Platform.OS !== 'web') {
+            if (true) {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             }
 

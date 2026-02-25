@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Text, View, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { Text } from '@/components';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/context/AuthContext';
@@ -9,6 +10,7 @@ import { getFirebaseAuth, createUserWithEmailAndPassword, updateProfile, signInW
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import Constants from 'expo-constants';
+import theme from '@/constants/colors';
 import styles from './auth.styles';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -79,7 +81,7 @@ export default function SignupScreen() {
           const fb = await signInWithGoogle(getFirebaseAuth(), tokenStr);
           const session = await firebaseAuthExchange(fb.idToken);
           await signInWithToken(session);
-          if (Platform.OS !== 'web') {
+          if (true) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           }
           router.replace('/');
@@ -95,14 +97,14 @@ export default function SignupScreen() {
 
   const handleSignUp = async () => {
     if (!email || !name || !password) {
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
@@ -119,12 +121,12 @@ export default function SignupScreen() {
       const idToken = await credential.user.getIdToken(true);
       const session = await firebaseAuthExchange(idToken);
       await signInWithToken(session);
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
       router.replace('/');
     } catch (error: any) {
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
       console.error('Firebase sign-up error:', error);
@@ -137,7 +139,7 @@ export default function SignupScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.content}>
         <View style={styles.header}>
@@ -156,6 +158,7 @@ export default function SignupScreen() {
               onChangeText={setName}
               autoCapitalize="words"
               editable={!isLoading}
+              placeholderTextColor={theme.textMuted}
             />
           </View>
 
@@ -170,6 +173,7 @@ export default function SignupScreen() {
               keyboardType="email-address"
               autoComplete="email"
               editable={!isLoading}
+              placeholderTextColor={theme.textMuted}
             />
           </View>
 
@@ -184,6 +188,7 @@ export default function SignupScreen() {
               autoCapitalize="none"
               autoComplete="password"
               editable={!isLoading}
+              placeholderTextColor={theme.textMuted}
             />
           </View>
 
@@ -193,7 +198,7 @@ export default function SignupScreen() {
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={theme.backgroundPrimary} />
             ) : (
               <Text style={styles.buttonText}>Create Account</Text>
             )}
@@ -203,7 +208,7 @@ export default function SignupScreen() {
             style={[styles.button, { marginTop: 8, backgroundColor: '#db4437' }]}
             onPress={async () => {
               try {
-                if (Platform.OS !== 'web') {
+                if (true) {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 }
                 setIsLoading(true);
@@ -223,7 +228,7 @@ export default function SignupScreen() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
             <TouchableOpacity onPress={() => {
-              if (Platform.OS !== 'web') {
+              if (true) {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
               router.push('/login');

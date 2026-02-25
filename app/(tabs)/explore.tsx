@@ -1,23 +1,19 @@
 import React, { useState, useCallback, useEffect } from 'react';
-
 import { useFocusEffect, useRouter } from 'expo-router';
-
-import { Text, View, ScrollView, TouchableOpacity, Platform, ActivityIndicator, Animated, TextInput, Modal, FlatList } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Platform, ActivityIndicator, Animated, TextInput, Modal, FlatList } from 'react-native';
+import { Text } from '@/components';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
-
 import { MapPin, Search, Heart, Umbrella, Bookmark, Star, X, BarChart3, Navigation, Icon, ChevronLeft } from 'lucide-react-native';
 import theme from '@/constants/colors';
 import { useTrails } from '@/context/TrailsContext';
 import { Trail } from '@/types/trail';
 import { formatDistance } from '@/utils/distance';
 import TrailMapPreview from '@/components/TrailMapPreview';
-
 import styles from './explore.styles';
-
 
 
 const CATEGORIES = [
@@ -25,7 +21,6 @@ const CATEGORIES = [
   { id: 'popular', name: 'Popular', icon: Heart },
   { id: 'beaches', name: 'Beaches', icon: Umbrella },
 ];
-
 
 
 export default function ExploreScreen() {
@@ -40,10 +35,10 @@ export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showSearchModal, setShowSearchModal] = useState<boolean>(false);
   const [currentLocation, setCurrentLocation] = useState<string>('');
-  const [searchSuggestions, setSearchSuggestions] = useState<{id: string; name: string; location: string; type: string}[]>([]);
+  const [searchSuggestions, setSearchSuggestions] = useState<{ id: string; name: string; location: string; type: string }[]>([]);
 
   const loadUserLocationAndNearbyTrails = useCallback(async () => {
-    if (Platform.OS === 'web') {
+    if (false) {
       setCurrentLocation('Current location');
       // Try to get a quick browser location; if unavailable, load without coords
       try {
@@ -78,7 +73,7 @@ export default function ExploreScreen() {
 
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      
+
       if (status === 'granted') {
         const location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
@@ -117,7 +112,7 @@ export default function ExploreScreen() {
 
   const loadSearchSuggestions = useCallback(() => {
     const query = searchQuery.toLowerCase();
-    
+
     const suggestions = nearbyTrails
       .filter(trail => {
         const name = trail.name?.toLowerCase() || '';
@@ -145,14 +140,14 @@ export default function ExploreScreen() {
   }, [searchQuery, loadSearchSuggestions]);
 
   const handleSearchBarPress = () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setShowSearchModal(true);
   };
 
   const handleCloseSearchModal = () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setShowSearchModal(false);
@@ -161,7 +156,7 @@ export default function ExploreScreen() {
   };
 
   const handleSuggestionPress = (suggestionId: string) => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setShowSearchModal(false);
@@ -171,7 +166,7 @@ export default function ExploreScreen() {
   };
 
   const handleCurrentLocationPress = () => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setShowSearchModal(false);
@@ -196,13 +191,13 @@ export default function ExploreScreen() {
   const handleBookmarkPress = async (trailId: string, isRealTrail: boolean = false) => {
     if (!isRealTrail && !isValidUUID(trailId)) {
       console.log('Cannot bookmark mock trail:', trailId);
-      if (Platform.OS !== 'web') {
+      if (true) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       }
       return;
     }
 
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
@@ -228,7 +223,7 @@ export default function ExploreScreen() {
         await removeTrailBookmark(trailId);
       } else {
         await saveTrailBookmark(trailId);
-        if (Platform.OS !== 'web') {
+        if (true) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
       }
@@ -238,14 +233,14 @@ export default function ExploreScreen() {
   };
 
   const handleNavigateToTrail = (trailId: string) => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     router.push(`/trail/${trailId}`);
   };
 
   const handleCategoryPress = (categoryId: string) => {
-    if (Platform.OS !== 'web') {
+    if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setSelectedCategory(categoryId);
@@ -270,23 +265,23 @@ export default function ExploreScreen() {
 
   return (
     <View style={styles.safeContainer}>
-      <ScrollView 
-        style={styles.container} 
+      <ScrollView
+        style={styles.container}
         showsVerticalScrollIndicator={false}
         stickyHeaderIndices={[0]}
       >
         <View style={[styles.stickyHeader, { paddingTop: insets.top + 16 }]}>
           <View style={styles.stickySearchContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.searchBar}
               onPress={handleSearchBarPress}
               activeOpacity={0.7}
             >
-                      <Search size={20} color={theme.textMuted} />
+              <Search size={20} color={theme.textMuted} />
               <Text style={styles.searchPlaceholder}>Find trails</Text>
             </TouchableOpacity>
-            {Platform.OS === 'web' && (
-              <TouchableOpacity 
+            {false && (
+              <TouchableOpacity
                 style={styles.demoButton}
                 onPress={() => router.push('/trail/demo-trail')}
               >
@@ -304,7 +299,7 @@ export default function ExploreScreen() {
               {CATEGORIES.map((category) => {
                 const Icon = category.icon;
                 const isSelected = selectedCategory === category.id;
-                
+
                 return (
                   <TouchableOpacity
                     key={category.id}
@@ -314,16 +309,23 @@ export default function ExploreScreen() {
                     ]}
                     onPress={() => handleCategoryPress(category.id)}
                   >
-                    <Icon
-                      size={20}
-                      color={isSelected ? theme.accentPrimary : theme.textMuted}
-                      strokeWidth={2}
-                    />
+                    {/* Wrap Icon in a View to ensure it has a fixed width separate from text */}
+                    <View style={{ marginRight: 10 }}>
+                      <Icon
+                        size={20}
+                        color={isSelected ? theme.accentPrimary : theme.textMuted}
+                        strokeWidth={2}
+                      />
+                    </View>
+
                     <Text
                       style={[
                         styles.categoryText,
                         isSelected && styles.categoryTextActive,
                       ]}
+                    // IMPORTANT: Remove numberOfLines={1} temporarily to see if it 
+                    // stops the concatenation. If it was cutting off, this will 
+                    // force it to show, even if it wraps (which it shouldn't with alignSelf).
                     >
                       {category.name}
                     </Text>
@@ -334,104 +336,104 @@ export default function ExploreScreen() {
           </View>
         </View>
 
-      <View style={styles.categoryTrailsSection}>
-        {isLoadingNearby ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.textMuted} />
-            <Text style={styles.loadingText}>Loading trails...</Text>
-          </View>
-        ) : filteredTrails.length > 0 ? (
-          filteredTrails.map((trail) => {
-            const anim = getBookmarkAnimation(trail.id);
-            const isSaved = isTrailSaved(trail.id);
-            return (
-            <TouchableOpacity
-              key={trail.id}
-              style={styles.largeTrailCard}
-              onPress={() => handleNavigateToTrail(trail.id)}
-            >
-                {trail.photo ? (
-                <Image
-                  source={{ uri: trail.photo }}
-                  style={styles.largeTrailImage}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                />
-              ) : (
-                <TrailMapPreview
-                  coordinates={trail.coordinates}
-                  path={(trail as any).path}
-                  style={styles.largeTrailImage}
-                  startLatitude={(trail as any).startLatitude}
-                  startLongitude={(trail as any).startLongitude}
-                />
-              )}
-              
-              <LinearGradient
-                colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.25)', 'rgba(0, 0, 0, 0.6)']}
-                locations={[0, 0.3, 0.6, 1]}
-                style={styles.cardGradient}
-              />
-              
-              <TouchableOpacity 
-                style={styles.bookmarkButton}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  handleBookmarkPress(trail.id, true);
-                }}
-              >
-                <Animated.View style={{ transform: [{ scale: anim }] }}>
-                  <Bookmark 
-                    size={20} 
-                    color={isSaved ? '#000' : theme.textMuted} 
-                    fill={isSaved ? '#000' : 'none'}
-                    strokeWidth={2} 
-                  />
-                </Animated.View>
-              </TouchableOpacity>
-              
-              <View style={styles.cardOverlayContent}>
-                <Text style={styles.overlayTrailName}>
-                  {trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}
-                </Text>
+        <View style={styles.categoryTrailsSection}>
+          {isLoadingNearby ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={theme.textMuted} />
+              <Text style={styles.loadingText}>Loading trails...</Text>
+            </View>
+          ) : filteredTrails.length > 0 ? (
+            filteredTrails.map((trail) => {
+              const anim = getBookmarkAnimation(trail.id);
+              const isSaved = isTrailSaved(trail.id);
+              return (
+                <TouchableOpacity
+                  key={trail.id}
+                  style={styles.largeTrailCard}
+                  onPress={() => handleNavigateToTrail(trail.id)}
+                >
+                  {trail.photo ? (
+                    <Image
+                      source={{ uri: trail.photo }}
+                      style={styles.largeTrailImage}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                    />
+                  ) : (
+                    <TrailMapPreview
+                      coordinates={trail.coordinates}
+                      path={(trail as any).path}
+                      style={styles.largeTrailImage}
+                      startLatitude={(trail as any).startLatitude}
+                      startLongitude={(trail as any).startLongitude}
+                    />
+                  )}
 
-                <View style={styles.overlayBadges}>
-                  {trail.difficulty && (
-                    <View style={styles.badge}>
-                      <BarChart3 size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-                      <Text style={styles.badgeText}>{trail.difficulty}</Text>
+                  <LinearGradient
+                    colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.25)', 'rgba(0, 0, 0, 0.6)']}
+                    locations={[0, 0.3, 0.6, 1]}
+                    style={styles.cardGradient}
+                  />
+
+                  <TouchableOpacity
+                    style={styles.bookmarkButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleBookmarkPress(trail.id, true);
+                    }}
+                  >
+                    <Animated.View style={{ transform: [{ scale: anim }] }}>
+                      <Bookmark
+                        size={20}
+                        color={isSaved ? '#000' : theme.textMuted}
+                        fill={isSaved ? '#000' : 'none'}
+                        strokeWidth={2}
+                      />
+                    </Animated.View>
+                  </TouchableOpacity>
+
+                  <View style={styles.cardOverlayContent}>
+                    <Text style={styles.overlayTrailName}>
+                      {trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}
+                    </Text>
+
+                    <View style={styles.overlayBadges}>
+                      {trail.difficulty && (
+                        <View style={styles.badge}>
+                          <BarChart3 size={14} color={theme.accentPrimary} strokeWidth={2.5} />
+                          <Text style={styles.badgeText}>{trail.difficulty}</Text>
+                        </View>
+                      )}
+                      <View style={styles.badge}>
+                        <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
+                        <Text style={styles.badgeText}>{formatDistance(trail.distance)}</Text>
+                      </View>
+                      {typeof (trail as any).distance_from_user === 'number' && (
+                        <View style={styles.badge}>
+                          <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
+                          <Text style={styles.badgeText}>{formatDistance((trail as any).distance_from_user)}</Text>
+                        </View>
+                      )}
+                      {trail.rating && (
+                        <View style={styles.badge}>
+                          <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
+                          <Text style={styles.badgeText}>{trail.rating.toFixed(1)}</Text>
+                        </View>
+                      )}
                     </View>
-                  )}
-                  <View style={styles.badge}>
-                    <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-                    <Text style={styles.badgeText}>{formatDistance(trail.distance)}</Text>
                   </View>
-                  {typeof (trail as any).distance_from_user === 'number' && (
-                    <View style={styles.badge}>
-                      <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-                      <Text style={styles.badgeText}>{formatDistance((trail as any).distance_from_user)}</Text>
-                    </View>
-                  )}
-                  {trail.rating && (
-                    <View style={styles.badge}>
-                      <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
-                      <Text style={styles.badgeText}>{trail.rating.toFixed(1)}</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </TouchableOpacity>
-            );
-          })
-        ) : (
-          <View style={styles.emptyContainer}>
-            <MapPin size={48} color="#9ca3af" />
-            <Text style={styles.emptyText}>
-              No trails found yet. Record a trail to share with others!
-            </Text>
-          </View>
-        )}
-      </View>
+                </TouchableOpacity>
+              );
+            })
+          ) : (
+            <View style={styles.emptyContainer}>
+              <MapPin size={48} color="#9ca3af" />
+              <Text style={styles.emptyText}>
+                No trails found yet. Record a trail to share with others!
+              </Text>
+            </View>
+          )}
+        </View>
 
         <View style={styles.bottomPadding} />
       </ScrollView>
@@ -461,7 +463,7 @@ export default function ExploreScreen() {
                 returnKeyType="search"
               />
               {searchQuery.length > 0 && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.clearButton}
                   onPress={() => setSearchQuery('')}
                 >

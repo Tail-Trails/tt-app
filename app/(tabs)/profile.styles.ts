@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import theme from '@/constants/colors';
+import { Typography } from '@/constants/typography';
 
 export default StyleSheet.create({
   container: {
@@ -45,9 +46,7 @@ export default StyleSheet.create({
     flex: 1,
   },
   userName: {
-    fontSize: 20,
-    fontWeight: '700' as const,
-    color: theme.accentPrimary,
+    ...Typography.h2(theme.accentPrimary),
     marginBottom: 2,
   },
   userEmailRow: {
@@ -56,8 +55,7 @@ export default StyleSheet.create({
     gap: 6,
   },
   userEmail: {
-    fontSize: 14,
-    color: theme.accentPrimary,
+    ...Typography.label(theme.accentPrimary),
     opacity: 0.8,
     marginLeft: 6,
   },
@@ -88,14 +86,11 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   dogName: {
-    fontSize: 22,
-    fontWeight: '700' as const,
-    color: theme.accentPrimary,
+    ...Typography.h2(theme.accentPrimary),
     marginBottom: 4,
   },
   dogNickname: {
-    fontSize: 14,
-    color: theme.textMuted,
+    ...Typography.label(theme.textMuted),
     opacity: 0.9,
     marginBottom: 16,
   },
@@ -112,14 +107,11 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: '700' as const,
-    color: theme.accentPrimary,
+    ...Typography.h1(theme.accentPrimary),
     marginBottom: 4,
   },
   statLabel: {
-    fontSize: 13,
-    color: theme.textSecondary,
+    ...Typography.caption(theme.textSecondary),
     opacity: 0.8,
   },
   dogInfoRow: {
@@ -133,9 +125,7 @@ export default StyleSheet.create({
     borderRadius: 16,
   },
   dogInfoText: {
-    fontSize: 14,
-    color: theme.textPrimary,
-    fontWeight: '500' as const,
+    ...Typography.label(theme.textPrimary),
   },
   loadingDogCard: {
     backgroundColor: theme.textPrimary,
@@ -156,8 +146,7 @@ export default StyleSheet.create({
     borderColor: theme.backgroundPrimary,
   },
   noDogText: {
-    fontSize: 16,
-    color: theme.accentPrimary,
+    ...Typography.body(theme.accentPrimary),
     opacity: 0.9,
     textAlign: 'center',
   },
@@ -169,9 +158,7 @@ export default StyleSheet.create({
     marginTop: 8,
   },
   addDogButtonText: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: theme.textPrimary,
+    ...Typography.label(theme.textPrimary),
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -191,17 +178,13 @@ export default StyleSheet.create({
     backgroundColor: theme.accentPrimary,
   },
   tabText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: theme.textMuted,
+    ...Typography.label(theme.textMuted),
   },
   tabTextActive: {
     color: theme.backgroundSecondary,
   },
   tabCount: {
-    fontSize: 24,
-    fontWeight: '700' as const,
-    color: theme.accentPrimary,
+    ...Typography.h1(theme.accentPrimary),
     marginBottom: 4,
   },
   tabCountActive: {
@@ -260,14 +243,11 @@ export default StyleSheet.create({
     padding: 12,
   },
   trailName: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: theme.textPrimary,
+    ...Typography.h2(theme.textPrimary),
     marginBottom: 4,
   },
   trailLocation: {
-    fontSize: 13,
-    color: theme.textPrimary,
+    ...Typography.caption(theme.textPrimary),
     opacity: 0.95,
   },
   trailBadges: {
@@ -285,12 +265,10 @@ export default StyleSheet.create({
     borderRadius: 12,
   },
   trailBadgeText: {
-    fontSize: 13,
-    color: theme.textPrimary,
+    ...Typography.caption(theme.textPrimary),
   },
   emptyText: {
-    fontSize: 16,
-    color: theme.backgroundPrimary,
+    ...Typography.body(theme.backgroundPrimary),
     opacity: 0.7,
     textAlign: 'center',
     lineHeight: 24,
@@ -316,9 +294,7 @@ export default StyleSheet.create({
     opacity: 0.6,
   },
   signOutText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: theme.backgroundPrimary,
+    ...Typography.label(theme.backgroundPrimary),
   },
   modalContainer: {
     flex: 1,
@@ -335,9 +311,7 @@ export default StyleSheet.create({
     borderBottomColor: theme.accentPrimary,
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: '700' as const,
-    color: theme.textPrimary,
+    ...Typography.h2(theme.textPrimary),
   },
   closeButton: {
     width: 40,
@@ -348,16 +322,13 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   inputLabel: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: theme.backgroundPrimary,
+    ...Typography.label(theme.backgroundPrimary),
     marginBottom: 8,
   },
   input: {
     backgroundColor: theme.backgroundPrimary,
     borderRadius: 12,
     padding: 16,
-    fontSize: 16,
     color: theme.textPrimary,
     borderWidth: 1,
     borderColor: theme.accentPrimary,
@@ -370,9 +341,7 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   initialAvatarText: {
-    fontSize: 36,
-    fontWeight: '700' as const,
-    color: theme.textPrimary,
+    ...Typography.h1(theme.textPrimary),
   },
   /* Modal / Edit profile styles */
   modalContent: {
@@ -411,8 +380,7 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   photoHint: {
-    fontSize: 13,
-    color: theme.textMuted,
+    ...Typography.caption(theme.textMuted),
     marginTop: 8,
   },
   inputSection: {
@@ -426,13 +394,11 @@ export default StyleSheet.create({
     borderColor: theme.accentPrimary,
   },
   disabledInputText: {
-    fontSize: 15,
-    color: theme.backgroundPrimary,
+    ...Typography.label(theme.backgroundPrimary),
     opacity: 0.8,
   },
   inputHint: {
-    fontSize: 12,
-    color: theme.textMuted,
+    ...Typography.caption(theme.textMuted),
     marginTop: 6,
   },
   modalFooter: {
@@ -453,8 +419,6 @@ export default StyleSheet.create({
     opacity: 0.6,
   },
   saveButtonText: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: theme.textPrimary,
+    ...Typography.button(theme.textPrimary),
   },
 });

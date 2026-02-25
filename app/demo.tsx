@@ -1,6 +1,8 @@
 
 import React from 'react';
-import { Text, View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { Text } from '@/components';
+import { Typography } from '@/constants/typography';
 
 import { Stack } from 'expo-router';
 import TrailMap from '@/components/TrailMap';
@@ -134,9 +136,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
+    ...Typography.h2('#fff'),
     marginBottom: 5,
   },
   locationRow: {
@@ -144,9 +144,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   locationText: {
-    color: '#fff',
+    ...Typography.body('#fff'),
     marginLeft: 5,
-    fontSize: 16,
   },
   mapContainer: {
     height: 300,
@@ -167,28 +166,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    ...Typography.h2('#333'),
     marginTop: 5,
-    color: '#333',
   },
   statLabel: {
-    fontSize: 12,
-    color: '#666',
+    ...Typography.caption('#666'),
     marginTop: 2,
   },
   section: {
     padding: 20,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    ...Typography.h2('#333'),
     marginBottom: 10,
-    color: '#333',
   },
   description: {
-    fontSize: 16,
+    ...Typography.body('#666'),
     lineHeight: 24,
-    color: '#666',
   },
 });

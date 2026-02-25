@@ -1,5 +1,6 @@
 import { StyleSheet, Platform } from 'react-native';
 import theme from '@/constants/colors';
+import { Typography } from '@/constants/typography';
 
 export default StyleSheet.create({
   container: {
@@ -18,8 +19,7 @@ export default StyleSheet.create({
   },
   webText: {
     marginTop: 16,
-    fontSize: 16,
-    color: theme.textMuted,
+    ...Typography.body(theme.textMuted),
     textAlign: 'center',
   },
   loadingContainer: {
@@ -30,8 +30,7 @@ export default StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-    fontSize: 16,
-    color: theme.textMuted,
+    ...Typography.body(theme.textMuted),
   },
   permissionContainer: {
     flex: 1,
@@ -42,15 +41,12 @@ export default StyleSheet.create({
   },
   permissionTitle: {
     marginTop: 16,
-    fontSize: 20,
-    fontWeight: '700' as const,
-    color: theme.textPrimary,
+    ...Typography.h2(theme.textPrimary),
     textAlign: 'center',
   },
   permissionText: {
     marginTop: 8,
-    fontSize: 16,
-    color: theme.textMuted,
+    ...Typography.body(theme.textMuted),
     textAlign: 'center',
   },
   permissionButton: {
@@ -61,9 +57,7 @@ export default StyleSheet.create({
     borderRadius: 12,
   },
   permissionButtonText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: theme.textMuted,
+    ...Typography.label(theme.textMuted),
   },
   statsContainer: {
     position: 'absolute',
@@ -118,15 +112,11 @@ export default StyleSheet.create({
     elevation: 4,
   },
   statLabel: {
-    fontSize: 13,
-    color: theme.textMuted,
-    fontWeight: '500' as const,
+    ...Typography.caption(theme.textMuted),
     marginBottom: 4,
   },
   statValue: {
-    fontSize: 24,
-    color: theme.textPrimary,
-    fontWeight: '700' as const,
+    ...Typography.h1(theme.textPrimary),
   },
   controlContainer: {
     position: 'absolute',
@@ -152,9 +142,7 @@ export default StyleSheet.create({
     backgroundColor: theme.accentSecondary,
   },
   recordButtonText: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: theme.backgroundPrimary,
+    ...Typography.button(theme.backgroundPrimary),
   },
   bottomSheet: {
     position: 'absolute',
@@ -203,17 +191,13 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   statItemLabel: {
-    fontSize: 11,
-    color: theme.textMuted,
-    fontWeight: '600' as const,
+    ...Typography.caption(theme.textMuted),
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
     marginBottom: 6,
   },
   statItemValue: {
-    fontSize: 18,
-    color: theme.textPrimary,
-    fontWeight: '700' as const,
+    ...Typography.h2(theme.textPrimary),
   },
   expandedContent: {
     marginTop: 8,
@@ -245,14 +229,11 @@ export default StyleSheet.create({
     flex: 1,
   },
   optionTitle: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: theme.textPrimary,
+    ...Typography.body(theme.textPrimary),
     marginBottom: 2,
   },
   optionSubtitle: {
-    fontSize: 13,
-    color: theme.textMuted,
+    ...Typography.caption(theme.textMuted),
   },
   optionBadge: {
     paddingHorizontal: 12,
@@ -264,9 +245,7 @@ export default StyleSheet.create({
     backgroundColor: 'rgba(93, 107, 74, 0.15)',
   },
   optionBadgeText: {
-    fontSize: 12,
-    fontWeight: '600' as const,
-    color: theme.textMuted,
+    ...Typography.caption(theme.textMuted),
   },
   optionBadgeTextActive: {
     color: theme.backgroundPrimary,
@@ -289,9 +268,7 @@ export default StyleSheet.create({
     padding: 20,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '700' as const,
-    color: theme.backgroundPrimary,
+    ...Typography.h2(theme.backgroundPrimary),
     marginBottom: 12,
   },
   input: {
@@ -318,9 +295,7 @@ export default StyleSheet.create({
     marginLeft: 8,
   },
   modalButtonText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: '#1f2937',
+    ...Typography.label('#1f2937'),
   },
   recenterButton: {
     position: 'absolute',
