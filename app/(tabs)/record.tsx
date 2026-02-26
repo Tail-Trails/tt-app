@@ -1,25 +1,20 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, TextInput, Modal, ScrollView } from 'react-native';
 import { Text } from '@/components';
-
 import TrailMap from '@/components/TrailMap';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as Haptics from 'expo-haptics';
-
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { Square, Play, MapPin, Watch, Bell, ChevronUp, Navigation, ChevronDown, Upload } from 'lucide-react-native';
 import styles from './record.styles';
 import theme from '@/constants/colors';
 import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
-
 import { Coordinate, Trail } from '@/types/trail';
-
 import { formatDistance, calculateTotalDistance, formatDuration } from '@/utils/distance';
 
 const LOCATION_TRACKING_TASK = 'background-location-task';
@@ -766,7 +761,7 @@ export default function RecordScreen() {
             latitudeDelta: 0.01,
             longitudeDelta: 0.01,
           }}
-          userLocation={userLocationFollow}
+          userLocation={userLocationFollow ?? currentLocation}
           showsUserLocation
           followsUserLocation={followMode || isRecording}
           showsMyLocationButton={false}

@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { View, ScrollView, TouchableOpacity, Platform, ActivityIndicator, Animated, TextInput, Modal, FlatList } from 'react-native';
 import { Text } from '@/components';
+import LottieLoader from '@/components/LottieLoader';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -339,7 +340,7 @@ export default function ExploreScreen() {
         <View style={styles.categoryTrailsSection}>
           {isLoadingNearby ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.textMuted} />
+              <LottieLoader size={120} />
               <Text style={styles.loadingText}>Loading trails...</Text>
             </View>
           ) : filteredTrails.length > 0 ? (

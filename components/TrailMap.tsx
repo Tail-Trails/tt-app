@@ -1,9 +1,8 @@
 import theme from '@/constants/colors';
-import { forwardRef, useMemo } from 'react';
-import * as MapLibreGL from '@maplibre/maplibre-react-native';
-// MapLibre's react-native types may not include all runtime props (styleURL etc.).
-// Cast the MapView to `any` to avoid TS complaints while preserving runtime behavior.
-const MLMapView: any = (MapLibreGL as any).MapView;
+import { forwardRef, useMemo, useRef, useImperativeHandle } from 'react';
+import { View } from 'react-native';
+import { Map as MLMapView, Camera, UserLocation, GeoJSONSource, Layer, Marker } from '@maplibre/maplibre-react-native';
+import DogMarker from './DogMarker';
 
   interface TrailMapProps {
     coordinates?: { latitude: number; longitude: number }[];
@@ -50,6 +49,8 @@ const MLMapView: any = (MapLibreGL as any).MapView;
     mapStyleURL,
   }, ref) => {
     const coords = coordinates ?? [];
+    const nativeMapRef = useRef<any>(null);
+    const cameraRef = useRef<any>(null);
 
     const center = useMemo(() => {
       if (initialRegion) return [initialRegion.longitude, initialRegion.latitude];
@@ -78,45 +79,73 @@ const MLMapView: any = (MapLibreGL as any).MapView;
       return latDeltaToZoom(latDelta);
     }, [initialRegion]);
 
+    useImperativeHandle(ref, () => ({
+      animateToRegion: (region: any, duration: number = 500) => {
+        if (!cameraRef.current) return;
+        const z = latDeltaToZoom(region.latitudeDelta);
+        try {
+          cameraRef.current.easeTo({ center: [region.longitude, region.latitude], zoom: z, duration });
+        } catch (e) {
+          // ignore if native method not available
+        }
+      },
+      fitToCoordinates: (inCoords: any[], options: any = {}) => {
+        if (!cameraRef.current || !inCoords || inCoords.length === 0) return;
+        const lats = inCoords.map((c: any) => c.latitude);
+        const lons = inCoords.map((c: any) => c.longitude);
+        const minLat = Math.min(...lats);
+        const maxLat = Math.max(...lats);
+        const minLon = Math.min(...lons);
+        const maxLon = Math.max(...lons);
+        try {
+          // bounds: [[swLng, swLat], [neLng, neLat]]
+          cameraRef.current.fitBounds([[minLon, minLat], [maxLon, maxLat]], { duration: options.duration ?? 2000 });
+        } catch (e) {
+          // ignore
+        }
+      }
+    }));
+
+    const extraNativeProps: any = { zoomEnabled, scrollEnabled, attributionEnabled: false };
+
     return (
       <MLMapView
         key={activeStyleURI}
-        ref={ref}
+        ref={nativeMapRef}
         style={style}
         mapStyle={activeStyleURI}
-        zoomEnabled={zoomEnabled}
-        scrollEnabled={scrollEnabled}
-        attributionEnabled={false}
+        {...extraNativeProps}
       >
-        {showsUserLocation && <MapLibreGL.UserLocation />}
+        {showsUserLocation && <UserLocation />}
 
         {followsUserLocation && userLocation ? (
-          <MapLibreGL.Camera
-            centerCoordinate={[userLocation.longitude, userLocation.latitude]}
-            zoomLevel={zoom}
+          <Camera
+            ref={cameraRef}
+            initialViewState={{ center: [userLocation.longitude, userLocation.latitude] as [number, number], zoom }}
           />
         ) : (
           center && (
-            <MapLibreGL.Camera
-              centerCoordinate={center}
-              zoomLevel={zoom}
+            <Camera
+              ref={cameraRef}
+              initialViewState={{ center: center as [number, number], zoom }}
             />
           )
         )}
 
         {geojson && (
-          <MapLibreGL.ShapeSource id="routeSource" shape={geojson}>
-            <MapLibreGL.LineLayer
+          <GeoJSONSource id="routeSource" data={geojson}>
+            <Layer
               id="routeLine"
-              style={{ lineColor: theme.backgroundPrimary, lineWidth: 4 }}
+              type="line"
+              paint={{ 'line-color': theme.backgroundPrimary, 'line-width': 4 }}
             />
-          </MapLibreGL.ShapeSource>
+          </GeoJSONSource>
         )}
+
         {userLocation && (
-          <MapLibreGL.PointAnnotation
-            id="userMarker"
-            coordinate={[userLocation.longitude, userLocation.latitude]}
-          />
+          <Marker id="userMarker" lngLat={[userLocation.longitude, userLocation.latitude] as [number, number]}>
+            <DogMarker size={50} color={theme.backgroundPrimary} />
+          </Marker>
         )}
       </MLMapView>
     );

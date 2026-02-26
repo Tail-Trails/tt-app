@@ -29,7 +29,6 @@ module.exports = async function (env, argv) {
     // Some consumers import the non-secure submodule directly (e.g. expo-router)
     // Point to a local copy so webpack doesn't need to resolve the package subpath.
     'nanoid/non-secure': path.resolve(__dirname, 'web', 'nanoid-non-secure.js'),
-    'react-native-reanimated': path.resolve(__dirname, 'web', 'reanimated-shim.js'),
   };
 
   // Define the EXPO_ROUTER_APP_ROOT env var so expo-router can find the app directory

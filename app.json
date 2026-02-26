@@ -2,12 +2,12 @@
   "expo": {
     "name": "TailTrails",
     "slug": "dog-walk-tracker-x2nouww",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tail-trails",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -34,33 +34,30 @@
       }
     },
     "android": {
+      "package": "com.tailtrails.app",
+      "versionCode": 5,
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.tailtrailsclub.app",
-      "googleServicesFile": "./google-services.json",
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyAn3mei2obx2g6PZFahuexvYBt2T7_1alQ"
         }
       },
       "permissions": [
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_LOCATION",
-        "android.permission.ACCESS_BACKGROUND_LOCATION",
-        "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.VIBRATE",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_BACKGROUND_LOCATION",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_LOCATION",
-        "android.permission.RECORD_AUDIO"
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
       ]
     },
     "web": {
@@ -85,13 +82,18 @@
       "expo-router",
       "expo-font",
       "expo-web-browser",
+      "expo-image",
       [
         "expo-location",
         {
+          "locationAlwaysAndWhenInUsePermission": "Allow TailTrails to track your walk.",
           "isAndroidForegroundServiceEnabled": true,
           "isAndroidBackgroundLocationEnabled": true,
-          "isIosBackgroundLocationEnabled": true,
-          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+          "foregroundService": {
+            "notificationTitle": "TailTrails is tracking your walk",
+            "notificationBody": "We are keeping your adventure safe.",
+            "notificationColor": "#ffffff"
+          }
         }
       ],
       [
@@ -109,15 +111,20 @@
         }
       ],
       "@react-native-firebase/app",
+      "@react-native-firebase/auth",
       [
         "expo-build-properties",
         {
+          "android": {
+            "newArchEnabled": false,
+            "ndkVersion": "26.1.10909125",
+            "buildToolsVersion": "35.0.0"
+          },
           "ios": {
             "useFrameworks": "static"
           }
         }
       ],
-      "@react-native-firebase/auth",
       "./plugins/patch-podfile"
     ],
     "experiments": {
