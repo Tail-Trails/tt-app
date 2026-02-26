@@ -14,8 +14,8 @@
     },
     {
       "platform": "play",
-      "url": "http://play.google.com/store/apps/details?id=com.tailtrailsclub.app",
-      "id": "com.tailtrailsclub.app"
+      "url": "http://play.google.com/store/apps/details?id=com.tailtrails.app",
+      "id": "com.tailtrails.app"
     }
   ],
   "prefer_related_applications": true
