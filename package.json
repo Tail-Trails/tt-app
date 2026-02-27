@@ -15,7 +15,7 @@
     "postbuild": "cp -f web-build/index.html web-build/404.html || true"
   },
   "dependencies": {
-    "@maplibre/maplibre-react-native": "^11.0.0-beta.1",
+    "@maplibre/maplibre-react-native": "^11.0.0-beta.5",
     "@nkzw/create-context-hook": "^1.1.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-firebase/app": "^23.8.6",

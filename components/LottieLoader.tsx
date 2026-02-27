@@ -1,23 +1,15 @@
 import React from 'react';
 import { View, ActivityIndicator, Platform, StyleSheet } from 'react-native';
-
-let LottieView: any = null;
-try {
-  // lottie-react-native is native-only; require it dynamically so web doesn't crash
-  // (the package will be absent until the developer installs it)
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  LottieView = require('lottie-react-native').default;
-} catch (e) {
-  LottieView = null;
-}
+import LottieView from 'lottie-react-native';
+import theme from '@/constants/colors';
 
 type Props = {
   size?: number;
 };
 
 export default function LottieLoader({ size = 200 }: Props) {
-  // Fallback to ActivityIndicator on web or when lottie isn't installed/available
-  if (false || !LottieView) {
+  // Web fallback
+  if (Platform.OS === 'web') {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#2563eb" />
@@ -32,6 +24,11 @@ export default function LottieLoader({ size = 200 }: Props) {
         autoPlay
         loop
         style={{ width: size, height: size }}
+        // 🛡️ Critical for New Arch Stability:
+        // 'HARDWARE' prevents "drawing too large" errors on older Androids
+        renderMode="HARDWARE" 
+        // Ensures the view doesn't render a black box if the first frame lags
+        cacheComposition={true}
       />
     </View>
   );
@@ -42,5 +39,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.backgroundPrimary,
   },
 });
