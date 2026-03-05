@@ -22,31 +22,30 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   userSection: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   userHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   userAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     overflow: 'hidden',
     backgroundColor: theme.accentPrimary,
-    borderWidth: 2,
-    borderColor: theme.backgroundPrimary,
+    borderWidth: 0,
   },
   userAvatarImage: {
     width: '100%',
     height: '100%',
   },
   userInfo: {
-    marginLeft: 12,
+    marginLeft: 16,
     flex: 1,
   },
   userName: {
-    ...Typography.h2(theme.accentPrimary),
+    ...Typography.h3(theme.accentPrimary),
     marginBottom: 2,
   },
   userEmailRow: {
@@ -55,17 +54,19 @@ export default StyleSheet.create({
     gap: 6,
   },
   userEmail: {
-    ...Typography.label(theme.accentPrimary),
+    ...Typography.caption(theme.textSecondary),
     opacity: 0.8,
     marginLeft: 6,
   },
   dogCardContainer: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   dogCard: {
     backgroundColor: theme.backgroundSecondary,
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 14,
+    paddingTop: 24,
+    paddingBottom: 24,
+    paddingHorizontal: 16,
     alignItems: 'center',
     borderWidth: 0,
     borderColor: theme.backgroundPrimary,
@@ -74,9 +75,9 @@ export default StyleSheet.create({
     marginBottom: 16,
   },
   dogPhoto: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: theme.backgroundSecondaryVarient,
     borderWidth: 0,
     borderColor: theme.accentPrimary,
@@ -101,14 +102,14 @@ export default StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   statItem: {
     alignItems: 'center',
   },
   statValue: {
-    ...Typography.h1(theme.accentPrimary),
-    marginBottom: 4,
+    ...Typography.h3(theme.accentPrimary),
+    marginBottom: 2,
   },
   statLabel: {
     ...Typography.caption(theme.textSecondary),
@@ -136,6 +137,67 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.backgroundPrimary,
   },
+  statsCardContainer: {
+    marginBottom: 16,
+  },
+  statsCard: {
+    backgroundColor: theme.backgroundSecondary,
+    borderRadius: 14,
+    padding: 18,
+    borderWidth: 0,
+    overflow: 'hidden',
+  },
+  statsCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  statsTitle: {
+    ...Typography.label(theme.accentPrimary),
+  },
+  statsCardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statsLeft: {
+    flex: 1,
+  },
+  statsBig: {
+    ...Typography.h1(theme.accentPrimary),
+    fontSize: 48,
+    lineHeight: 52,
+  },
+  statsLabel: {
+    ...Typography.h3(theme.accentPrimary),
+    marginTop: 6,
+  },
+  statsHint: {
+    ...Typography.caption(theme.textSecondary),
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  statsRight: {
+    width: 110,
+    alignItems: 'center',
+  },
+  badgeCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: theme.accentSecondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  badgeTitle: {
+    ...Typography.label(theme.accentPrimary),
+  },
+  badgeSubtitle: {
+    ...Typography.caption(theme.textSecondary),
+    marginTop: 2,
+  },
   noDogCard: {
     backgroundColor: theme.textPrimary,
     borderRadius: 24,
@@ -162,15 +224,17 @@ export default StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
-    marginBottom: 20,
-    gap: 12,
+    marginBottom: 16,
+    backgroundColor: theme.backgroundSecondary,
+    borderRadius: 14,
+    padding: 8,
+    gap: 8,
   },
   tab: {
     flex: 1,
-    backgroundColor: theme.backgroundSecondary,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 12,
     alignItems: 'center',
     borderWidth: 0,
   },
@@ -184,20 +248,26 @@ export default StyleSheet.create({
     color: theme.backgroundSecondary,
   },
   tabCount: {
-    ...Typography.h1(theme.accentPrimary),
-    marginBottom: 4,
+    ...Typography.h3(theme.accentPrimary),
+    marginBottom: 2,
   },
   tabCountActive: {
     color: theme.backgroundPrimary,
   },
   trailsSection: {
-    marginBottom: 24,
+    marginBottom: 16,
+    marginHorizontal: -16,
+  },
+  horizontalTrailsContainer: {
+    gap: 12,
+    paddingHorizontal: 16,
   },
   trailCard: {
     backgroundColor: theme.textPrimary,
-    borderRadius: 24,
+    borderRadius: 8,
+    width: 350,
     overflow: 'hidden',
-    marginBottom: 20,
+    marginBottom: 10,
     shadowColor: theme.backgroundSecondaryVarient,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -207,7 +277,7 @@ export default StyleSheet.create({
   },
   trailImage: {
     width: '100%',
-    height: 260,
+    height: 250,
     backgroundColor: theme.backgroundSecondary,
   },
   loadingContainer: {
@@ -242,6 +312,10 @@ export default StyleSheet.create({
     bottom: 12,
     padding: 12,
   },
+  trailContentBelow: {
+    padding: 12,
+    backgroundColor: theme.backgroundSecondary,
+  },
   trailName: {
     ...Typography.h2(theme.textPrimary),
     marginBottom: 4,
@@ -268,7 +342,7 @@ export default StyleSheet.create({
     ...Typography.caption(theme.textPrimary),
   },
   emptyText: {
-    ...Typography.body(theme.backgroundPrimary),
+    ...Typography.body(theme.textPrimary),
     opacity: 0.7,
     textAlign: 'center',
     lineHeight: 24,
@@ -277,6 +351,10 @@ export default StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 40,
+    backgroundColor: theme.backgroundSecondary,
+    borderRadius: 14,
+    height: 177,
+    width: 264,
   },
   signOutButton: {
     flexDirection: 'row',

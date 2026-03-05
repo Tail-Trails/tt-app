@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
-import { MapPin, Search, Heart, Umbrella, Bookmark, Star, X, BarChart3, Navigation, Icon, ChevronLeft } from 'lucide-react-native';
+import { MapPin, Search, Heart, Umbrella, Bookmark, Star, X, BarChart3, Navigation, Icon, ChevronLeft, SlidersHorizontal, ArrowRight, MoreVertical } from 'lucide-react-native';
 import theme from '@/constants/colors';
 import { useTrails } from '@/context/TrailsContext';
 import { Trail } from '@/types/trail';
@@ -278,17 +278,13 @@ export default function ExploreScreen() {
               onPress={handleSearchBarPress}
               activeOpacity={0.7}
             >
-              <Search size={20} color={theme.textMuted} />
-              <Text style={styles.searchPlaceholder}>Find trails</Text>
+              <Search size={22} color={theme.textMuted} />
+              <Text style={styles.searchPlaceholder}>Find Trails</Text>
+              <View style={styles.filterButton}>
+                <SlidersHorizontal size={18} color={theme.accentPrimary} />
+              </View>
             </TouchableOpacity>
-            {false && (
-              <TouchableOpacity
-                style={styles.demoButton}
-                onPress={() => router.push('/trail/demo-trail')}
-              >
-                <Text style={styles.demoButtonText}>Demo</Text>
-              </TouchableOpacity>
-            )}
+            
           </View>
 
           <View style={styles.categoriesSection}>
@@ -310,23 +306,16 @@ export default function ExploreScreen() {
                     ]}
                     onPress={() => handleCategoryPress(category.id)}
                   >
-                    {/* Wrap Icon in a View to ensure it has a fixed width separate from text */}
-                    <View style={{ marginRight: 10 }}>
-                      <Icon
-                        size={20}
-                        color={isSelected ? theme.accentPrimary : theme.textMuted}
-                        strokeWidth={2}
-                      />
-                    </View>
-
+                    <Icon
+                      size={20}
+                      color={isSelected ? theme.backgroundSecondary : theme.textMuted}
+                      strokeWidth={2}
+                    />
                     <Text
                       style={[
                         styles.categoryText,
                         isSelected && styles.categoryTextActive,
                       ]}
-                    // IMPORTANT: Remove numberOfLines={1} temporarily to see if it 
-                    // stops the concatenation. If it was cutting off, this will 
-                    // force it to show, even if it wraps (which it shouldn't with alignSelf).
                     >
                       {category.name}
                     </Text>
@@ -337,6 +326,10 @@ export default function ExploreScreen() {
           </View>
         </View>
 
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Tailored for you</Text>
+          <ArrowRight size={20} color={theme.accentPrimary} />
+        </View>
         <View style={styles.categoryTrailsSection}>
           {isLoadingNearby ? (
             <View style={styles.loadingContainer}>
@@ -360,45 +353,31 @@ export default function ExploreScreen() {
                       contentFit="cover"
                       cachePolicy="memory-disk"
                     />
-                  ) : (
+                    ) : (
                     <TrailMapPreview
                       coordinates={trail.coordinates}
-                      path={(trail as any).path}
+                      path={trail.path}
                       style={styles.largeTrailImage}
-                      startLatitude={(trail as any).startLatitude}
-                      startLongitude={(trail as any).startLongitude}
+                      startLatitude={trail.startLatitude}
+                      startLongitude={trail.startLongitude}
                     />
                   )}
 
-                  <LinearGradient
-                    colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.25)', 'rgba(0, 0, 0, 0.6)']}
-                    locations={[0, 0.3, 0.6, 1]}
-                    style={styles.cardGradient}
-                  />
+                  <View style={styles.cardContent}>
+                    <View style={styles.cardHeader}>
+                      <Text style={styles.cardTitle}>
+                        {trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}
+                      </Text>
+                      <TouchableOpacity>
+                        <MoreVertical size={20} color={theme.textPrimary} />
+                      </TouchableOpacity>
+                    </View>
 
-                  <TouchableOpacity
-                    style={styles.bookmarkButton}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      handleBookmarkPress(trail.id, true);
-                    }}
-                  >
-                    <Animated.View style={{ transform: [{ scale: anim }] }}>
-                      <Bookmark
-                        size={20}
-                        color={isSaved ? '#000' : theme.textMuted}
-                        fill={isSaved ? '#000' : 'none'}
-                        strokeWidth={2}
-                      />
-                    </Animated.View>
-                  </TouchableOpacity>
-
-                  <View style={styles.cardOverlayContent}>
-                    <Text style={styles.overlayTrailName}>
-                      {trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}
+                    <Text style={styles.cardLocation}>
+                      {trail.city ? `${trail.city}, ` : ''}{trail.country || 'Portugal'}
                     </Text>
 
-                    <View style={styles.overlayBadges}>
+                    <View style={styles.cardBadges}>
                       {trail.difficulty && (
                         <View style={styles.badge}>
                           <BarChart3 size={14} color={theme.accentPrimary} strokeWidth={2.5} />
@@ -406,13 +385,13 @@ export default function ExploreScreen() {
                         </View>
                       )}
                       <View style={styles.badge}>
-                        <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
+                        <Navigation size={14} color={theme.accentPrimary} strokeWidth={2.5} />
                         <Text style={styles.badgeText}>{formatDistance(trail.distance)}</Text>
                       </View>
-                      {typeof (trail as any).distance_from_user === 'number' && (
+                      {typeof trail.distance_from_user === 'number' && (
                         <View style={styles.badge}>
                           <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-                          <Text style={styles.badgeText}>{formatDistance((trail as any).distance_from_user)}</Text>
+                          <Text style={styles.badgeText}>{formatDistance(trail.distance_from_user)}</Text>
                         </View>
                       )}
                       {trail.rating && (

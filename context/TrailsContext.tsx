@@ -110,22 +110,22 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
         name: trail.name,
         distance: trail.distance,
         duration: trail.duration,
-        path: coordsToPath((trail as any).coordinates),
-        photo: (trail as any).photo,
+        path: coordsToPath(trail.coordinates),
+        photo: trail.photo,
         city: trail.city,
         country: trail.country,
-        description: (trail as any).description,
-        tags: (trail as any).tags,
-        elevation: (trail as any).elevation,
-        surface_type: (trail as any).surfaceType,
-        difficulty: (trail as any).difficulty,
-        location: (trail as any).location,
+        description: trail.description,
+        tags: trail.tags,
+        elevation: trail.elevation,
+        surface_type: trail.surfaceType,
+        difficulty: trail.difficulty,
+        location: trail.location,
         pace: trail.pace,
         speed: trail.speed,
         max_elevation: trail.maxElevation,
         rating: trail.rating,
         review: trail.review,
-        environment_tags: (trail as any).environment_tags,
+        environment_tags: trail.environment_tags,
       };
 
       const accessToken = session.accessToken;
@@ -251,47 +251,27 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     }
   }, [session]);
 
-  const getTrailById = useCallback((id: string): Trail | undefined => {
+  const getTrailById = useCallback(async (id: string): Promise<Trail | undefined> => {
     const found = trails.find((t: Trail) => t.id === id);
     if (found) return found;
 
-    // If not in state, try fetching from API synchronously is not possible here — keep demo fallback
-    if (id === 'demo-trail') {
-      return {
-        id: 'demo-trail',
-        name: 'Scenic Coastal Walk',
-        distance: 5.2,
-        duration: 3600,
-        coordinates: [
-          { latitude: 50.81999932593175, longitude: -0.1443926504884132 },
-          { latitude: 50.81982005377856, longitude: -0.14389605957015306 },
-          { latitude: 50.8195735534442, longitude: -0.14290287773496857 },
-          { latitude: 50.81976403108945, longitude: -0.14245949298612004 },
-          { latitude: 50.819651985510006, longitude: -0.1415904588798469 },
-          { latitude: 50.819360665744455, longitude: -0.141129338740825 },
-          { latitude: 50.81955114425804, longitude: -0.14054407087405707 },
-          { latitude: 50.8194278935438, longitude: -0.1397814491065219 },
-          { latitude: 50.819282233189426, longitude: -0.1389301503892284 },
-          { latitude: 50.819696803774036, longitude: -0.13903656272921694 },
-          { latitude: 50.81999932593175, longitude: -0.13919618123853184 },
-          { latitude: 50.82010016621547, longitude: -0.13853997181101363 },
-          { latitude: 50.82041389015009, longitude: -0.138220734792327 },
-          { latitude: 50.82055954697452, longitude: -0.13852223642078343 },
-          { latitude: 50.82086206354296, longitude: -0.13829167635185513 },
-        ],
-        city: 'Brighton',
-        country: 'UK',
-        difficulty: 'Easy',
-        pace: '11:32',
-        maxElevation: 45,
-        date: Date.now(),
-        environment_tags: ['Beach', 'Sunny', 'Paved'],
-        rating: 4.5,
-        review: 'A beautiful walk along the seafront. Very dog friendly!',
-      };
+    // If not in state, try fetching from API
+    try {
+      console.log('Fetching trail by id from API:', id);
+      const headers: any = {};
+      if (session?.accessToken) headers['Authorization'] = `Bearer ${session.accessToken}`;
+      const resp = await fetch(`${API_URL}/trail/${id}`, { headers });
+      const data = await resp.json();
+      if (data) {
+        setTrails((prev: Trail[]) => [data, ...prev.filter(t => t.id !== data.id)]);
+        return data as Trail;
+      }
+      return undefined;
+    } catch (err) {
+      console.error('Error fetching trail by id:', err);
+      return undefined;
     }
-    return undefined;
-  }, [trails]);
+  }, [trails, session]);
 
   const loadNearbyTrails = useCallback(async (latitude?: number, longitude?: number, distanceKm: number = 10) => {
     try {

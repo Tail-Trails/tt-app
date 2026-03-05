@@ -29,6 +29,7 @@ const createTextStyle = (
 export const Typography = {
   h1: (color: string) => createTextStyle(32, '700', color),
   h2: (color: string) => createTextStyle(24, '700', color),
+  h3: (color: string) => createTextStyle(18, '600', color),
   body: (color: string) => createTextStyle(16, '400', color),
   label: (color: string) => createTextStyle(14, '600', color),
   button: (color: string) => createTextStyle(16, '600', color),

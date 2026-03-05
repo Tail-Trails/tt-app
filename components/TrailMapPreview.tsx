@@ -61,7 +61,7 @@ export default function TrailMapPreview({ coordinates, path, style, startLatitud
   }, [coordinates, path]);
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, style]} pointerEvents="none">
       <TrailMap
         style={styles.map}
         initialRegion={region}

@@ -14,8 +14,9 @@ import { Text } from '@/components';
 
 import { router, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
-import TrailMap from '@/components/TrailMap';
-import { Clock, MapPin, Calendar, Edit3, Check, X, Navigation, TrendingUp, Tag, Camera, Activity, Star, ArrowLeft, Share2, Bookmark, MoreVertical } from 'lucide-react-native';
+import TrailMapPreview from '@/components/TrailMapPreview';
+import * as Location from 'expo-location';
+import { Clock, MapPin, Calendar, Edit3, Check, X, Navigation, TrendingUp, Tag, Camera, Activity, Star, ArrowLeft, Share2, Bookmark, MoreVertical, ChevronRight } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -78,7 +79,7 @@ export default function TrailDetailScreen() {
 
     setIsLoading(true);
     try {
-      const foundTrail = getTrailById(id);
+      const foundTrail = await getTrailById(id);
       if (foundTrail) {
         setTrail(foundTrail);
         setEditedName(foundTrail.name || '');
@@ -150,39 +151,61 @@ export default function TrailDetailScreen() {
     }
   };
 
-  const handleGetDirections = () => {
+  const handleGetDirections = async () => {
     if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
-    if (!trail || (trail.coordinates?.length ?? 0) === 0) {
+    if (!trail) {
       Alert.alert('Error', 'Location not available for this trail');
       return;
     }
 
-    const latitude = trail.coordinates[0].latitude;
-    const longitude = trail.coordinates[0].longitude;
-    const label = trail.name || 'Trail Location';
+    // Determine trail start coordinates: prefer explicit start coords, then normalized coordinates, then raw path
+    let destLat: number | undefined = trail.startLatitude as number | undefined;
+    let destLng: number | undefined = trail.startLongitude as number | undefined;
 
-    const scheme = Platform.select({
-      ios: 'maps:',
-      android: 'geo:',
-      default: 'https://www.google.com/maps',
-    });
+    if ((destLat == null || destLng == null) && (trail.coordinates?.length ?? 0) > 0) {
+      destLat = trail.coordinates![0].latitude;
+      destLng = trail.coordinates![0].longitude;
+    }
 
-    const url = Platform.select({
-      ios: `${scheme}?q=${label}&ll=${latitude},${longitude}`,
-      android: `${scheme}${latitude},${longitude}?q=${label}`,
-      default: `${scheme}/search/?api=1&query=${latitude},${longitude}`,
-    });
+    if ((destLat == null || destLng == null) && (trail.path?.length ?? 0) > 0) {
+      // backend path is [lon, lat]
+      destLat = trail.path![0][1];
+      destLng = trail.path![0][0];
+    }
 
-    Linking.canOpenURL(url as string).then((supported) => {
+    if (destLat == null || destLng == null) {
+      Alert.alert('Error', 'Trail start location not available');
+      return;
+    }
+
+    // Request user's current location for origin
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Allow location access to get directions');
+        return;
+      }
+
+      const userLoc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
+      const originLat = userLoc.coords.latitude;
+      const originLng = userLoc.coords.longitude;
+
+      const label = encodeURIComponent(trail.name || 'Trail Location');
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destLat},${destLng}&travelmode=walking&dir_action=navigate&destination_place_id=${label}`;
+
+      const supported = await Linking.canOpenURL(url);
       if (supported) {
-        Linking.openURL(url as string);
+        await Linking.openURL(url);
       } else {
         Alert.alert('Error', 'Unable to open maps application');
       }
-    });
+    } catch (err) {
+      console.error('Directions error', err);
+      Alert.alert('Error', 'Failed to get directions');
+    }
   };
 
   const handleCancelEdit = () => {
@@ -350,7 +373,7 @@ export default function TrailDetailScreen() {
   return (
     <View style={[
       styles.container,
-      { paddingTop: insets.top + 70, paddingBottom: Math.max(16, insets.bottom), paddingHorizontal: 16 + (insets.left || 0) },
+      { paddingBottom: Math.max(16, insets.bottom) },
     ]}>
       {false && (
         <input
@@ -364,17 +387,14 @@ export default function TrailDetailScreen() {
 
       <View style={[styles.headerButtons, { top: insets.top + 12 }]}>
         <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
-          <ArrowLeft size={24} />
+          <ArrowLeft size={24} color={theme.accentPrimary} />
         </TouchableOpacity>
         <View style={styles.headerRightButtons}>
-          <TouchableOpacity style={styles.headerButton} onPress={handleShare}>
-            <Share2 size={22} />
-          </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton} onPress={handleSave}>
-            <Bookmark size={22} fill={isSaved ? theme.textPrimary : 'none'} />
+            <Bookmark size={22} color={theme.accentPrimary} fill={isSaved ? theme.accentPrimary : 'none'} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton} onPress={handleMore}>
-            <MoreVertical size={22} />
+            <MoreVertical size={22} color={theme.accentPrimary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -389,60 +409,39 @@ export default function TrailDetailScreen() {
         scrollEventThrottle={16}
       >
         <View style={styles.heroSection}>
-          {trail.photo ? (
-            <View style={styles.heroImageContainer}>
-              <Image
-                source={{ uri: trail.photo }}
-                style={styles.heroImage}
-                contentFit="cover"
-                cachePolicy="memory-disk"
-              />
-              <LinearGradient
-                colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)']}
-                style={styles.heroGradient}
-              />
-              {canEdit && (
-                <TouchableOpacity
-                  style={styles.changePhotoFab}
-                  onPress={handlePickImage}
-                  disabled={isUploadingPhoto}
-                >
-                  {isUploadingPhoto ? (
-                    <ActivityIndicator color={theme.textPrimary} size="small" />
-                  ) : (
-                    <Camera size={20} color={theme.textPrimary} />
-                  )}
-                </TouchableOpacity>
-              )}
+          <View style={styles.heroImageContainer}>
+            <TrailMapPreview
+              coordinates={coords}
+              path={trail.path}
+              startLatitude={trail.startLatitude}
+              startLongitude={trail.startLongitude}
+              style={styles.heroImage}
+            />
+            <View style={styles.paginationDots}>
+              <View style={[styles.dot, styles.dotActive]} />
+              {trail.photo && <View style={styles.dot} />}
             </View>
-          ) : canEdit && (
-            <TouchableOpacity
-              style={styles.addPhotoContainer}
-              onPress={handlePickImage}
-              disabled={isUploadingPhoto}
-            >
-              {isUploadingPhoto ? (
-                <ActivityIndicator size="large" color={theme.backgroundPrimary} />
-              ) : (
-                <>
-                  <View style={styles.addPhotoIcon}>
-                    <Camera size={32} color={theme.backgroundPrimary} />
-                  </View>
-                  <Text style={styles.addPhotoText}>Add a photo</Text>
-                  <Text style={styles.addPhotoSubtext}>Make your trail memorable</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
-
-
+            {canEdit && (
+              <TouchableOpacity
+                style={styles.changePhotoFab}
+                onPress={handlePickImage}
+                disabled={isUploadingPhoto}
+              >
+                {isUploadingPhoto ? (
+                  <ActivityIndicator color={theme.textPrimary} size="small" />
+                ) : (
+                  <Camera size={20} color={theme.textPrimary} />
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         <View style={styles.contentWrapper}>
           <View style={styles.content}>
             <View style={styles.titleSection}>
               <View style={styles.dateRow}>
-                <IconOrEmoji IconComponent={Calendar} emoji="📅" size={16} color={theme.accentPrimary} />
+                <IconOrEmoji IconComponent={Calendar} emoji="📅" size={16} color={theme.textMuted} />
                 <Text style={styles.dateText}>{new Date(trail.createdAt ?? trail.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
               </View>
               {canEdit && isEditingName ? (
@@ -486,75 +485,38 @@ export default function TrailDetailScreen() {
                 )}
                 <Text style={styles.authorName}>{user?.name || 'John Snow'}</Text>
               </View>
-
-              {trail.city && (
-                <View style={styles.locationRow}>
-                  <MapPin size={16} color={theme.textPrimary} />
-                  <Text style={styles.location}>{trail.city}, {trail.country || 'Unknown'}</Text>
-                </View>
-              )}
-
-              {trail.rating && !isEditingDetails && (
-                <View style={styles.ratingRow}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      size={18}
-                      color={star <= trail.rating! ? '#f59e0b' : '#d1d5db'}
-                      fill={star <= trail.rating! ? '#f59e0b' : 'none'}
-                    />
-                  ))}
-                </View>
-              )}
             </View>
-
-            {trail.review && !isEditingDetails && (
-              <View style={styles.reviewCard}>
-                <Text style={styles.reviewText}>{trail.review}</Text>
-              </View>
-            )}
 
             <View style={styles.statsSection}>
               <View style={styles.statCard}>
-                <View style={styles.statIconContainer}>
-                  <MapPin size={20} color={theme.textPrimary} strokeWidth={2.5} />
-                </View>
-                <Text style={styles.statLabel}>Distance</Text>
+                <Text style={styles.statLabel}>ESTIMATED TIME</Text>
+                <Text style={styles.statValue}>{formatDuration(trail.duration)}</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statLabel}>DISTANCE</Text>
                 <Text style={styles.statValue}>{formatDistance(trail.distance)}</Text>
               </View>
 
               <View style={styles.statCard}>
-                <View style={styles.statIconContainer}>
-                  <Clock size={20} color={theme.textPrimary} strokeWidth={2.5} />
-                </View>
-                <Text style={styles.statLabel}>Duration</Text>
-                <Text style={styles.statValue}>{formatDuration(trail.duration)}</Text>
+                <Text style={styles.statLabel}>ELEVATION</Text>
+                <Text style={styles.statValue}>{trail.elevation ? `${Math.round(trail.elevation)}m` : '0m'}</Text>
               </View>
-
-              {trail.difficulty && (
-                <View style={styles.statCard}>
-                  <View style={styles.statIconContainer}>
-                    <IconOrEmoji IconComponent={TrendingUp} emoji="⛰️" size={20} color={theme.textPrimary} />
-                  </View>
-                  <Text style={styles.statLabel}>Difficulty</Text>
-                  <Text style={styles.statValue}>{trail.difficulty}</Text>
-                </View>
-              )}
+              <View style={styles.statCard}>
+                <Text style={styles.statLabel}>MATCH</Text>
+                <Text style={styles.statValue}>80%</Text>
+              </View>
             </View>
 
-            {trail.environment_tags && trail.environment_tags.length > 0 && !isEditingDetails && (
-              <View style={styles.tagsSection}>
-                <View style={styles.sectionHeader}>
-                  <IconOrEmoji IconComponent={Tag} emoji="🏷️" size={18} color={theme.textPrimary} />
-                  <Text style={styles.sectionTitle}>Environment</Text>
-                </View>
-                <View style={styles.tagsGrid}>
-                  {trail.environment_tags.map((tag: string, index: number) => (
-                    <View key={index} style={styles.tagChip}>
-                      <Text style={styles.tagText}>{tag}</Text>
-                    </View>
-                  ))}
-                </View>
+            {(trail.description || trail.review) && !isEditingDetails && (
+              <View style={styles.reviewCard}>
+                <Text style={styles.reviewText}>{trail.description || trail.review}</Text>
+              </View>
+            )}
+
+            {trail.city && (
+              <View style={styles.locationRow}>
+                <MapPin size={16} color={theme.textMuted} />
+                <Text style={styles.location}>{trail.city}, {trail.country || 'Unknown'}</Text>
               </View>
             )}
 
@@ -689,106 +651,54 @@ export default function TrailDetailScreen() {
             )}
 
             <View style={styles.mapSection}>
-              <View style={styles.sectionHeader}>
-                <IconOrEmoji IconComponent={Navigation} emoji="🧭" size={18} color={theme.textPrimary} />
-                <Text style={styles.sectionTitle}>Route Map</Text>
-              </View>
               <View style={styles.mapContainer}>
-                <TrailMap
+                <TrailMapPreview
                   coordinates={coords}
+                  path={trail.path}
+                  startLatitude={trail.startLatitude}
+                  startLongitude={trail.startLongitude}
                   style={styles.map}
-                  initialRegion={region || undefined}
-                  scrollEnabled={false}
-                  zoomEnabled={false}
                 />
               </View>
               <TouchableOpacity style={styles.directionsButton} onPress={handleGetDirections}>
-                <IconOrEmoji IconComponent={Navigation} emoji="🧭" size={18} color="#fff" />
+                <Navigation size={18} color={theme.accentPrimary} />
                 <Text style={styles.directionsButtonText}>Get Directions</Text>
               </TouchableOpacity>
-              <View style={{ height: 16 }} />
-
-              <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
-                <TouchableOpacity style={styles.startButton} onPress={() => {
-                  if (true) {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }
-                  router.push(`/(tabs)/record?trailId=${trail.id}`);
-                }}>
-                  <Text style={styles.startButtonText}>Start Trail</Text>
-                </TouchableOpacity>
-
-                <View style={styles.reviewsCard}>
-                  <Text style={styles.reviewsTitle}>Reviews</Text>
-                  <View style={styles.reviewStars}>
-                    {[1,2,3,4,5].map((s)=> (
-                      <Star key={s} size={20} color={s <= (trail.rating || 0) ? '#f59e0b' : '#374151'} />
-                    ))}
-                  </View>
-                </View>
-              </View>
-              
-              {/* Replaced modal with navigation to record screen. */}
+              <TouchableOpacity style={styles.startButton} onPress={() => {
+                if (true) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                console.log('Starting trail:', trail.id);
+                router.push(`/(tabs)/record?trailId=${trail.id}`);
+              }}>
+                <Text style={styles.startButtonText}>Start Trail</Text>
+              </TouchableOpacity>
             </View>
 
-            <View>
-              <Text style={styles.detailsTitle}>Additional Details</Text>
-
-              {trail.maxElevation !== undefined && (
-                <View style={styles.detailRow}>
-                  <View style={styles.detailIcon}>
-                    <IconOrEmoji IconComponent={TrendingUp} emoji="⛰️" size={18} color={theme.backgroundPrimary} />
-                  </View>
-                  <View style={styles.detailContent}>
-                    <Text style={styles.detailLabel}>Elevation Gain</Text>
-                    <Text style={styles.detailValue}>{trail.maxElevation}m</Text>
-                  </View>
+            <TouchableOpacity style={styles.reviewsSection} onPress={() => {}}>
+              <Text style={styles.reviewsTitle}>REVIEWS (12)</Text>
+              <View style={styles.reviewsRow}>
+                <View style={styles.reviewStars}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} size={24} color={s <= (trail.rating || 0) ? theme.accentPrimary : theme.backgroundSecondaryVarient} fill={s <= (trail.rating || 0) ? theme.accentPrimary : 'none'} />
+                  ))}
                 </View>
-              )}
+                <IconOrEmoji IconComponent={ChevronRight} emoji=">" size={24} color={theme.textMuted} />
+              </View>
+            </TouchableOpacity>
 
-              {trail.pace && (
-                <View style={styles.detailRow}>
-                  <View style={styles.detailIcon}>
-                    <IconOrEmoji IconComponent={Activity} emoji="🏃" size={18} color={theme.backgroundPrimary} />
-                  </View>
-                  <View style={styles.detailContent}>
-                    <Text style={styles.detailLabel}>Pace</Text>
-                    <Text style={styles.detailValue}>{trail.pace} /km</Text>
-                  </View>
-                </View>
-              )}
-
-              {trail.speed && (
-                <View style={styles.detailRow}>
-                  <View style={styles.detailIcon}>
-                    <IconOrEmoji IconComponent={Activity} emoji="⚡" size={18} color={theme.backgroundPrimary} />
-                  </View>
-                  <View style={styles.detailContent}>
-                    <Text style={styles.detailLabel}>Max Speed</Text>
-                    <Text style={styles.detailValue}>{trail.speed.toFixed(1)} km/h</Text>
-                  </View>
-                </View>
-              )}
-
-              <View style={styles.detailRow}>
-                <View style={styles.detailIcon}>
-                  <IconOrEmoji IconComponent={Calendar} emoji="📅" size={18} color={theme.backgroundPrimary} />
-                </View>
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Date & Time</Text>
-                  <Text style={styles.detailValue}>
-                    {new Date(trail.createdAt ?? trail.date).toLocaleString('en-US', {
-                      weekday: 'short',
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: 'numeric',
-                      minute: '2-digit',
-                    })}
-                  </Text>
+            {trail.environment_tags && trail.environment_tags.length > 0 && !isEditingDetails && (
+              <View style={styles.tagsSection}>
+                <Text style={styles.reviewsTitle}>TERRAIN TAGS</Text>
+                <View style={styles.tagsGrid}>
+                  {trail.environment_tags.map((tag: string, index: number) => (
+                    <View key={index} style={styles.tagChip}>
+                      <Text style={styles.tagText}>{tag}</Text>
+                    </View>
+                  ))}
                 </View>
               </View>
-            </View>
+            )}
           </View>
         </View>
       </Animated.ScrollView>

@@ -73,13 +73,25 @@ if (true) {
   });
 }
 
-export default function RecordScreen() {
-  const { saveTrail, getTrailById } = useTrails();
+export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail } = {}) {
+  const { saveTrail, getTrailById, getTrailWithUser } = useTrails();
   const { user } = useAuth();
   const params = useLocalSearchParams();
   const router = useRouter();
   const trailId = typeof params.trailId === 'string' ? params.trailId : undefined;
-  const existingTrail = trailId ? getTrailById(trailId) : undefined;
+  // If a full trail object was passed via query param `trail`, prefer it (JSON-encoded).
+  let paramTrail: Trail | undefined = undefined;
+  if (typeof params.trail === 'string') {
+    try {
+      // params from URL are encoded; decode then parse
+      paramTrail = JSON.parse(decodeURIComponent(params.trail));
+    } catch (err) {
+      console.warn('Failed to parse trail param:', err);
+    }
+  }
+
+
+  const [initialTrail, setInitialTrail] = useState<Trail | undefined>(incomingTrail ?? paramTrail ?? undefined);
   const mapRef = useRef<any>(null);
 
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -115,7 +127,7 @@ export default function RecordScreen() {
   const [formDifficulty, setFormDifficulty] = useState<string | undefined>(undefined);
 
   // Follow-only mode state when viewing an existing trail (via ?trailId=)
-  const [followMode, setFollowMode] = useState<boolean>(!!existingTrail);
+  const [followMode, setFollowMode] = useState<boolean>(!!initialTrail);
   const [userLocationFollow, setUserLocationFollow] = useState<Coordinate | null>(null);
   const followLocationRef = useRef<Location.LocationSubscription | null>(null);
 
@@ -143,12 +155,47 @@ export default function RecordScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // If the screen is opened without a trailId or incoming trail (e.g. via the tab bar),
+  // ensure we don't keep a previous `initialTrail` around — unless the user is actively recording.
+  useEffect(() => {
+    if (!trailId && !incomingTrail && typeof params.trail !== 'string' && !isRecording) {
+      setInitialTrail(undefined);
+      setFollowMode(false);
+    }
+  }, [trailId, incomingTrail, params.trail, isRecording]);
+
   // If opened with an existing trail, enable follow mode and show the trail coordinates
   useEffect(() => {
-    if (existingTrail) {
+    if (initialTrail) {
       setFollowMode(true);
     }
-  }, [existingTrail]);
+  }, [initialTrail]);
+
+  // DEBUG: log when initialTrail or trailId changes to help debugging navigation
+  useEffect(() => {
+    try {
+      console.log('RecordScreen debug - initialTrail:', initialTrail ? { id: initialTrail.id, coords: (initialTrail.coordinates?.length ?? initialTrail.path?.length ?? 0) } : null, 'trailId:', trailId);
+    } catch (err) {
+      console.warn('RecordScreen debug log failed', err);
+    }
+  }, [initialTrail, trailId]);
+
+  // If we have a trailId but no trail object yet, fetch it from the API/context
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (!initialTrail && trailId) {
+        try {
+          const t = await getTrailWithUser(trailId);
+          if (mounted && t) setInitialTrail(t);
+        } catch (err) {
+          console.warn('Failed to load trail by id in RecordScreen:', err);
+        }
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [initialTrail, trailId, getTrailWithUser]);
 
   // Start/stop following user location when followMode changes
   useEffect(() => {
@@ -205,10 +252,26 @@ export default function RecordScreen() {
 
   const loadRecordingState = async () => {
     try {
-      const coordsStr = await AsyncStorage.getItem('recording_coordinates');
-      if (coordsStr) {
-        const coords = JSON.parse(coordsStr);
-        setCoordinates(coords);
+      const startTimeStr = await AsyncStorage.getItem('recording_start_time');
+
+      if (!startTimeStr) {
+        // No active recording: clear any stale saved coordinates so the map is empty
+        await AsyncStorage.removeItem('recording_coordinates');
+        setCoordinates([]);
+        setIsRecording(false);
+        setDuration(0);
+      } else {
+        // There's an active recording in storage - resume state
+        setIsRecording(true);
+        const coordsStr = await AsyncStorage.getItem('recording_coordinates');
+        if (coordsStr) {
+          const coords = JSON.parse(coordsStr);
+          setCoordinates(coords);
+        }
+
+        const startTime = parseInt(startTimeStr);
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        setDuration(elapsed);
       }
 
       const maxElevationStr = await AsyncStorage.getItem('recording_max_elevation');
@@ -219,15 +282,6 @@ export default function RecordScreen() {
       const maxSpeedStr = await AsyncStorage.getItem('recording_max_speed');
       if (maxSpeedStr) {
         setMaxSpeed(parseFloat(maxSpeedStr));
-      }
-
-      if (isRecording) {
-        const startTimeStr = await AsyncStorage.getItem('recording_start_time');
-        if (startTimeStr) {
-          const startTime = parseInt(startTimeStr);
-          const elapsed = Math.floor((Date.now() - startTime) / 1000);
-          setDuration(elapsed);
-        }
       }
     } catch (error) {
       console.error('Error loading recording state:', error);
@@ -593,10 +647,10 @@ export default function RecordScreen() {
     // Instead of POSTing immediately, open save modal with draft data
     setDraftTrail(trail);
     setFormName(trail.name || '');
-    setFormDescription((trail as any).description || '');
-    setFormPhoto((trail as any).photo || undefined);
-    setFormTags((trail as any).tags || []);
-    setFormDifficulty((trail as any).difficulty || undefined);
+    setFormDescription(trail.description || '');
+    setFormPhoto(trail.photo || undefined);
+    setFormTags(trail.tags || []);
+    setFormDifficulty(trail.difficulty || undefined);
     setShowSaveModal(true);
     return;
   };
@@ -605,7 +659,7 @@ export default function RecordScreen() {
     if (!draftTrail) return;
     const toSave: Trail = {
       ...(draftTrail as Trail),
-      name: formName || (draftTrail as any).name || 'Untitled Trail',
+      name: formName || draftTrail.name || 'Untitled Trail',
       description: formDescription,
       photo: formPhoto,
       tags: formTags,
@@ -705,11 +759,20 @@ export default function RecordScreen() {
 
   const distance = calculateTotalDistance(coordinates);
 
-  const progress = existingTrail && isRecording && coordinates.length > 0 && existingTrail.coordinates.length > 0
-    ? Math.min((distance / existingTrail.distance) * 100, 100)
+  // Normalize trail coordinates: API returns `path` as [lon, lat] arrays, convert to {latitude,longitude}
+  const initialTrailCoordinates: Coordinate[] | undefined = initialTrail
+    ? (initialTrail.coordinates && initialTrail.coordinates.length > 0
+        ? initialTrail.coordinates
+        : initialTrail.path && initialTrail.path.length > 0
+          ? initialTrail.path.map((p: any) => ({ latitude: p[1], longitude: p[0] }))
+          : undefined)
+    : undefined;
+
+  const progress = initialTrail && isRecording && coordinates.length > 0 && initialTrailCoordinates && initialTrailCoordinates.length > 0
+    ? Math.min((distance / (initialTrail.distance || distance)) * 100, 100)
     : 0;
 
-  const showProgress = !!existingTrail;
+  const showProgress = !!initialTrail;
 
   const recenterMap = async () => {
     if (true) {
@@ -750,23 +813,34 @@ export default function RecordScreen() {
 
   return (
     <View style={styles.container}>
-      {currentLocation && (
-        <TrailMap
-          ref={mapRef}
-          coordinates={existingTrail && !isRecording ? existingTrail.coordinates : coordinates}
-          style={styles.map}
-          initialRegion={{
-            latitude: currentLocation.latitude,
-            longitude: currentLocation.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-          userLocation={userLocationFollow ?? currentLocation}
-          showsUserLocation
-          followsUserLocation={followMode || isRecording}
-          showsMyLocationButton={false}
-        />
-      )}
+          {(currentLocation || initialTrail) && (
+            <TrailMap
+              ref={mapRef}
+              coordinates={initialTrail && !isRecording ? initialTrailCoordinates ?? initialTrail.coordinates : coordinates}
+              style={styles.map}
+              initialRegion={
+                currentLocation
+                  ? {
+                      latitude: currentLocation.latitude,
+                      longitude: currentLocation.longitude,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    }
+                  : initialTrailCoordinates && initialTrailCoordinates.length > 0
+                  ? {
+                      latitude: initialTrailCoordinates[0].latitude,
+                      longitude: initialTrailCoordinates[0].longitude,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    }
+                  : undefined
+              }
+              userLocation={userLocationFollow ?? currentLocation}
+              showsUserLocation
+              followsUserLocation={followMode || isRecording}
+              showsMyLocationButton={false}
+            />
+          )}
 
       <TouchableOpacity
         style={styles.recenterButton}
@@ -857,7 +931,7 @@ export default function RecordScreen() {
           {/* Primary control area */}
           {!isRecording ? (
             <View style={styles.controlContainer}>
-              {existingTrail ? (
+              {initialTrail ? (
                 // Viewing an existing trail: show a simple close/back control
                 <TouchableOpacity
                   style={styles.recordButton}

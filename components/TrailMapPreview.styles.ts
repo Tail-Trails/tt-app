@@ -10,7 +10,10 @@ export default StyleSheet.create({
   },
   map: {
     width: '100%',
-    height: '100%',
+    // Make the map slightly taller than its container and shift up
+    // so Mapbox bottom UI/attribution is hidden behind the container's overflow.
+    height: '120%',
+    transform: [{ translateY: -15 } as any],
   },
   placeholder: {
     justifyContent: 'center',

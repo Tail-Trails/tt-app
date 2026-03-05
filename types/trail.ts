@@ -27,4 +27,9 @@ export interface Trail {
   review?: string;
   environment_tags?: string[];
   createdAt?: string | Date | number;
+  // Optional client/backend-provided fields
+  path?: number[][];
+  startLatitude?: number;
+  startLongitude?: number;
+  distance_from_user?: number;
 }

@@ -21,7 +21,7 @@ import { useAccount } from '@/context/AccountContext';
 import { useDogs } from '@/context/DogsContext';
 import { useTrails } from '@/context/TrailsContext';
 
-import { Mail, LogOut, Dog, Camera, X, MapPin, Star, BarChart3, Bookmark, LucideTableOfContents } from 'lucide-react-native';
+import { Mail, LogOut, Dog, Camera, X, MapPin, Star, BarChart3, Bookmark, LucideTableOfContents, ArrowRight } from 'lucide-react-native';
 import theme from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './profile.styles';
@@ -71,6 +71,35 @@ export default function ProfileScreen() {
   const totalWalks = trails.length;
   const totalTime = trails.reduce((acc, trail) => acc + (trail.duration || 0), 0);
   const totalDistance = trails.reduce((acc, trail) => acc + trail.distance, 0);
+
+  const getDayStreak = () => {
+    try {
+      const dayMs = 24 * 60 * 60 * 1000;
+      const daysSet = new Set<number>();
+      trails.forEach(t => {
+        if (!t.date) return;
+        const d = new Date(t.date);
+        d.setHours(0, 0, 0, 0);
+        daysSet.add(d.getTime());
+      });
+
+      let streak = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let cursor = today.getTime();
+
+      while (daysSet.has(cursor)) {
+        streak++;
+        cursor -= dayMs;
+      }
+
+      return streak;
+    } catch (e) {
+      return 0;
+    }
+  };
+
+  const dayStreak = getDayStreak();
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -204,7 +233,7 @@ export default function ProfileScreen() {
     }
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
+
     if (status !== 'granted') {
       Alert.alert('Permission needed', 'Please allow access to your photo library');
       return;
@@ -313,312 +342,333 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 20 }]}>
-      <View style={styles.userSection}>
-        <View style={styles.userHeader}>
-          <TouchableOpacity style={styles.userAvatar} onPress={handleOpenEditModal}>
-            {editedPhoto ? (
-              <Image
-                source={editedPhoto}
-                style={styles.userAvatarImage}
-                contentFit="cover"
-                cachePolicy="memory-disk"
-              />
-            ) : (
-              <View style={styles.initialAvatar}>
-                <Text style={styles.initialAvatarText}>{(editedName || userProfile?.name || user?.email || 'A').charAt(0).toUpperCase()}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{userProfile?.name || editedName || 'Account Holder'}</Text>
-            <View style={styles.userEmailRow}>
-              <Mail size={14} color={theme.accentPrimary} />
-              <Text style={styles.userEmail}>{user?.email || 'Not available'}</Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            style={styles.settingsButton}
-            onPress={() => router.push('/settings')}
-            accessibilityLabel="Open settings"
-          >
-            <LucideTableOfContents size={20} color={theme.accentSecondary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {isDogProfileLoading ? (
-        <View style={styles.dogCardContainer}>
-          <View style={styles.loadingDogCard}>
-            <ActivityIndicator size="large" color={theme.accentPrimary} />
-          </View>
-        </View>
-      ) : dogProfile ? (
-        <View style={styles.dogCardContainer}>
-          <TouchableOpacity style={styles.dogCard} onPress={handleEditDogProfile}>
-            <View style={styles.dogPhotoContainer}>
-              {dogProfile.image ? (
+        <View style={styles.userSection}>
+          <View style={styles.userHeader}>
+            <TouchableOpacity style={styles.userAvatar} onPress={handleOpenEditModal}>
+              {editedPhoto ? (
                 <Image
-                  source={dogProfile.image}
-                  style={styles.dogPhoto}
+                  source={editedPhoto}
+                  style={styles.userAvatarImage}
                   contentFit="cover"
                   cachePolicy="memory-disk"
                 />
               ) : (
-                <View style={[styles.dogPhoto, styles.dogPhotoPlaceholder]}>
-                  <Dog size={40} color={theme.accentPrimary} />
+                <View style={styles.initialAvatar}>
+                  <Text style={styles.initialAvatarText}>{(editedName || userProfile?.name || user?.email || 'A').charAt(0).toUpperCase()}</Text>
                 </View>
               )}
-            </View>
-            
-            <Text style={styles.dogName}>{dogProfile.name}</Text>
-            {dogProfile.nickname && (
-              <Text style={styles.dogNickname}>
-                {dogProfile.nickname}
-              </Text>
-            )}
-            {!dogProfile.nickname && <View style={styles.nicknameSpacing} />}
-
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{totalWalks}</Text>
-                <Text style={styles.statLabel}>Walks</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{formatTime(totalTime)}</Text>
-                <Text style={styles.statLabel}>Total Time</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{formatDistance(totalDistance)}</Text>
-                <Text style={styles.statLabel}>Total Dist.</Text>
+            </TouchableOpacity>
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{userProfile?.name || editedName || 'Account Holder'}</Text>
+              <View style={styles.userEmailRow}>
+                <Mail size={14} color={theme.textSecondary} />
+                <Text style={styles.userEmail}>{user?.email || 'Not available'}</Text>
               </View>
             </View>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.dogCardContainer}>
-          <View style={styles.noDogCard}>
-            <Dog size={48} color={theme.textMuted} />
-            <Text style={styles.noDogText}>No dog profile yet</Text>
             <TouchableOpacity
-              style={styles.addDogButton}
-              onPress={handleEditDogProfile}
+              style={styles.settingsButton}
+              onPress={() => router.push('/settings')}
+              accessibilityLabel="Open settings"
             >
-              <Text style={styles.addDogButtonText}>Add Dog Profile</Text>
+              <LucideTableOfContents size={24} color={theme.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
-      )}
 
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'created' && styles.tabActive]}
-          onPress={() => handleTabPress('created')}
-        >
-          <Text style={[styles.tabCount, selectedTab === 'created' && styles.tabCountActive]}>{trails.length}</Text>
-          <Text style={[styles.tabText, selectedTab === 'created' && styles.tabTextActive]}>Created</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'saved' && styles.tabActive]}
-          onPress={() => handleTabPress('saved')}
-        >
-          <Text style={[styles.tabCount, selectedTab === 'saved' && styles.tabCountActive]}>{savedTrails.length}</Text>
-          <Text style={[styles.tabText, selectedTab === 'saved' && styles.tabTextActive]}>Saved</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'reviews' && styles.tabActive]}
-          onPress={() => handleTabPress('reviews')}
-        >
-          <Text style={[styles.tabCount, selectedTab === 'reviews' && styles.tabCountActive]}>0</Text>
-          <Text style={[styles.tabText, selectedTab === 'reviews' && styles.tabTextActive]}>Reviews</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.trailsSection}>
-        {isTrailsLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.backgroundPrimary} />
+        {isDogProfileLoading ? (
+          <View style={styles.dogCardContainer}>
+            <View style={styles.loadingDogCard}>
+              <ActivityIndicator size="large" color={theme.accentPrimary} />
+            </View>
           </View>
-        ) : displayedTrails.length > 0 ? (
-          displayedTrails.map((trail) => {
-            const anim = getBookmarkAnimation(trail.id);
-            const isSaved = isTrailSaved(trail.id);
-            return (
-            <TouchableOpacity
-              key={trail.id}
-              style={styles.trailCard}
-              onPress={() => handleNavigateToTrail(trail.id)}
-            >
-              {trail.photo ? (
-                <Image source={{ uri: trail.photo }} style={styles.trailImage} />
-              ) : (
-                <TrailMapPreview
-                  coordinates={trail.coordinates}
-                  path={(trail as any).path}
-                  style={styles.trailImage}
-                  startLatitude={(trail as any).startLatitude}
-                  startLongitude={(trail as any).startLongitude}
-                />
-              )}
-              
-              <LinearGradient
-                colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.25)', 'rgba(0, 0, 0, 0.6)']}
-                locations={[0, 0.3, 0.6, 1]}
-                style={styles.trailGradient}
-              />
-              
-              <TouchableOpacity 
-                style={styles.bookmarkButton}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  handleBookmarkPress(trail.id);
-                }}
-              >
-                <Animated.View style={{ transform: [{ scale: anim }] }}>
-                  <Bookmark 
-                    size={20} 
-                    color={isSaved ? "#000" : theme.textMuted} 
-                    fill={isSaved ? "#000" : "none"}
-                    strokeWidth={2} 
-                  />
-                </Animated.View>
-              </TouchableOpacity>
-              
-              <View style={styles.trailContent}>
-                <Text style={styles.trailName}>
-                  {trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}
-                </Text>
-                <Text style={styles.trailLocation}>
-                  {trail.city ? `${trail.city}, ${trail.country || 'Unknown'}` : 'Location unknown'}
-                </Text>
-                <View style={styles.trailBadges}>
-                  {trail.difficulty && (
-                    <View style={styles.trailBadge}>
-                      <BarChart3 size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-                      <Text style={styles.trailBadgeText}>{trail.difficulty}</Text>
-                    </View>
-                  )}
-                  <View style={styles.trailBadge}>
-                    <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-                    <Text style={styles.trailBadgeText}>{formatDistance(trail.distance)}</Text>
-                  </View>
-                  {trail.rating && (
-                    <View style={styles.trailBadge}>
-                      <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
-                      <Text style={styles.trailBadgeText}>{trail.rating.toFixed(1)}</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </TouchableOpacity>
-            );
-          })
-        ) : (
-          <View style={styles.emptyContainer}>
-            <MapPin size={48} color={theme.textMuted} />
-            <Text style={styles.emptyText}>
-              {selectedTab === 'created' 
-                ? 'No trails created yet'
-                : selectedTab === 'saved'
-                ? 'No trails saved yet'
-                : 'No reviews yet'}
-            </Text>
-          </View>
-        )}
-      </View>
-
-      <TouchableOpacity
-        style={[styles.signOutButton, isLoading && styles.signOutButtonDisabled]}
-        onPress={handleSignOut}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color={theme.backgroundPrimary} />
-        ) : (
-          <>
-            <LogOut size={20} color={theme.backgroundPrimary} />
-            <Text style={styles.signOutText}>Sign Out</Text>
-          </>
-        )}
-      </TouchableOpacity>
-
-      <Modal
-        visible={showEditModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={handleCloseEditModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={[styles.modalHeader, { paddingTop: insets.top + 20 }]}>
-            <Text style={styles.modalTitle}>Edit Profile</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={handleCloseEditModal}
-            >
-              <X size={24} color={theme.backgroundPrimary} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.modalContent}>
-            <View style={styles.photoSection}>
-              <TouchableOpacity
-                style={styles.photoContainer}
-                onPress={handlePickImage}
-              >
-                {editedPhoto ? (
+        ) : dogProfile ? (
+          <View style={styles.dogCardContainer}>
+            <TouchableOpacity style={styles.dogCard} onPress={handleEditDogProfile}>
+              <View style={styles.dogPhotoContainer}>
+                {dogProfile.image ? (
                   <Image
-                    source={editedPhoto}
-                    style={styles.editPhoto}
+                    source={dogProfile.image}
+                    style={styles.dogPhoto}
                     contentFit="cover"
                     cachePolicy="memory-disk"
                   />
                 ) : (
-                  <View style={[styles.editPhoto, styles.initialAvatar] }>
-                    <Text style={styles.initialAvatarText}>{(editedName || userProfile?.name || user?.email || 'A').charAt(0).toUpperCase()}</Text>
+                  <View style={[styles.dogPhoto, styles.dogPhotoPlaceholder]}>
+                    <Dog size={40} color={theme.accentPrimary} />
                   </View>
                 )}
-                <View style={styles.cameraOverlay}>
-                  <Camera size={24} color={theme.accentPrimary} />
-                </View>
-              </TouchableOpacity>
-              <Text style={styles.photoHint}>Tap to change photo</Text>
-            </View>
-
-            <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>Name</Text>
-              <TextInput
-                style={styles.input}
-                value={editedName}
-                onChangeText={setEditedName}
-                placeholder="Enter your name"
-                placeholderTextColor={theme.textMuted}
-              />
-            </View>
-
-            <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>Email</Text>
-              <View style={styles.disabledInput}>
-                <Text style={styles.disabledInputText}>{user?.email}</Text>
               </View>
-              <Text style={styles.inputHint}>Email cannot be changed</Text>
-            </View>
-          </ScrollView>
 
-          <View style={[styles.modalFooter, { paddingBottom: insets.bottom + 20 }]}>
-            <TouchableOpacity
-              style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-              onPress={handleSaveProfile}
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <ActivityIndicator color={theme.accentPrimary} />
-              ) : (
-                <Text style={styles.saveButtonText}>Save Changes</Text>
+              <Text style={styles.dogName}>{dogProfile.name}</Text>
+              {dogProfile.nickname && (
+                <Text style={styles.dogNickname}>
+                  {dogProfile.nickname}
+                </Text>
               )}
+              {!dogProfile.nickname && <View style={styles.nicknameSpacing} />}
+
+              <View style={styles.statsRow}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{totalWalks}</Text>
+                  <Text style={styles.statLabel}>Walks</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{formatTime(totalTime)}</Text>
+                  <Text style={styles.statLabel}>Total Time</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statValue}>{formatDistance(totalDistance)}</Text>
+                  <Text style={styles.statLabel}>Total Dist.</Text>
+                </View>
+              </View>
             </TouchableOpacity>
           </View>
+        ) : (
+          <View style={styles.dogCardContainer}>
+            <View style={styles.noDogCard}>
+              <Dog size={48} color={theme.textMuted} />
+              <Text style={styles.noDogText}>No dog profile yet</Text>
+              <TouchableOpacity
+                style={styles.addDogButton}
+                onPress={handleEditDogProfile}
+              >
+                <Text style={styles.addDogButtonText}>Add Dog Profile</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        <View style={styles.statsCardContainer}>
+          <TouchableOpacity style={styles.statsCard} onPress={() => router.push('/stats')}>
+            <View style={styles.statsCardHeader}>
+              <Text style={styles.statsTitle}>Stats</Text>
+              <ArrowRight size={18} color={theme.accentPrimary} />
+            </View>
+
+            <View style={styles.statsCardContent}>
+              <View style={styles.statsLeft}>
+                <Text style={styles.statsBig}>{dayStreak}</Text>
+                <Text style={styles.statsLabel}>Day streak</Text>
+                <Text style={styles.statsHint}>Keep the streak alive by walking at least once every 24 hours!</Text>
+              </View>
+
+              <View style={styles.statsRight}>
+                <View style={styles.badgeCircle}>
+                  <Dog size={20} color={theme.backgroundSecondary} />
+                </View>
+                <Text style={styles.badgeTitle}>{totalWalks} Walks</Text>
+                <Text style={styles.badgeSubtitle}>Badge</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
         </View>
-      </Modal>
-    </ScrollView>
+
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'created' && styles.tabActive]}
+            onPress={() => handleTabPress('created')}
+          >
+            <Text style={[styles.tabCount, selectedTab === 'created' && styles.tabCountActive]}>{trails.length}</Text>
+            <Text style={[styles.tabText, selectedTab === 'created' && styles.tabTextActive]}>Created</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'saved' && styles.tabActive]}
+            onPress={() => handleTabPress('saved')}
+          >
+            <Text style={[styles.tabCount, selectedTab === 'saved' && styles.tabCountActive]}>{savedTrails.length}</Text>
+            <Text style={[styles.tabText, selectedTab === 'saved' && styles.tabTextActive]}>Saved</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'reviews' && styles.tabActive]}
+            onPress={() => handleTabPress('reviews')}
+          >
+            <Text style={[styles.tabCount, selectedTab === 'reviews' && styles.tabCountActive]}>0</Text>
+            <Text style={[styles.tabText, selectedTab === 'reviews' && styles.tabTextActive]}>Reviews</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.trailsSection}>
+          {isTrailsLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={theme.backgroundPrimary} />
+            </View>
+          ) : displayedTrails.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalTrailsContainer}>
+              {displayedTrails.map((trail) => {
+                const anim = getBookmarkAnimation(trail.id);
+                const isSaved = isTrailSaved(trail.id);
+                return (
+                  <TouchableOpacity
+                    key={trail.id}
+                    style={styles.trailCard}
+                    onPress={() => handleNavigateToTrail(trail.id)}
+                  >
+                    {trail.photo ? (
+                      <Image source={{ uri: trail.photo }} style={styles.trailImage} />
+                    ) : (
+                      <TrailMapPreview
+                        coordinates={trail.coordinates}
+                        path={trail.path}
+                        style={styles.trailImage}
+                        startLatitude={trail.startLatitude}
+                        startLongitude={trail.startLongitude}
+                      />
+                    )}
+
+                    <TouchableOpacity
+                      style={styles.bookmarkButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleBookmarkPress(trail.id);
+                      }}
+                    >
+                      <Animated.View style={{ transform: [{ scale: anim }] }}>
+                        <Bookmark
+                          size={20}
+                          color={isSaved ? "#000" : theme.textMuted}
+                          fill={isSaved ? "#000" : "none"}
+                          strokeWidth={2}
+                        />
+                      </Animated.View>
+                    </TouchableOpacity>
+
+                    <View style={styles.trailContentBelow}>
+                      <Text style={styles.trailName}>
+                        {trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}
+                      </Text>
+                      <Text style={styles.trailLocation}>
+                        {trail.city ? `${trail.city}, ${trail.country || 'Unknown'}` : 'Location unknown'}
+                      </Text>
+                      <View style={styles.trailBadges}>
+                        {trail.difficulty && (
+                          <View style={styles.trailBadge}>
+                            <BarChart3 size={14} color={theme.accentPrimary} strokeWidth={2.5} />
+                            <Text style={styles.trailBadgeText}>{trail.difficulty}</Text>
+                          </View>
+                        )}
+                        <View style={styles.trailBadge}>
+                          <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
+                          <Text style={styles.trailBadgeText}>{formatDistance(trail.distance)}</Text>
+                        </View>
+                        {trail.rating && (
+                          <View style={styles.trailBadge}>
+                            <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
+                            <Text style={styles.trailBadgeText}>{trail.rating.toFixed(1)}</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <MapPin size={48} color={theme.textMuted} />
+              <Text style={styles.emptyText}>
+                {selectedTab === 'created'
+                  ? 'No trails created yet'
+                  : selectedTab === 'saved'
+                    ? 'No trails saved yet'
+                    : 'No reviews yet'}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        <TouchableOpacity
+          style={[styles.signOutButton, isLoading && styles.signOutButtonDisabled]}
+          onPress={handleSignOut}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color={theme.backgroundPrimary} />
+          ) : (
+            <>
+              <LogOut size={20} color={theme.backgroundPrimary} />
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        <Modal
+          visible={showEditModal}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={handleCloseEditModal}
+        >
+          <View style={styles.modalContainer}>
+            <View style={[styles.modalHeader, { paddingTop: insets.top + 20 }]}>
+              <Text style={styles.modalTitle}>Edit Profile</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={handleCloseEditModal}
+              >
+                <X size={24} color={theme.backgroundPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalContent}>
+              <View style={styles.photoSection}>
+                <TouchableOpacity
+                  style={styles.photoContainer}
+                  onPress={handlePickImage}
+                >
+                  {editedPhoto ? (
+                    <Image
+                      source={editedPhoto}
+                      style={styles.editPhoto}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                    />
+                  ) : (
+                    <View style={[styles.editPhoto, styles.initialAvatar]}>
+                      <Text style={styles.initialAvatarText}>{(editedName || userProfile?.name || user?.email || 'A').charAt(0).toUpperCase()}</Text>
+                    </View>
+                  )}
+                  <View style={styles.cameraOverlay}>
+                    <Camera size={24} color={theme.accentPrimary} />
+                  </View>
+                </TouchableOpacity>
+                <Text style={styles.photoHint}>Tap to change photo</Text>
+              </View>
+
+              <View style={styles.inputSection}>
+                <Text style={styles.inputLabel}>Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editedName}
+                  onChangeText={setEditedName}
+                  placeholder="Enter your name"
+                  placeholderTextColor={theme.textMuted}
+                />
+              </View>
+
+              <View style={styles.inputSection}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <View style={styles.disabledInput}>
+                  <Text style={styles.disabledInputText}>{user?.email}</Text>
+                </View>
+                <Text style={styles.inputHint}>Email cannot be changed</Text>
+              </View>
+            </ScrollView>
+
+            <View style={[styles.modalFooter, { paddingBottom: insets.bottom + 20 }]}>
+              <TouchableOpacity
+                style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+                onPress={handleSaveProfile}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <ActivityIndicator color={theme.accentPrimary} />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </ScrollView>
     </View>
   );
 }
