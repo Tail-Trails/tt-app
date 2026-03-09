@@ -1,21 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, TextInput, Image, Alert, ScrollView, Platform, ActivityIndicator } from 'react-native';
 import { Text } from '@/components';
-
 import { useRouter, Stack } from 'expo-router';
-
 import { useDogs } from '@/context/DogsContext';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
-
 import { ChevronDown, Camera, Upload, X } from 'lucide-react-native';
 import theme from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import styles from './dog-basics.styles';
+import styles from './dog-profile.styles';
 
 import { DogSize, DOG_SIZES } from '@/types/dog-profile';
 
-export default function DogBasicsScreen() {
+export default function DogProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { dogProfile } = useDogs();
@@ -130,7 +127,7 @@ export default function DogBasicsScreen() {
 
     const navigationMethod = dogProfile ? 'replace' : 'push';
     router[navigationMethod]({
-      pathname: '/onboarding/dog-personality' as any,
+      pathname: '/onboarding/dog-traits' as any,
       params: {
         name: name.trim(),
         nickname: nickname.trim(),

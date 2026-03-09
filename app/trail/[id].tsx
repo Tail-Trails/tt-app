@@ -9,6 +9,8 @@ import {
   Alert,
   Linking,
   Animated,
+  ScrollView,
+  Dimensions,
 } from 'react-native';
 import { Text } from '@/components';
 
@@ -52,9 +54,11 @@ export default function TrailDetailScreen() {
   const [editedDifficulty, setEditedDifficulty] = useState<string>('');
   const [editedNameInDetails, setEditedNameInDetails] = useState('');
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isGettingDirections, setIsGettingDirections] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
+  const [heroActiveIndex, setHeroActiveIndex] = useState<number>(0);
   // Helper to render native icons on mobile and an emoji fallback on web where some icon libs
   // can produce text nodes that raise "Text strings must be rendered within a <Text> component".
   const IconOrEmoji = ({ IconComponent, emoji, size = 18, color }: { IconComponent: any; emoji?: string; size?: number; color?: string }) => {
@@ -181,7 +185,7 @@ export default function TrailDetailScreen() {
       return;
     }
 
-    // Request user's current location for origin
+    setIsGettingDirections(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -189,7 +193,8 @@ export default function TrailDetailScreen() {
         return;
       }
 
-      const userLoc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
+      const userLoc = await (await import('@/utils/location')).getBestAvailableLocation({ accuracy: Location.Accuracy.Highest });
+      if (!userLoc) throw new Error('User location unavailable');
       const originLat = userLoc.coords.latitude;
       const originLng = userLoc.coords.longitude;
 
@@ -205,6 +210,8 @@ export default function TrailDetailScreen() {
     } catch (err) {
       console.error('Directions error', err);
       Alert.alert('Error', 'Failed to get directions');
+    } finally {
+      setIsGettingDirections(false);
     }
   };
 
@@ -370,6 +377,8 @@ export default function TrailDetailScreen() {
 
   const canEdit = trail.user_id === user?.id;
 
+  const heroSlidesCount = ((trail as any).images?.length || 0) + (((trail as any).images?.length || 0) > 0 ? 1 : (trail.photo ? 1 : 0));
+
   return (
     <View style={[
       styles.container,
@@ -410,17 +419,64 @@ export default function TrailDetailScreen() {
       >
         <View style={styles.heroSection}>
           <View style={styles.heroImageContainer}>
-            <TrailMapPreview
-              coordinates={coords}
-              path={trail.path}
-              startLatitude={trail.startLatitude}
-              startLongitude={trail.startLongitude}
-              style={styles.heroImage}
-            />
-            <View style={styles.paginationDots}>
-              <View style={[styles.dot, styles.dotActive]} />
-              {trail.photo && <View style={styles.dot} />}
-            </View>
+            {Array.isArray((trail as any).images) && (trail as any).images.length > 0 ? (
+              <ScrollView
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.heroImageScroll}
+                onMomentumScrollEnd={(e) => {
+                  const offsetX = e.nativeEvent.contentOffset.x || 0;
+                  const idx = Math.round(offsetX / Dimensions.get('window').width);
+                  setHeroActiveIndex(idx);
+                }}
+                scrollEventThrottle={16}
+              >
+                {(trail as any).images.map((img: any, idx: number) => (
+                  <Image
+                    key={img?.id || img?.url || idx}
+                    source={{ uri: img?.url || '' }}
+                    style={[styles.heroImage, { width: Dimensions.get('window').width }]}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                  />
+                ))}
+                <View style={[styles.heroImage, { width: Dimensions.get('window').width }]}> 
+                  <TrailMapPreview
+                    coordinates={coords}
+                    path={trail.path}
+                    startLatitude={trail.startLatitude}
+                    startLongitude={trail.startLongitude}
+                    style={{ flex: 1 }}
+                  />
+                </View>
+              </ScrollView>
+            ) : trail.photo ? (
+              <Image
+                source={{ uri: trail.photo }}
+                style={styles.heroImage}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+              />
+            ) : (
+              <TrailMapPreview
+                coordinates={coords}
+                path={trail.path}
+                startLatitude={trail.startLatitude}
+                startLongitude={trail.startLongitude}
+                style={styles.heroImage}
+              />
+            )}
+
+            {heroSlidesCount > 1 && (
+              <View style={styles.paginationDots} pointerEvents="box-none">
+                {new Array(heroSlidesCount).fill(0).map((_, i) => {
+                  const active = heroActiveIndex === i;
+                  return <View key={`hero-dot-${i}`} style={[styles.dot, active && styles.dotActive]} />;
+                })}
+              </View>
+            )}
+
             {canEdit && (
               <TouchableOpacity
                 style={styles.changePhotoFab}
@@ -660,9 +716,17 @@ export default function TrailDetailScreen() {
                   style={styles.map}
                 />
               </View>
-              <TouchableOpacity style={styles.directionsButton} onPress={handleGetDirections}>
-                <Navigation size={18} color={theme.accentPrimary} />
-                <Text style={styles.directionsButtonText}>Get Directions</Text>
+              <TouchableOpacity
+                style={[styles.directionsButton, isGettingDirections && { opacity: 0.7 }]}
+                onPress={handleGetDirections}
+                disabled={isGettingDirections}
+              >
+                {isGettingDirections ? (
+                  <ActivityIndicator size="small" color={theme.accentPrimary} />
+                ) : (
+                  <Navigation size={18} color={theme.accentPrimary} />
+                )}
+                <Text style={styles.directionsButtonText}>{isGettingDirections ? 'Opening...' : 'Get Directions'}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.startButton} onPress={() => {
                 if (true) {

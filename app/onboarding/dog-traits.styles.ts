@@ -5,7 +5,7 @@ import { Typography } from '@/constants/typography';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.backgroundSecondaryVarient,
+    backgroundColor: theme.backgroundPrimary,
   },
   scrollView: {
     flex: 1,
@@ -15,16 +15,16 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 32,
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   title: {
     ...Typography.h2(theme.accentPrimary),
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   subtitle: {
     ...Typography.body(theme.accentPrimary),
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 24,
   },
   progressContainer: {
@@ -75,6 +75,11 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 24,
+    padding: 18,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: theme.borderSubtle,
+    backgroundColor: theme.backgroundPrimary,
   },
   label: {
     ...Typography.label(theme.accentPrimary),
@@ -83,6 +88,31 @@ const styles = StyleSheet.create({
   helperText: {
     ...Typography.caption(theme.accentPrimary),
     marginBottom: 12,
+  },
+  helperRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  helperLeft: {
+    ...Typography.caption(theme.accentPrimary),
+    textAlign: 'left',
+  },
+  helperRight: {
+    ...Typography.caption(theme.accentPrimary),
+    textAlign: 'right',
+  },
+  slider: {
+    height: 40,
+    marginVertical: 6,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#3d4520',
+    marginVertical: 12,
+    opacity: 0.5,
   },
   recallContainer: {
     flexDirection: 'row',
@@ -117,8 +147,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: '#3d4520',
-    backgroundColor: '#282E10',
+    borderTopColor: theme.borderSubtle,
+    backgroundColor: theme.backgroundPrimary,
   },
   backButton: {
     flex: 1,

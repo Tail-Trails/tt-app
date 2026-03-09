@@ -1,27 +1,24 @@
 import React from 'react';
+import { SvgXml } from 'react-native-svg';
 import {
   View,
-  StyleSheet,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
   ScrollView,
   Platform,
-  TextInput,
-  Modal,
   Animated,
 } from 'react-native';
-import { Text } from '@/components';
+import { Text, CollectibleDrawer } from '@/components';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
-import * as ImagePicker from 'expo-image-picker';
 import { API_URL } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useAccount } from '@/context/AccountContext';
 import { useDogs } from '@/context/DogsContext';
 import { useTrails } from '@/context/TrailsContext';
 
-import { Mail, LogOut, Dog, Camera, X, MapPin, Star, BarChart3, Bookmark, LucideTableOfContents, ArrowRight } from 'lucide-react-native';
+import { Mail, LogOut, Dog, MapPin, Star, BarChart3, Bookmark, LucideTableOfContents, ArrowRight } from 'lucide-react-native';
 import theme from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './profile.styles';
@@ -46,27 +43,15 @@ export default function ProfileScreen() {
     );
   }
   const { user, signOut, session } = auth;
-  const { userProfile, updateAccount, isLoading: isAccountLoading } = useAccount();
+  const { userProfile, isLoading: isAccountLoading } = useAccount();
   const { dogProfile, isDogProfileLoading } = useDogs();
   const { trails, savedTrails, isLoading: isTrailsLoading, saveTrailBookmark, removeTrailBookmark, isTrailSaved } = useTrails();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const [showEditModal, setShowEditModal] = React.useState<boolean>(false);
-  const [editedName, setEditedName] = React.useState<string>('');
-  const [editedPhoto, setEditedPhoto] = React.useState<string | number>('');
-  const [isSaving, setIsSaving] = React.useState<boolean>(false);
   const [selectedTab, setSelectedTab] = React.useState<ProfileTab>('created');
   const [bookmarkAnimations, setBookmarkAnimations] = React.useState<Record<string, Animated.Value>>({});
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-
-  React.useEffect(() => {
-    const defaultName = userProfile?.name || user?.email?.split('@')[0] || '';
-    // Use profile image if available, otherwise use bundled app icon as default
-    const defaultPhoto = userProfile?.image || Icon;
-    setEditedName(defaultName);
-    setEditedPhoto(defaultPhoto);
-  }, [user, userProfile]);
 
   const totalWalks = trails.length;
   const totalTime = trails.reduce((acc, trail) => acc + (trail.duration || 0), 0);
@@ -100,6 +85,51 @@ export default function ProfileScreen() {
   };
 
   const dayStreak = getDayStreak();
+
+  const [dogSvg, setDogSvg] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const resp = await fetch(`${API_URL}/uploads/proxy/stats/dog.svg`);
+        if (!resp.ok) return;
+        const txt = await resp.text();
+        if (mounted) setDogSvg(txt);
+      } catch (err) {
+        // ignore
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // Collectibles
+  const collectibleUrls = [
+    `${API_URL}/uploads/proxy/collectibles/bone.svg`,
+    `${API_URL}/uploads/proxy/collectibles/bowl.svg`,
+    `${API_URL}/uploads/proxy/collectibles/sign.svg`,
+  ];
+  const [collectibleSvgs, setCollectibleSvgs] = React.useState<(string | null)[]>([null, null, null]);
+  const [showCollectibleDrawer, setShowCollectibleDrawer] = React.useState(false);
+  const [selectedCollectible, setSelectedCollectible] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const results: (string | null)[] = [null, null, null];
+      await Promise.all(collectibleUrls.map(async (u, i) => {
+        try {
+          const r = await fetch(u);
+          if (!r.ok) return;
+          const t = await r.text();
+          results[i] = t;
+        } catch (err) {
+          // ignore
+        }
+      }));
+      if (mounted) setCollectibleSvgs(results);
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -206,129 +236,7 @@ export default function ProfileScreen() {
     if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    router.push('/onboarding/dog-basics');
-  };
-
-  const handleOpenEditModal = () => {
-    if (true) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setShowEditModal(true);
-  };
-
-  const handleCloseEditModal = () => {
-    if (true) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setShowEditModal(false);
-    const defaultName = userProfile?.name || user?.email?.split('@')[0] || '';
-    const defaultPhoto = userProfile?.image || Icon;
-    setEditedName(defaultName);
-    setEditedPhoto(defaultPhoto);
-  };
-
-  const handlePickImage = async () => {
-    if (true) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please allow access to your photo library');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setEditedPhoto(result.assets[0].uri);
-    }
-  };
-
-  const handleSaveProfile = async () => {
-    if (true) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-
-    if (!editedName.trim()) {
-      Alert.alert('Error', 'Name cannot be empty');
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      let finalPhoto: string | undefined;
-
-      // If editedPhoto is a string but not a remote URL, upload it to the server first
-      if (typeof editedPhoto === 'string' && editedPhoto && !editedPhoto.startsWith('http')) {
-        if (!session?.accessToken || !user?.id) throw new Error('No active session for upload');
-
-        const form = new FormData();
-
-        // Build file object for RN/Expo fetch
-        const uriParts = editedPhoto.split('/');
-        const fileName = uriParts[uriParts.length - 1] || `photo_${Date.now()}.jpg`;
-        const extMatch = fileName.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
-        const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
-        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
-
-        // Append file and auxiliary fields to match curl example
-        // @ts-ignore - React Native FormData file
-        form.append('file', { uri: editedPhoto, name: fileName, type: mimeType });
-        form.append('filename', fileName);
-        form.append('dog_id', '');
-        form.append('trail_id', '');
-        form.append('user_id', user.id);
-
-        const uploadResp = await fetch(`${API_URL}/uploads`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.accessToken}`,
-            'accept': 'application/json',
-            // Do NOT set Content-Type; let fetch set the multipart boundary
-          },
-          body: form as any,
-        });
-
-        if (!uploadResp.ok) {
-          const errText = await uploadResp.text();
-          throw new Error(`Upload failed: ${uploadResp.status} ${errText}`);
-        }
-
-        const uploadData = await uploadResp.json();
-        finalPhoto = uploadData.public_url || uploadData.publicUrl || uploadData.url;
-        if (!finalPhoto) throw new Error('Upload did not return a public URL');
-      } else if (typeof editedPhoto === 'string' && editedPhoto.startsWith('http')) {
-        finalPhoto = editedPhoto;
-      }
-
-      // Update account with name and (if present) the uploaded image URL
-      await updateAccount({
-        name: editedName.trim(),
-        image: finalPhoto,
-      });
-
-      if (true) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-
-      setShowEditModal(false);
-      Alert.alert('Success', 'Profile updated successfully!');
-    } catch (error: any) {
-      console.error('Failed to save profile:', error);
-      if (true) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-      Alert.alert('Error', error?.message || 'Failed to update profile');
-    } finally {
-      setIsSaving(false);
-    }
+    router.push('/onboarding/dog-profile');
   };
 
   const getDisplayedTrails = () => {
@@ -344,22 +252,22 @@ export default function ProfileScreen() {
       <ScrollView style={styles.scrollContainer} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 20 }]}>
         <View style={styles.userSection}>
           <View style={styles.userHeader}>
-            <TouchableOpacity style={styles.userAvatar} onPress={handleOpenEditModal}>
-              {editedPhoto ? (
+            <TouchableOpacity style={styles.userAvatar} onPress={() => router.push('/settings/account')}>
+              {(userProfile?.image || Icon) ? (
                 <Image
-                  source={editedPhoto}
+                  source={userProfile?.image || Icon}
                   style={styles.userAvatarImage}
                   contentFit="cover"
                   cachePolicy="memory-disk"
                 />
               ) : (
                 <View style={styles.initialAvatar}>
-                  <Text style={styles.initialAvatarText}>{(editedName || userProfile?.name || user?.email || 'A').charAt(0).toUpperCase()}</Text>
+                  <Text style={styles.initialAvatarText}>{(userProfile?.name || user?.email || 'A').charAt(0).toUpperCase()}</Text>
                 </View>
               )}
             </TouchableOpacity>
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{userProfile?.name || editedName || 'Account Holder'}</Text>
+              <Text style={styles.userName}>{userProfile?.name || user?.email?.split('@')[0] || 'Account Holder'}</Text>
               <View style={styles.userEmailRow}>
                 <Mail size={14} color={theme.textSecondary} />
                 <Text style={styles.userEmail}>{user?.email || 'Not available'}</Text>
@@ -369,6 +277,8 @@ export default function ProfileScreen() {
               style={styles.settingsButton}
               onPress={() => router.push('/settings')}
               accessibilityLabel="Open settings"
+              accessibilityRole="button"
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
               <LucideTableOfContents size={24} color={theme.textSecondary} />
             </TouchableOpacity>
@@ -446,22 +356,65 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.statsCardContent}>
-              <View style={styles.statsLeft}>
-                <Text style={styles.statsBig}>{dayStreak}</Text>
-                <Text style={styles.statsLabel}>Day streak</Text>
-                <Text style={styles.statsHint}>Keep the streak alive by walking at least once every 24 hours!</Text>
-              </View>
-
-              <View style={styles.statsRight}>
-                <View style={styles.badgeCircle}>
-                  <Dog size={20} color={theme.backgroundSecondary} />
+              <View style={styles.statsSvgContainer}>
+                <View style={styles.statsSvgRow}>
+                  {[0,1,2,3].map((i) => (
+                    <View key={i} style={styles.dogWrapper}>
+                      {/** render fetched svg or placeholder box */}
+                      {dogSvg ? (
+                        <SvgXml xml={dogSvg} width={64} height={64} />
+                      ) : (
+                        <View style={styles.dogPlaceholder} />
+                      )}
+                    </View>
+                  ))}
                 </View>
-                <Text style={styles.badgeTitle}>{totalWalks} Walks</Text>
-                <Text style={styles.badgeSubtitle}>Badge</Text>
+                <View style={styles.dogCountBadge}>
+                  <Text style={styles.dogCountText}>{totalWalks}</Text>
+                </View>
               </View>
             </View>
           </TouchableOpacity>
         </View>
+
+          {/* Collectibles (styled like Stats card) */}
+          <View style={styles.statsCardContainer}>
+            <TouchableOpacity style={styles.statsCard} onPress={() => router.push('/collectibles')}>
+              <View style={styles.statsCardHeader}>
+                <Text style={styles.statsTitle}>Collectibles</Text>
+                <ArrowRight size={18} color={theme.accentPrimary} />
+              </View>
+
+              <View style={styles.statsCardContent}>
+                <View style={styles.statsSvgContainer}>
+                  <View style={styles.statsSvgRow}>
+                    {collectibleSvgs.map((xml, i) => (
+                      <TouchableOpacity
+                        key={i}
+                        style={styles.collectibleItem}
+                        onPress={() => {
+                          if (xml) setSelectedCollectible(xml);
+                          setShowCollectibleDrawer(true);
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        {xml ? (
+                          <SvgXml xml={xml} width={64} height={64} />
+                        ) : (
+                          <View style={styles.collectiblePlaceholder} />
+                        )}
+                        <View style={[styles.collectibleOverlay, i === 0 ? { opacity: 0 } : { opacity: 0.55 }]} />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* <CollectibleDrawer visible={showCollectibleDrawer} title="Collectible" onClose={() => { setShowCollectibleDrawer(false); setSelectedCollectible(null); }}>
+            {selectedCollectible ? <SvgXml xml={selectedCollectible} width={180} height={180} /> : null}
+          </CollectibleDrawer> */}
 
         <View style={styles.tabsContainer}>
           <TouchableOpacity
@@ -493,14 +446,14 @@ export default function ProfileScreen() {
               <ActivityIndicator size="large" color={theme.backgroundPrimary} />
             </View>
           ) : displayedTrails.length > 0 ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalTrailsContainer}>
+            <View style={styles.verticalTrailsContainer}>
               {displayedTrails.map((trail) => {
                 const anim = getBookmarkAnimation(trail.id);
                 const isSaved = isTrailSaved(trail.id);
                 return (
                   <TouchableOpacity
                     key={trail.id}
-                    style={styles.trailCard}
+                    style={[styles.trailCard, styles.trailCardVertical]}
                     onPress={() => handleNavigateToTrail(trail.id)}
                   >
                     {trail.photo ? (
@@ -561,7 +514,7 @@ export default function ProfileScreen() {
                   </TouchableOpacity>
                 );
               })}
-            </ScrollView>
+            </View>
           ) : (
             <View style={styles.emptyContainer}>
               <MapPin size={48} color={theme.textMuted} />
@@ -576,101 +529,7 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        <TouchableOpacity
-          style={[styles.signOutButton, isLoading && styles.signOutButtonDisabled]}
-          onPress={handleSignOut}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color={theme.backgroundPrimary} />
-          ) : (
-            <>
-              <LogOut size={20} color={theme.backgroundPrimary} />
-              <Text style={styles.signOutText}>Sign Out</Text>
-            </>
-          )}
-        </TouchableOpacity>
-
-        <Modal
-          visible={showEditModal}
-          animationType="slide"
-          presentationStyle="pageSheet"
-          onRequestClose={handleCloseEditModal}
-        >
-          <View style={styles.modalContainer}>
-            <View style={[styles.modalHeader, { paddingTop: insets.top + 20 }]}>
-              <Text style={styles.modalTitle}>Edit Profile</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={handleCloseEditModal}
-              >
-                <X size={24} color={theme.backgroundPrimary} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.modalContent}>
-              <View style={styles.photoSection}>
-                <TouchableOpacity
-                  style={styles.photoContainer}
-                  onPress={handlePickImage}
-                >
-                  {editedPhoto ? (
-                    <Image
-                      source={editedPhoto}
-                      style={styles.editPhoto}
-                      contentFit="cover"
-                      cachePolicy="memory-disk"
-                    />
-                  ) : (
-                    <View style={[styles.editPhoto, styles.initialAvatar]}>
-                      <Text style={styles.initialAvatarText}>{(editedName || userProfile?.name || user?.email || 'A').charAt(0).toUpperCase()}</Text>
-                    </View>
-                  )}
-                  <View style={styles.cameraOverlay}>
-                    <Camera size={24} color={theme.accentPrimary} />
-                  </View>
-                </TouchableOpacity>
-                <Text style={styles.photoHint}>Tap to change photo</Text>
-              </View>
-
-              <View style={styles.inputSection}>
-                <Text style={styles.inputLabel}>Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editedName}
-                  onChangeText={setEditedName}
-                  placeholder="Enter your name"
-                  placeholderTextColor={theme.textMuted}
-                />
-              </View>
-
-              <View style={styles.inputSection}>
-                <Text style={styles.inputLabel}>Email</Text>
-                <View style={styles.disabledInput}>
-                  <Text style={styles.disabledInputText}>{user?.email}</Text>
-                </View>
-                <Text style={styles.inputHint}>Email cannot be changed</Text>
-              </View>
-            </ScrollView>
-
-            <View style={[styles.modalFooter, { paddingBottom: insets.bottom + 20 }]}>
-              <TouchableOpacity
-                style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-                onPress={handleSaveProfile}
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <ActivityIndicator color={theme.accentPrimary} />
-                ) : (
-                  <Text style={styles.saveButtonText}>Save Changes</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </ScrollView>
     </View>
   );
 }
-
-// styles are imported from profile.styles.ts

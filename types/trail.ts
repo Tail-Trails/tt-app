@@ -10,7 +10,11 @@ export interface Trail {
   duration: number;
   coordinates: Coordinate[];
   name?: string;
+  // For new creates, the client should send `urls` (array of image URLs uploaded beforehand).
+  // The backend returns `images` for saved trails. `photo` is kept for backward compatibility.
   photo?: string;
+  urls?: string[];
+  images?: string[];
   city?: string;
   country?: string;
   description?: string;

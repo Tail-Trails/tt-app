@@ -2,43 +2,9 @@ export type DogSize = 'XS' | 'S' | 'M' | 'L' | 'XL';
 
 export const DOG_SIZES: DogSize[] = ['XS', 'S', 'M', 'L', 'XL'];
 
-export const PERSONALITY_TAGS = [
-  'Friendly',
-  'Shy',
-  'Energetic',
-  'Calm',
-  'Social',
-  'Independent',
-  'Playful',
-  'Curious',
-  'Barky',
-  'Reactive',
-  'Easily Triggered',
-  'Gentle',
-  'Protective',
-  'Anxious',
-  'Confident',
-  'Food-Motivated',
-  'Quiet',
-  'Adventurous',
-  'Lazy',
-  'Affectionate',
-  'Dominant',
-  'Submissive',
-  'Fearful',
-  'Obedient',
-  'Stubborn',
-  'High-Prey-Drive',
-  'Leash-Pulling',
-  'Good-With-Dogs',
-  'Good-With-Kids',
-] as const;
+// personality tags removed — replaced by explicit trait fields
 
-export type PersonalityTag = typeof PERSONALITY_TAGS[number];
-
-export type RecallReliability = 'Poor' | 'Fair' | 'Good' | 'Excellent';
-
-export const RECALL_RELIABILITY_OPTIONS: RecallReliability[] = ['Poor', 'Fair', 'Good', 'Excellent'];
+// recall_reliability removed — traits drive onboarding instead
 
 export interface Vaccine {
   name: string;
@@ -53,9 +19,15 @@ export interface DogProfile {
   size: DogSize;
   age: number;
   image?: string;
-  personality_tags: string[];
   vaccines?: Vaccine[];
-  recall_reliability?: RecallReliability;
+  // New trait fields (optional)
+  dog_tolerance?: number; // 1-100
+  nervous_around_people?: boolean;
+  offleash_reliability?: number; // 1-100
+  stimulation_tolerance?: number; // 1-100
+  high_prey_drive?: boolean;
+  walking_need?: number; // 1-100
+  sensitive_to_heat?: boolean;
   created_at?: string;
   updated_at?: string;
 }

@@ -20,6 +20,8 @@ export default StyleSheet.create({
     backgroundColor: theme.backgroundPrimary,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
+    elevation: 6,
   },
   userSection: {
     marginBottom: 16,
@@ -161,6 +163,84 @@ export default StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  statsSvgContainer: {
+    flex: 1,
+    position: 'relative',
+    paddingVertical: 8,
+  },
+  statsSvgRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  dogWrapper: {
+    width: 72,
+    height: 72,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dogPlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.04)'
+  },
+  dogCountBadge: {
+    position: 'absolute',
+    left: 28,
+    top: 6,
+    backgroundColor: '#e6f2d6',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  dogCountText: {
+    color: '#203108',
+    fontWeight: '700',
+  },
+  collectiblesContainer: {
+    marginBottom: 16,
+    backgroundColor: theme.backgroundSecondary,
+    borderRadius: 14,
+    padding: 18,
+  },
+  collectiblesTitle: {
+    ...Typography.label('#e6f2d6'),
+    marginBottom: 12,
+    fontSize: 18,
+  },
+  collectiblesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  collectibleItem: {
+    width: 88,
+    height: 88,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  collectiblePlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.03)'
+  },
+  collectibleOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#213011',
+    borderRadius: 12,
+  },
   statsLeft: {
     flex: 1,
   },
@@ -262,6 +342,13 @@ export default StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
   },
+  verticalTrailsContainer: {
+    gap: 12,
+    paddingHorizontal: 16,
+  },
+  trailCardVertical: {
+    width: '100%',
+  },
   trailCard: {
     backgroundColor: theme.textPrimary,
     borderRadius: 8,
@@ -350,11 +437,12 @@ export default StyleSheet.create({
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 40,
     backgroundColor: theme.backgroundSecondary,
-    borderRadius: 14,
-    height: 177,
-    width: 264,
+    borderRadius: 12,
+    marginHorizontal: 12,
+    padding: 40,
+    minHeight: 200,
+    marginBottom: 60,
   },
   signOutButton: {
     flexDirection: 'row',

@@ -61,6 +61,39 @@ export default StyleSheet.create({
     height: 300,
     backgroundColor: theme.backgroundSecondary,
   },
+  largeTrailImageScroll: {
+    // content container for horizontal gallery — children use same height
+    alignItems: 'stretch',
+  },
+  largeTrailImageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 300,
+    overflow: 'hidden',
+  },
+  largeTrailDots: {
+    position: 'absolute',
+    bottom: 12,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    alignItems: 'center',
+    pointerEvents: 'none' as any,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  dotActive: {
+    backgroundColor: theme.accentPrimary,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
   bookmarkButton: {
     position: 'absolute',
     top: 20,

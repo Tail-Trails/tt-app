@@ -1,12 +1,13 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { View, ScrollView, TouchableOpacity, Platform, ActivityIndicator, Animated, TextInput, Modal, FlatList } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Platform, ActivityIndicator, Animated, TextInput, Modal, FlatList, Dimensions } from 'react-native';
 import { Text } from '@/components';
 import LottieLoader from '@/components/LottieLoader';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
+import { getBestAvailableLocation } from '@/utils/location';
 import * as Haptics from 'expo-haptics';
 import { MapPin, Search, Heart, Umbrella, Bookmark, Star, X, BarChart3, Navigation, Icon, ChevronLeft, SlidersHorizontal, ArrowRight, MoreVertical } from 'lucide-react-native';
 import theme from '@/constants/colors';
@@ -37,6 +38,8 @@ export default function ExploreScreen() {
   const [showSearchModal, setShowSearchModal] = useState<boolean>(false);
   const [currentLocation, setCurrentLocation] = useState<string>('');
   const [searchSuggestions, setSearchSuggestions] = useState<{ id: string; name: string; location: string; type: string }[]>([]);
+  const [activeImageIndex, setActiveImageIndex] = useState<Record<string, number>>({});
+  const [isCardSwiping, setIsCardSwiping] = useState<Record<string, boolean>>({});
 
   const loadUserLocationAndNearbyTrails = useCallback(async () => {
     if (false) {
@@ -76,15 +79,19 @@ export default function ExploreScreen() {
       const { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status === 'granted') {
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
+        const location = await getBestAvailableLocation({ accuracy: Location.Accuracy.Balanced });
 
         // Skip reverse geocoding to avoid rate limits. We only need lat/lon for nearby search.
         setUserCity(undefined);
-        setCurrentLocation('Current location');
-        const trails = await loadNearbyTrails(location.coords.latitude, location.coords.longitude);
-        setNearbyTrails(trails);
+        if (location) {
+          setCurrentLocation('Current location');
+          const trails = await loadNearbyTrails(location.coords.latitude, location.coords.longitude);
+          setNearbyTrails(trails);
+        } else {
+          setCurrentLocation('Location unavailable');
+          const trails = await loadNearbyTrails();
+          setNearbyTrails(trails);
+        }
       } else {
         setCurrentLocation('Location unavailable');
         const trails = await loadNearbyTrails();
@@ -345,23 +352,68 @@ export default function ExploreScreen() {
                   key={trail.id}
                   style={styles.largeTrailCard}
                   onPress={() => handleNavigateToTrail(trail.id)}
+                  disabled={!!isCardSwiping[trail.id]}
                 >
-                  {trail.photo ? (
-                    <Image
-                      source={{ uri: trail.photo }}
-                      style={styles.largeTrailImage}
-                      contentFit="cover"
-                      cachePolicy="memory-disk"
-                    />
-                    ) : (
-                    <TrailMapPreview
-                      coordinates={trail.coordinates}
-                      path={trail.path}
-                      style={styles.largeTrailImage}
-                      startLatitude={trail.startLatitude}
-                      startLongitude={trail.startLongitude}
-                    />
-                  )}
+                  {Array.isArray((trail as any).images) && (trail as any).images.length > 0 ? (
+                    <View style={styles.largeTrailImageContainer}>
+                        <ScrollView
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.largeTrailImageScroll}
+                        onScrollBeginDrag={() => setIsCardSwiping(prev => ({ ...prev, [trail.id]: true }))}
+                        onScrollEndDrag={() => setIsCardSwiping(prev => ({ ...prev, [trail.id]: false }))}
+                        onMomentumScrollEnd={(e) => {
+                          const offsetX = e.nativeEvent.contentOffset.x || 0;
+                          const idx = Math.round(offsetX / Dimensions.get('window').width);
+                          setActiveImageIndex(prev => ({ ...prev, [trail.id]: idx }));
+                          setIsCardSwiping(prev => ({ ...prev, [trail.id]: false }));
+                        }}
+                        scrollEventThrottle={16}
+                      >
+                        {(trail as any).images.map((img: any, idx: number) => (
+                          <Image
+                            key={img?.id || img?.url || idx}
+                            source={{ uri: img?.url || '' }}
+                            style={[styles.largeTrailImage, { width: Dimensions.get('window').width }]}
+                            contentFit="cover"
+                            cachePolicy="memory-disk"
+                          />
+                        ))}
+                        <View style={[styles.largeTrailImage, { width: Dimensions.get('window').width }] }>
+                          <TrailMapPreview
+                            coordinates={trail.coordinates}
+                            path={trail.path}
+                            style={{ flex: 1 }}
+                            startLatitude={trail.startLatitude}
+                            startLongitude={trail.startLongitude}
+                          />
+                        </View>
+                      </ScrollView>
+
+                      <View style={styles.largeTrailDots} pointerEvents="box-none">
+                        {new Array(((trail as any).images.length || 0) + 1).fill(0).map((_, i) => {
+                          const active = (activeImageIndex[trail.id] || 0) === i;
+                          return <View key={`${trail.id}-dot-${i}`} style={[styles.dot, active && styles.dotActive]} />;
+                        })}
+                      </View>
+                    </View>
+                  ) : (trail.photo ? (
+                      <Image
+                        source={{ uri: trail.photo }}
+                        style={styles.largeTrailImage}
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
+                      />
+                      ) : (
+                      <TrailMapPreview
+                        coordinates={trail.coordinates}
+                        path={trail.path}
+                        style={styles.largeTrailImage}
+                        startLatitude={trail.startLatitude}
+                        startLongitude={trail.startLongitude}
+                      />
+                    ))}
 
                   <View style={styles.cardContent}>
                     <View style={styles.cardHeader}>

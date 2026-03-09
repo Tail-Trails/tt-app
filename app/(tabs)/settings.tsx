@@ -55,20 +55,16 @@ export default function SettingsScreen() {
             <Text style={styles.rowText}>Privacy and Safety</Text>
             <ChevronRight size={18} color={theme.accentPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.row} onPress={() => handleRow('Change your password', '/settings/password')}>
-            <Text style={styles.rowText}>Change your password</Text>
-            <ChevronRight size={18} color={theme.accentPrimary} />
-          </TouchableOpacity>
         </View>
 
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Dog Profile</Text>
-          <TouchableOpacity style={styles.row} onPress={() => handleRow('Dog Information', '/settings/dog-info')}>
-            <Text style={styles.rowText}>Dog Information</Text>
+          <Text style={styles.sectionTitle}>Dog Account</Text>
+          <TouchableOpacity style={styles.row} onPress={() => handleRow('Dog Profile', '/onboarding/dog-profile')}>
+            <Text style={styles.rowText}>Dog Profile</Text>
             <ChevronRight size={18} color={theme.accentPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.row} onPress={() => handleRow('Edit Tags', '/settings/dog-tags')}>
-            <Text style={styles.rowText}>Edit Tags</Text>
+          <TouchableOpacity style={styles.row} onPress={() => handleRow('Dog Traits', '/onboarding/dog-traits')}>
+            <Text style={styles.rowText}>Dog Traits</Text>
             <ChevronRight size={18} color={theme.accentPrimary} />
           </TouchableOpacity>
         </View>

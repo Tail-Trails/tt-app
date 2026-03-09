@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, TextInput, Modal, ScrollView } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, TextInput, ScrollView } from 'react-native';
 import { Text } from '@/components';
 import TrailMap from '@/components/TrailMap';
-import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as Haptics from 'expo-haptics';
@@ -117,14 +115,6 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   const [pace, setPace] = useState<string>('0:00');
   const [speed, setSpeed] = useState<number>(0);
   const [maxSpeed, setMaxSpeed] = useState<number>(0);
-  const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
-  const [draftTrail, setDraftTrail] = useState<Partial<Trail> | null>(null);
-  // fields for the save form
-  const [formName, setFormName] = useState<string>('');
-  const [formDescription, setFormDescription] = useState<string>('');
-  const [formPhoto, setFormPhoto] = useState<string | undefined>(undefined);
-  const [formTags, setFormTags] = useState<string[]>([]);
-  const [formDifficulty, setFormDifficulty] = useState<string | undefined>(undefined);
 
   // Follow-only mode state when viewing an existing trail (via ?trailId=)
   const [followMode, setFollowMode] = useState<boolean>(!!initialTrail);
@@ -314,17 +304,19 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
         setHasPermission(true);
 
         try {
-          const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
-          const coord = {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          };
-          setCurrentLocation(coord);
-          console.log('Initial location:', coord);
+          const location = await (await import('@/utils/location')).getBestAvailableLocation({ accuracy: Location.Accuracy.Balanced });
+          if (location) {
+            const coord = {
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            };
+            setCurrentLocation(coord);
+            console.log('Initial location:', coord);
+          } else {
+            console.warn('Initial location not available (no current or last-known position)');
+          }
         } catch (locError: any) {
-          console.warn('Error getting initial location:', locError.message);
+          console.warn('Error getting initial location:', locError?.message || locError);
         }
       } else {
         setHasPermission(false);
@@ -375,9 +367,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
       await AsyncStorage.removeItem('recording_max_speed');
       await AsyncStorage.removeItem('recording_last_update');
 
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      const location = await (await import('@/utils/location')).getBestAvailableLocation({ accuracy: Location.Accuracy.Balanced });
 
       // do not perform reverse geocoding — only keep coordinates
       setStartLocation(null);
@@ -644,87 +634,17 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
       speed: finalMaxSpeed,
       maxElevation: finalMaxElevation,
     };
-    // Instead of POSTing immediately, open save modal with draft data
-    setDraftTrail(trail);
-    setFormName(trail.name || '');
-    setFormDescription(trail.description || '');
-    setFormPhoto(trail.photo || undefined);
-    setFormTags(trail.tags || []);
-    setFormDifficulty(trail.difficulty || undefined);
-    setShowSaveModal(true);
+    // Navigate to end-walk flow with draft trail data for finalization
+    try {
+      const draftParam = encodeURIComponent(JSON.stringify(trail));
+      router.push(`/end-walk/summary?draft=${draftParam}`);
+    } catch (err) {
+      console.error('Failed to navigate to end-walk summary:', err);
+    }
     return;
   };
 
-  const submitSave = async () => {
-    if (!draftTrail) return;
-    const toSave: Trail = {
-      ...(draftTrail as Trail),
-      name: formName || draftTrail.name || 'Untitled Trail',
-      description: formDescription,
-      photo: formPhoto,
-      tags: formTags,
-      difficulty: formDifficulty,
-    };
-
-    try {
-      const saved = await saveTrail(toSave);
-      if (true) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-      setShowSaveModal(false);
-      setDraftTrail(null);
-      setIsRecording(false);
-      setCoordinates([]);
-      setDuration(0);
-      setStartLocation(null);
-      setElevation(0);
-      setMaxElevation(0);
-      setPace('0:00');
-      setSpeed(0);
-      setMaxSpeed(0);
-
-      await AsyncStorage.removeItem('recording_coordinates');
-      await AsyncStorage.removeItem('recording_max_elevation');
-      await AsyncStorage.removeItem('recording_max_speed');
-      await AsyncStorage.removeItem('recording_start_time');
-      await AsyncStorage.removeItem('recording_last_update');
-      // Redirect to profile tab after saving
-      router.push('/(tabs)/profile');
-    } catch (err) {
-      console.error('Save failed', err);
-      Alert.alert('Error', 'Failed to save trail');
-    }
-  };
-
-  const pickImage = async () => {
-    if (true) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please allow access to your photo library');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setFormPhoto(result.assets[0].uri);
-    }
-  };
-
-  const cancelSave = () => {
-    setShowSaveModal(false);
-    setDraftTrail(null);
-  };
-
-
+  
   if (isLoadingPermission && true) {
     return (
       <View style={styles.loadingContainer}>
@@ -780,9 +700,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
     }
     if (mapRef.current) {
       try {
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
+        const location = await (await import('@/utils/location')).getBestAvailableLocation({ accuracy: Location.Accuracy.Balanced });
         const coord = {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
@@ -972,58 +890,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
           ) : null}
         </View>
       </Animated.View>
-      <Modal
-        visible={showSaveModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={cancelSave}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <ScrollView contentContainerStyle={styles.modalContent}>
-              <Text style={styles.modalTitle}>Save Trail</Text>
-              <TextInput
-                placeholder="Trail name"
-                value={formName}
-                onChangeText={setFormName}
-                style={styles.input}
-                placeholderTextColor={theme.backgroundPrimary}
-              />
-              <TextInput
-                placeholder="Description"
-                value={formDescription}
-                onChangeText={setFormDescription}
-                style={[styles.input, { height: 100 }]}
-                placeholderTextColor={theme.backgroundPrimary}
-                multiline
-              />
-              <TouchableOpacity onPress={pickImage} style={[styles.input, { padding: 12, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }]}>
-                {formPhoto ? (
-                  <>
-                    <Image source={{ uri: formPhoto }} style={{ width: 80, height: 60, borderRadius: 8, marginRight: 12 }} />
-                    <Text style={{ flex: 1 }}>{formName || 'Selected image'}</Text>
-                    <Upload size={18} color={theme.backgroundPrimary} />
-                  </>
-                ) : (
-                  <>
-                    <Upload size={18} color={theme.backgroundPrimary} />
-                    <Text style={{ marginLeft: 8, color: theme.backgroundPrimary }}>Add Photo (optional)</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-                <TouchableOpacity style={styles.modalButton} onPress={cancelSave}>
-                  <Text style={styles.modalButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.modalButton, styles.modalButtonPrimary]} onPress={submitSave}>
-                  <Text style={[styles.modalButtonText, { color: '#fff' }]}>Save Trail</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+      
     </View>
   );
 }
