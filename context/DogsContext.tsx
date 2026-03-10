@@ -15,6 +15,7 @@ export const [DogsContext, useDogs] = createContextHook(() => {
   , [dogProfiles, activeDogId]);
 
   const loadDogProfiles = useCallback(async (userId: string, token: string) => {
+    if (!userId || !token) return; // Add this guard to prevent unnecessary calls
     console.log('Loading dog profiles for user:', userId);
     setIsDogProfileLoading(true);
     try {

@@ -1,11 +1,8 @@
-import React from 'react';
 import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text } from '@/components';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X } from 'lucide-react-native';
-import styles from './end-walk.styles';
-import theme from '@/constants/colors';
+import styles from './summary.styles';
 import { formatDuration } from '@/utils/distance';
 
 export default function EndWalkSummary() {
@@ -25,9 +22,6 @@ export default function EndWalkSummary() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 20 }]}>
-        <TouchableOpacity style={[styles.closeButton, { position: 'absolute', left: 16, top: insets.top + 12 }]} onPress={() => router.back()}>
-          <X size={22} color={theme.accentPrimary} />
-        </TouchableOpacity>
 
         <View style={styles.bigHeader}>
           <Text style={styles.hugeTitle}>Great walk today{draft && draft.name ? `\n${draft.name}!` : ' Username!'} 👏</Text>

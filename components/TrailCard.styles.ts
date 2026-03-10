@@ -1,0 +1,179 @@
+import { StyleSheet, Platform } from 'react-native';
+import theme from '@/constants/colors';
+import { Typography } from '@/constants/typography';
+
+export default StyleSheet.create({
+  /* Large / Explore variant */
+  largeTrailCard: {
+    backgroundColor: theme.backgroundSecondary,
+    borderRadius: 24,
+    overflow: 'hidden',
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: theme.borderSubtle,
+  },
+  largeTrailImage: {
+    width: '100%',
+    height: 300,
+    backgroundColor: theme.backgroundSecondary,
+  },
+  largeTrailImageScroll: {
+    alignItems: 'stretch',
+  },
+  largeTrailImageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 300,
+    overflow: 'hidden',
+  },
+  largeTrailDots: {
+    position: 'absolute',
+    bottom: 12,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    alignItems: 'center',
+    pointerEvents: 'none' as any,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  dotActive: {
+    backgroundColor: theme.accentPrimary,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  bookmarkButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(25, 30, 7, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: theme.backgroundSecondaryVarient,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  cardContent: {
+    padding: 16,
+    paddingTop: 12,
+  },
+  cardTitle: {
+    ...Typography.h2(theme.textPrimary),
+    flex: 1,
+    marginRight: 8,
+  },
+  cardLocation: {
+    ...Typography.body(theme.textMuted),
+    marginBottom: 12,
+  },
+  cardBadges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flexWrap: 'wrap' as const,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(25, 30, 7, 0.75)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  badgeText: {
+    ...Typography.caption(theme.textPrimary),
+  },
+
+  /* Vertical / Profile variant */
+  trailCard: {
+    backgroundColor: theme.textPrimary,
+    borderRadius: 8,
+    width: 350,
+    overflow: 'hidden',
+    marginBottom: 10,
+    shadowColor: theme.backgroundSecondaryVarient,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 4,
+    position: 'relative',
+  },
+  trailCardVertical: {
+    width: '100%',
+  },
+  trailImage: {
+    width: '100%',
+    height: 250,
+    backgroundColor: theme.backgroundSecondary,
+  },
+  bookmarkButtonVertical: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.backgroundSecondary,
+  },
+  trailContentBelow: {
+    padding: 12,
+    backgroundColor: theme.backgroundSecondary,
+  },
+  trailName: {
+    ...Typography.h2(theme.textPrimary),
+    marginBottom: 4,
+  },
+  trailLocation: {
+    ...Typography.caption(theme.textPrimary),
+    opacity: 0.95,
+  },
+  trailBadges: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  trailBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  trailBadgeText: {
+    ...Typography.caption(theme.textPrimary),
+  },
+  placeholderImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.textPrimary,
+  },
+});

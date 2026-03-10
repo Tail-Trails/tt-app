@@ -197,7 +197,7 @@ export default StyleSheet.create({
     marginBottom: 6,
   },
   statItemValue: {
-    ...Typography.h2(theme.textPrimary),
+    ...Typography.h2(theme.accentPrimary),
   },
   expandedContent: {
     marginTop: 8,

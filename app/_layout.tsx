@@ -62,9 +62,9 @@ function RootLayoutNav() {
       // Small delay ensures the first frame of the app is rendered 
       // before the splash screen is pulled away on Android.
       const timer = setTimeout(async () => {
-        await SplashScreen.hideAsync().catch(() => {});
+        await SplashScreen.hideAsync().catch(() => { });
         setIsReady(true);
-      }, 50); 
+      }, 50);
       return () => clearTimeout(timer);
     }
   }, [isLoading, isDogProfileLoading]);
@@ -87,8 +87,15 @@ function RootLayoutNav() {
     }
   }, [isAuthenticated, hasDogProfile, segments, isLoading, isDogProfileLoading, isReady]);
 
-  // While data is fetching, we show the Loader (which will be behind the splash screen initially)
+  // 1. If we are still determining auth or dog status, show loader
   if (isLoading || isDogProfileLoading) {
+    return <LottieLoader />;
+  }
+
+  // 2. If the splash screen hasn't finished hiding, don't mount the Stack yet
+  // This prevents the "stale" error during the quick transition from 
+  // "Logged Out" -> "Logged In"
+  if (!isReady) {
     return <LottieLoader />;
   }
 

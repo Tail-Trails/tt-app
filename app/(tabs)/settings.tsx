@@ -69,14 +69,6 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Debug</Text>
-          <TouchableOpacity style={styles.row} onPress={() => setShowLoader(true)}>
-            <Text style={styles.rowText}>Show Lottie Loader</Text>
-            <ChevronRight size={18} color={theme.accentPrimary} />
-          </TouchableOpacity>
-        </View>
-
         <TouchableOpacity style={styles.logoutCard} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
           <ChevronRight size={18} color={theme.accentPrimary} />

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { View, ScrollView, TouchableOpacity, Platform, ActivityIndicator, Animated, TextInput, Modal, FlatList, Dimensions } from 'react-native';
 import { Text } from '@/components';
@@ -15,6 +15,7 @@ import { useTrails } from '@/context/TrailsContext';
 import { Trail } from '@/types/trail';
 import { formatDistance } from '@/utils/distance';
 import TrailMapPreview from '@/components/TrailMapPreview';
+import TrailCard from '@/components/TrailCard';
 import styles from './explore.styles';
 
 
@@ -40,6 +41,8 @@ export default function ExploreScreen() {
   const [searchSuggestions, setSearchSuggestions] = useState<{ id: string; name: string; location: string; type: string }[]>([]);
   const [activeImageIndex, setActiveImageIndex] = useState<Record<string, number>>({});
   const [isCardSwiping, setIsCardSwiping] = useState<Record<string, boolean>>({});
+  const [cardWidths, setCardWidths] = useState<Record<string, number>>({});
+  const mainScrollRef = React.useRef<ScrollView>(null);
 
   const loadUserLocationAndNearbyTrails = useCallback(async () => {
     if (false) {
@@ -274,6 +277,8 @@ export default function ExploreScreen() {
   return (
     <View style={styles.safeContainer}>
       <ScrollView
+        ref={mainScrollRef}
+        scrollEnabled={!Object.values(isCardSwiping).some(Boolean)}
         style={styles.container}
         showsVerticalScrollIndicator={false}
         stickyHeaderIndices={[0]}
@@ -332,11 +337,6 @@ export default function ExploreScreen() {
             </ScrollView>
           </View>
         </View>
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Tailored for you</Text>
-          <ArrowRight size={20} color={theme.accentPrimary} />
-        </View>
         <View style={styles.categoryTrailsSection}>
           {isLoadingNearby ? (
             <View style={styles.loadingContainer}>
@@ -345,116 +345,16 @@ export default function ExploreScreen() {
             </View>
           ) : filteredTrails.length > 0 ? (
             filteredTrails.map((trail) => {
-              const anim = getBookmarkAnimation(trail.id);
               const isSaved = isTrailSaved(trail.id);
               return (
-                <TouchableOpacity
+                <TrailCard
                   key={trail.id}
-                  style={styles.largeTrailCard}
-                  onPress={() => handleNavigateToTrail(trail.id)}
-                  disabled={!!isCardSwiping[trail.id]}
-                >
-                  {Array.isArray((trail as any).images) && (trail as any).images.length > 0 ? (
-                    <View style={styles.largeTrailImageContainer}>
-                        <ScrollView
-                        horizontal
-                        pagingEnabled
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.largeTrailImageScroll}
-                        onScrollBeginDrag={() => setIsCardSwiping(prev => ({ ...prev, [trail.id]: true }))}
-                        onScrollEndDrag={() => setIsCardSwiping(prev => ({ ...prev, [trail.id]: false }))}
-                        onMomentumScrollEnd={(e) => {
-                          const offsetX = e.nativeEvent.contentOffset.x || 0;
-                          const idx = Math.round(offsetX / Dimensions.get('window').width);
-                          setActiveImageIndex(prev => ({ ...prev, [trail.id]: idx }));
-                          setIsCardSwiping(prev => ({ ...prev, [trail.id]: false }));
-                        }}
-                        scrollEventThrottle={16}
-                      >
-                        {(trail as any).images.map((img: any, idx: number) => (
-                          <Image
-                            key={img?.id || img?.url || idx}
-                            source={{ uri: img?.url || '' }}
-                            style={[styles.largeTrailImage, { width: Dimensions.get('window').width }]}
-                            contentFit="cover"
-                            cachePolicy="memory-disk"
-                          />
-                        ))}
-                        <View style={[styles.largeTrailImage, { width: Dimensions.get('window').width }] }>
-                          <TrailMapPreview
-                            coordinates={trail.coordinates}
-                            path={trail.path}
-                            style={{ flex: 1 }}
-                            startLatitude={trail.startLatitude}
-                            startLongitude={trail.startLongitude}
-                          />
-                        </View>
-                      </ScrollView>
-
-                      <View style={styles.largeTrailDots} pointerEvents="box-none">
-                        {new Array(((trail as any).images.length || 0) + 1).fill(0).map((_, i) => {
-                          const active = (activeImageIndex[trail.id] || 0) === i;
-                          return <View key={`${trail.id}-dot-${i}`} style={[styles.dot, active && styles.dotActive]} />;
-                        })}
-                      </View>
-                    </View>
-                  ) : (trail.photo ? (
-                      <Image
-                        source={{ uri: trail.photo }}
-                        style={styles.largeTrailImage}
-                        contentFit="cover"
-                        cachePolicy="memory-disk"
-                      />
-                      ) : (
-                      <TrailMapPreview
-                        coordinates={trail.coordinates}
-                        path={trail.path}
-                        style={styles.largeTrailImage}
-                        startLatitude={trail.startLatitude}
-                        startLongitude={trail.startLongitude}
-                      />
-                    ))}
-
-                  <View style={styles.cardContent}>
-                    <View style={styles.cardHeader}>
-                      <Text style={styles.cardTitle}>
-                        {trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}
-                      </Text>
-                      <TouchableOpacity>
-                        <MoreVertical size={20} color={theme.textPrimary} />
-                      </TouchableOpacity>
-                    </View>
-
-                    <Text style={styles.cardLocation}>
-                      {trail.city ? `${trail.city}, ` : ''}{trail.country || 'Portugal'}
-                    </Text>
-
-                    <View style={styles.cardBadges}>
-                      {trail.difficulty && (
-                        <View style={styles.badge}>
-                          <BarChart3 size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-                          <Text style={styles.badgeText}>{trail.difficulty}</Text>
-                        </View>
-                      )}
-                      <View style={styles.badge}>
-                        <Navigation size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-                        <Text style={styles.badgeText}>{formatDistance(trail.distance)}</Text>
-                      </View>
-                      {typeof trail.distance_from_user === 'number' && (
-                        <View style={styles.badge}>
-                          <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-                          <Text style={styles.badgeText}>{formatDistance(trail.distance_from_user)}</Text>
-                        </View>
-                      )}
-                      {trail.rating && (
-                        <View style={styles.badge}>
-                          <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
-                          <Text style={styles.badgeText}>{trail.rating.toFixed(1)}</Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                </TouchableOpacity>
+                  trail={trail}
+                  onPress={(id) => handleNavigateToTrail(id)}
+                  onBookmarkPress={(id) => handleBookmarkPress(id, isValidUUID(id))}
+                  isSaved={isSaved}
+                  onSwipeStateChange={(id, swiping) => setIsCardSwiping(prev => ({ ...prev, [id]: swiping }))}
+                />
               );
             })
           ) : (

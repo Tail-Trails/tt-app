@@ -3,11 +3,13 @@ import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView,
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Plus } from 'lucide-react-native';
 import { useTrails } from '@/context/TrailsContext';
-import styles from './end-walk.styles';
+import styles from './info.styles';
+import theme from '@/constants/colors';
 
 export default function InfoPage() {
   const router = useRouter();
@@ -94,74 +96,78 @@ export default function InfoPage() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top || 20 }]}>
-      <ScrollView contentContainerStyle={styles.infoScroll}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-          <Text style={styles.closeX}>✕</Text>
-        </TouchableOpacity>
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <View style={[styles.container, { paddingTop: insets.top || 20 }]}>
+        <ScrollView contentContainerStyle={styles.infoScroll}>
+          <Text style={styles.infoHeader}>Name your trail</Text>
+          <Text style={styles.infoSub}>This name will help you find it later</Text>
 
-        <Text style={styles.infoHeader}>Name your trail</Text>
-        <Text style={styles.infoSub}>This name will help you find it later</Text>
+          <TextInput
+            placeholder="Trail name"
+            placeholderTextColor="rgba(255,255,255,0.25)"
+            value={name}
+            onChangeText={setName}
+            style={styles.nameInput}
+          />
 
-        <TextInput
-          placeholder="Trail name"
-          placeholderTextColor="rgba(255,255,255,0.25)"
-          value={name}
-          onChangeText={setName}
-          style={styles.nameInput}
-        />
+          <TouchableOpacity style={styles.addMoreToggle} onPress={() => setShowMore(s => !s)}>
+            <Plus size={18} color={theme.textMuted} style={{ marginRight: 12 }} />
+            <Text style={styles.addMoreText}>Add More Details</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.addMoreToggle} onPress={() => setShowMore(s => !s)}>
-          <Text style={styles.addMoreText}>+ Add more details</Text>
-        </TouchableOpacity>
+          {showMore && (
+            <View style={styles.moreCard}>
+              <Text style={styles.cardTitle}>Add photos?</Text>
+              <Text style={styles.cardSub}>Show highlights from your walk</Text>
 
-        {showMore && (
-          <View style={styles.moreCard}>
-            <Text style={styles.cardTitle}>Add photos?</Text>
-            <Text style={styles.cardSub}>Show highlights from your walk</Text>
+              <TouchableOpacity style={styles.addPhotoBox} onPress={pickImages}>
+                <Text style={styles.plusSign}>+</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity style={styles.addPhotoBox} onPress={pickImages}>
-              <Text style={styles.plusSign}>+</Text>
+              <View style={styles.photoRow}>
+                {photos.map((p, i) => {
+                  const extraStyle: any = { zIndex: i };
+                  if (i === 1) extraStyle.transform = [{ rotate: '-6deg' }, { translateY: 6 }];
+                  if (i === 2) extraStyle.transform = [{ rotate: '-3deg' }, { translateY: 3 }];
+                  return <RNImage key={i} source={{ uri: p }} style={[styles.thumb, extraStyle]} />;
+                })}
+              </View>
+
+              <Text style={styles.cardTitle}>Anything you'd like to share?</Text>
+              <Text style={styles.cardSub}>Share helpful information regarding the trail</Text>
+              <TextInput
+                placeholder="Anything other dog walkers should know?"
+                placeholderTextColor="rgba(255,255,255,0.25)"
+                value={notes}
+                onChangeText={setNotes}
+                style={styles.notesInput}
+                multiline
+              />
+
+              <Text style={[styles.cardTitle, { marginTop: 18 }]}>Privacy</Text>
+              <Text style={styles.cardSub}>Choose who can see your trail</Text>
+              <TouchableOpacity
+                style={styles.privacyButton}
+                onPress={() => setPrivacy(p => (p === 'public' ? 'private' : 'public'))}
+              >
+                <Text style={styles.privacyText}>{privacy === 'public' ? 'Public' : 'Private'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          <View style={{ height: 24 }} />
+
+          <View style={styles.bottomRow}>
+            <TouchableOpacity style={styles.backButton} onPress={onBack}>
+              <Text style={styles.backText}>Back</Text>
             </TouchableOpacity>
 
-            <View style={styles.photoRow}>
-              {photos.map((p, i) => (
-                <RNImage key={i} source={{ uri: p }} style={styles.thumb} />
-              ))}
-            </View>
-
-            <Text style={styles.cardTitle}>Anything you'd like to share?</Text>
-            <Text style={styles.cardSub}>Share helpful information regarding the trail</Text>
-            <TextInput
-              placeholder="Anything other dog walkers should know?"
-              placeholderTextColor="rgba(255,255,255,0.25)"
-              value={notes}
-              onChangeText={setNotes}
-              style={styles.notesInput}
-              multiline
-            />
-
-            <Text style={[styles.cardTitle, { marginTop: 18 }]}>Privacy</Text>
-            <Text style={styles.cardSub}>Choose who can see your trail</Text>
-            <TouchableOpacity
-              style={styles.privacyButton}
-              onPress={() => setPrivacy(p => (p === 'public' ? 'private' : 'public'))}
-            >
-              <Text style={styles.privacyText}>{privacy === 'public' ? 'Public' : 'Private'}</Text>
+            <TouchableOpacity style={styles.doneButton} onPress={onDone} disabled={saving}>
+              {saving ? <ActivityIndicator color="#000" /> : <Text style={styles.doneText}>Done</Text>}
             </TouchableOpacity>
           </View>
-        )}
-      </ScrollView>
-
-      <View style={styles.bottomRow}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.doneButton} onPress={onDone} disabled={saving}>
-          {saving ? <ActivityIndicator color="#000" /> : <Text style={styles.doneText}>Done</Text>}
-        </TouchableOpacity>
+        </ScrollView>
       </View>
-    </View>
+    </>
   );
 }

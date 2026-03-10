@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Square, Play, MapPin, Watch, Bell, ChevronUp, Navigation, ChevronDown, Upload } from 'lucide-react-native';
 import styles from './record.styles';
 import theme from '@/constants/colors';
+import RecordOverlay from '@/components/RecordOverlay';
 import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
 import { Coordinate, Trail } from '@/types/trail';
@@ -784,111 +785,37 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
             activeOpacity={0.7}
           >
             <View style={styles.handle} />
-            {isExpanded ? (
-              <ChevronDown size={20} color="#9ca3af" />
-            ) : (
-              <ChevronUp size={20} color="#9ca3af" />
-            )}
           </TouchableOpacity>
         </View>
 
-        <View style={[styles.bottomSheetContent, { paddingBottom: contentPaddingBottom }] }>
-          {/* Overlay states:
-              - not recording: show only the large Start Trail button
-              - recording & collapsed: show compact time/distance + stop button
-              - recording & expanded: show full stats grid + stop button
-          */}
-          {!isRecording ? null : !isExpanded ? (
-            <View style={styles.compactRow}>
-              <View style={styles.compactStats}>
-                <View style={styles.compactStatBox}>
-                  <Text style={styles.statItemLabel}>Time</Text>
-                  <Text style={styles.statItemValue}>{formatDuration(duration)}</Text>
-                </View>
-                <View style={styles.compactStatBox}>
-                  <Text style={styles.statItemLabel}>Distance</Text>
-                  <Text style={styles.statItemValue}>{formatDistance(distance)}</Text>
-                </View>
-              </View>
-              <TouchableOpacity style={styles.stopButtonCompact} onPress={stopRecording} activeOpacity={0.8}>
-                <Square size={18} color="#fff" fill="#fff" />
-                <Text style={styles.stopButtonCompactText}>Stop</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <Text style={styles.statItemLabel}>Time</Text>
-              <Text style={styles.statItemValue}>{formatDuration(duration)}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statItemLabel}>Distance</Text>
-              <Text style={styles.statItemValue}>{formatDistance(distance)}</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statItemLabel}>Elevation</Text>
-              <Text style={styles.statItemValue}>{elevation.toFixed(0)}m</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statItemLabel}>Pace</Text>
-              <Text style={styles.statItemValue}>{pace}/km</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statItemLabel}>Speed</Text>
-              <Text style={styles.statItemValue}>{speed.toFixed(1)} km/h</Text>
-            </View>
-            {showProgress && (
-              <View style={styles.statItem}>
-                <Text style={styles.statItemLabel}>Progress</Text>
-                <Text style={styles.statItemValue}>{progress.toFixed(0)}%</Text>
-              </View>
-            )}
-            </View>
-          )}
-
-          {/* Primary control area */}
-          {!isRecording ? (
-            <View style={styles.controlContainer}>
-              {initialTrail ? (
-                // Viewing an existing trail: show a simple close/back control
-                <TouchableOpacity
-                  style={styles.recordButton}
-                  onPress={() => {
-                    if (followLocationRef.current) {
-                      followLocationRef.current.remove();
-                      followLocationRef.current = null;
-                    }
-                    setFollowMode(false);
-                    router.back();
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.recordButtonText}>Close</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={styles.recordButton}
-                  onPress={startRecording}
-                  activeOpacity={0.8}
-                >
-                  <Play size={24} color={theme.backgroundPrimary} fill={theme.backgroundPrimary} />
-                  <Text style={styles.recordButtonText}>Start Trail</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          ) : isExpanded ? (
-            <View style={styles.controlContainer}>
-              <TouchableOpacity
-                style={styles.recordButton}
-                onPress={stopRecording}
-                activeOpacity={0.8}
-              >
-                <Square size={20} color={theme.backgroundPrimary} fill={theme.backgroundPrimary} />
-                <Text style={styles.recordButtonText}>Stop & Save</Text>
-              </TouchableOpacity>
-            </View>
-          ) : null}
-        </View>
+        <ScrollView
+          style={styles.bottomSheetContent}
+          contentContainerStyle={{ paddingBottom: contentPaddingBottom }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <RecordOverlay
+            isRecording={isRecording}
+            isExpanded={isExpanded}
+            duration={duration}
+            distance={distance}
+            elevation={elevation}
+            pace={pace}
+            speed={speed}
+            progress={progress}
+            showProgress={showProgress}
+            onStart={startRecording}
+            onStop={stopRecording}
+            onClose={() => {
+              if (followLocationRef.current) {
+                followLocationRef.current.remove();
+                followLocationRef.current = null;
+              }
+              setFollowMode(false);
+              router.back();
+            }}
+          />
+        </ScrollView>
       </Animated.View>
       
     </View>

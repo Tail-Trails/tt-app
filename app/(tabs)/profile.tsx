@@ -26,6 +26,7 @@ import { useRouter } from 'expo-router';
 import { formatDistance } from '@/utils/distance';
 import { LinearGradient } from 'expo-linear-gradient';
 import TrailMapPreview from '@/components/TrailMapPreview';
+import TrailCard from '@/components/TrailCard';
 // Use bundler require for local asset so Metro/Expo can resolve it reliably
 const Icon = require('../../assets/images/icon.png');
 
@@ -448,70 +449,16 @@ export default function ProfileScreen() {
           ) : displayedTrails.length > 0 ? (
             <View style={styles.verticalTrailsContainer}>
               {displayedTrails.map((trail) => {
-                const anim = getBookmarkAnimation(trail.id);
                 const isSaved = isTrailSaved(trail.id);
                 return (
-                  <TouchableOpacity
+                  <TrailCard
                     key={trail.id}
-                    style={[styles.trailCard, styles.trailCardVertical]}
-                    onPress={() => handleNavigateToTrail(trail.id)}
-                  >
-                    {trail.photo ? (
-                      <Image source={{ uri: trail.photo }} style={styles.trailImage} />
-                    ) : (
-                      <TrailMapPreview
-                        coordinates={trail.coordinates}
-                        path={trail.path}
-                        style={styles.trailImage}
-                        startLatitude={trail.startLatitude}
-                        startLongitude={trail.startLongitude}
-                      />
-                    )}
-
-                    <TouchableOpacity
-                      style={styles.bookmarkButton}
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        handleBookmarkPress(trail.id);
-                      }}
-                    >
-                      <Animated.View style={{ transform: [{ scale: anim }] }}>
-                        <Bookmark
-                          size={20}
-                          color={isSaved ? "#000" : theme.textMuted}
-                          fill={isSaved ? "#000" : "none"}
-                          strokeWidth={2}
-                        />
-                      </Animated.View>
-                    </TouchableOpacity>
-
-                    <View style={styles.trailContentBelow}>
-                      <Text style={styles.trailName}>
-                        {trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}
-                      </Text>
-                      <Text style={styles.trailLocation}>
-                        {trail.city ? `${trail.city}, ${trail.country || 'Unknown'}` : 'Location unknown'}
-                      </Text>
-                      <View style={styles.trailBadges}>
-                        {trail.difficulty && (
-                          <View style={styles.trailBadge}>
-                            <BarChart3 size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-                            <Text style={styles.trailBadgeText}>{trail.difficulty}</Text>
-                          </View>
-                        )}
-                        <View style={styles.trailBadge}>
-                          <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-                          <Text style={styles.trailBadgeText}>{formatDistance(trail.distance)}</Text>
-                        </View>
-                        {trail.rating && (
-                          <View style={styles.trailBadge}>
-                            <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
-                            <Text style={styles.trailBadgeText}>{trail.rating.toFixed(1)}</Text>
-                          </View>
-                        )}
-                      </View>
-                    </View>
-                  </TouchableOpacity>
+                    trail={trail}
+                    variant="vertical"
+                    onPress={(id) => handleNavigateToTrail(id)}
+                    onBookmarkPress={(id) => handleBookmarkPress(id)}
+                    isSaved={isSaved}
+                  />
                 );
               })}
             </View>
