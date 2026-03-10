@@ -1,11 +1,11 @@
 {
   "files": {
-    "main.js": "/static/js/main.cb98e237.js",
+    "main.js": "/static/js/main.849d0941.js",
     "static/js/908.88be4c33.chunk.js": "/static/js/908.88be4c33.chunk.js",
     "static/js/888.8c99ba14.chunk.js": "/static/js/888.8c99ba14.chunk.js",
-    "static/js/684.e657cfb4.chunk.js": "/static/js/684.e657cfb4.chunk.js",
-    "static/css/861.03371083.css": "/static/css/861.03371083.css",
-    "static/js/861.ab60d22c.js": "/static/js/861.ab60d22c.js",
+    "static/js/684.02a3c764.chunk.js": "/static/js/684.02a3c764.chunk.js",
+    "static/css/824.17b568f0.css": "/static/css/824.17b568f0.css",
+    "static/js/824.8d4e6c9e.js": "/static/js/824.8d4e6c9e.js",
     "static/media/icon.png": "/static/media/icon.f99e957780228420852c.png",
     "favicon.ico": "/favicon.ico",
     "static/media/arrow_down.png": "/static/media/arrow_down.fd10304a000d8aeb6c42.png",
@@ -21,16 +21,16 @@
     "shims/lottie-shim.js": "/shims/lottie-shim.js",
     "nanoid-shim.js": "/nanoid-shim.js",
     "CNAME": "/CNAME",
-    "main.cb98e237.js.map": "/static/js/main.cb98e237.js.map",
+    "main.849d0941.js.map": "/static/js/main.849d0941.js.map",
     "908.88be4c33.chunk.js.map": "/static/js/908.88be4c33.chunk.js.map",
     "888.8c99ba14.chunk.js.map": "/static/js/888.8c99ba14.chunk.js.map",
-    "684.e657cfb4.chunk.js.map": "/static/js/684.e657cfb4.chunk.js.map",
-    "861.03371083.css.map": "/static/css/861.03371083.css.map",
-    "861.ab60d22c.js.map": "/static/js/861.ab60d22c.js.map"
+    "684.02a3c764.chunk.js.map": "/static/js/684.02a3c764.chunk.js.map",
+    "824.17b568f0.css.map": "/static/css/824.17b568f0.css.map",
+    "824.8d4e6c9e.js.map": "/static/js/824.8d4e6c9e.js.map"
   },
   "entrypoints": [
-    "static/css/861.03371083.css",
-    "static/js/861.ab60d22c.js",
-    "static/js/main.cb98e237.js"
+    "static/css/824.17b568f0.css",
+    "static/js/824.8d4e6c9e.js",
+    "static/js/main.849d0941.js"
   ]
 }
