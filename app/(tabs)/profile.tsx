@@ -9,7 +9,7 @@ import {
   Platform,
   Animated,
 } from 'react-native';
-import { Text, CollectibleDrawer } from '@/components';
+import { Text } from '@/components';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { API_URL } from '@/lib/api';
@@ -47,13 +47,13 @@ export default function ProfileScreen() {
   const { userProfile, isLoading: isAccountLoading } = useAccount();
   const { dogProfile, isDogProfileLoading } = useDogs();
   const { trails, savedTrails, isLoading: isTrailsLoading, saveTrailBookmark, removeTrailBookmark, isTrailSaved } = useTrails();
+  const [isCardSwiping, setIsCardSwiping] = React.useState<Record<string, boolean>>({});
+  const mainScrollRef = React.useRef<ScrollView | null>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [selectedTab, setSelectedTab] = React.useState<ProfileTab>('created');
   const [bookmarkAnimations, setBookmarkAnimations] = React.useState<Record<string, Animated.Value>>({});
   const insets = useSafeAreaInsets();
   const router = useRouter();
-
-
   const totalWalks = trails.length;
   const totalTime = trails.reduce((acc, trail) => acc + (trail.duration || 0), 0);
   const totalDistance = trails.reduce((acc, trail) => acc + trail.distance, 0);
@@ -110,8 +110,6 @@ export default function ProfileScreen() {
     `${API_URL}/uploads/proxy/collectibles/sign.svg`,
   ];
   const [collectibleSvgs, setCollectibleSvgs] = React.useState<(string | null)[]>([null, null, null]);
-  const [showCollectibleDrawer, setShowCollectibleDrawer] = React.useState(false);
-  const [selectedCollectible, setSelectedCollectible] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let mounted = true;
@@ -250,7 +248,12 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollContainer} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 20 }]}>
+      <ScrollView
+        ref={mainScrollRef}
+        scrollEnabled={!Object.values(isCardSwiping).some(Boolean)}
+        style={styles.scrollContainer}
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 20 }]}
+      >
         <View style={styles.userSection}>
           <View style={styles.userHeader}>
             <TouchableOpacity style={styles.userAvatar} onPress={() => router.push('/settings/account')}>
@@ -294,42 +297,49 @@ export default function ProfileScreen() {
           </View>
         ) : dogProfile ? (
           <View style={styles.dogCardContainer}>
-            <TouchableOpacity style={styles.dogCard} onPress={handleEditDogProfile}>
-              <View style={styles.dogPhotoContainer}>
-                {dogProfile.image ? (
-                  <Image
-                    source={dogProfile.image}
-                    style={styles.dogPhoto}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
-                  />
+            <TouchableOpacity style={styles.dogCardRow} onPress={handleEditDogProfile} activeOpacity={0.9}>
+              <View style={styles.dogCardLeft}>
+                <View style={styles.dogPhotoContainerLeft}>
+                  {dogProfile.image ? (
+                    <Image
+                      source={dogProfile.image}
+                      style={styles.dogPhotoLarge}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                    />
+                  ) : (
+                    <View style={[styles.dogPhotoLarge, styles.dogPhotoPlaceholder]}>
+                      <Dog size={48} color={theme.accentPrimary} />
+                    </View>
+                  )}
+                </View>
+
+                <Text style={styles.dogName}>{dogProfile.name}</Text>
+                {dogProfile.nickname ? (
+                  <Text style={styles.dogNickname}>{dogProfile.nickname}</Text>
                 ) : (
-                  <View style={[styles.dogPhoto, styles.dogPhotoPlaceholder]}>
-                    <Dog size={40} color={theme.accentPrimary} />
-                  </View>
+                  <View style={styles.nicknameSpacing} />
                 )}
               </View>
 
-              <Text style={styles.dogName}>{dogProfile.name}</Text>
-              {dogProfile.nickname && (
-                <Text style={styles.dogNickname}>
-                  {dogProfile.nickname}
-                </Text>
-              )}
-              {!dogProfile.nickname && <View style={styles.nicknameSpacing} />}
-
-              <View style={styles.statsRow}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{totalWalks}</Text>
-                  <Text style={styles.statLabel}>Walks</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{formatTime(totalTime)}</Text>
-                  <Text style={styles.statLabel}>Total Time</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{formatDistance(totalDistance)}</Text>
-                  <Text style={styles.statLabel}>Total Dist.</Text>
+              <View style={styles.dogCardRight}>
+                <View style={styles.statsGrid}>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statValueLarge}>{dayStreak}</Text>
+                    <Text style={styles.statLabelSmall}>Streak</Text>
+                  </View>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statValueLarge}>{totalWalks}</Text>
+                    <Text style={styles.statLabelSmall}>Walks</Text>
+                  </View>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statValueLarge}>{formatTime(totalTime)}</Text>
+                    <Text style={styles.statLabelSmall}>Total Time</Text>
+                  </View>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statValueLarge}>{formatDistance(totalDistance)}</Text>
+                    <Text style={styles.statLabelSmall}>Total Dist.</Text>
+                  </View>
                 </View>
               </View>
             </TouchableOpacity>
@@ -349,41 +359,11 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        <View style={styles.statsCardContainer}>
-          <TouchableOpacity style={styles.statsCard} onPress={() => router.push('/stats')}>
-            <View style={styles.statsCardHeader}>
-              <Text style={styles.statsTitle}>Stats</Text>
-              <ArrowRight size={18} color={theme.accentPrimary} />
-            </View>
-
-            <View style={styles.statsCardContent}>
-              <View style={styles.statsSvgContainer}>
-                <View style={styles.statsSvgRow}>
-                  {[0,1,2,3].map((i) => (
-                    <View key={i} style={styles.dogWrapper}>
-                      {/** render fetched svg or placeholder box */}
-                      {dogSvg ? (
-                        <SvgXml xml={dogSvg} width={64} height={64} />
-                      ) : (
-                        <View style={styles.dogPlaceholder} />
-                      )}
-                    </View>
-                  ))}
-                </View>
-                <View style={styles.dogCountBadge}>
-                  <Text style={styles.dogCountText}>{totalWalks}</Text>
-                </View>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-
-          {/* Collectibles (styled like Stats card) */}
+          {/* Collectibles card */}
           <View style={styles.statsCardContainer}>
-            <TouchableOpacity style={styles.statsCard} onPress={() => router.push('/collectibles')}>
+            <TouchableOpacity style={styles.collectiblesContainer} onPress={() => router.push('/collectible')}>
               <View style={styles.statsCardHeader}>
                 <Text style={styles.statsTitle}>Collectibles</Text>
-                <ArrowRight size={18} color={theme.accentPrimary} />
               </View>
 
               <View style={styles.statsCardContent}>
@@ -393,10 +373,6 @@ export default function ProfileScreen() {
                       <TouchableOpacity
                         key={i}
                         style={styles.collectibleItem}
-                        onPress={() => {
-                          if (xml) setSelectedCollectible(xml);
-                          setShowCollectibleDrawer(true);
-                        }}
                         activeOpacity={0.8}
                       >
                         {xml ? (
@@ -413,30 +389,23 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* <CollectibleDrawer visible={showCollectibleDrawer} title="Collectible" onClose={() => { setShowCollectibleDrawer(false); setSelectedCollectible(null); }}>
-            {selectedCollectible ? <SvgXml xml={selectedCollectible} width={180} height={180} /> : null}
-          </CollectibleDrawer> */}
-
         <View style={styles.tabsContainer}>
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'created' && styles.tabActive]}
             onPress={() => handleTabPress('created')}
           >
-            <Text style={[styles.tabCount, selectedTab === 'created' && styles.tabCountActive]}>{trails.length}</Text>
             <Text style={[styles.tabText, selectedTab === 'created' && styles.tabTextActive]}>Created</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'saved' && styles.tabActive]}
             onPress={() => handleTabPress('saved')}
           >
-            <Text style={[styles.tabCount, selectedTab === 'saved' && styles.tabCountActive]}>{savedTrails.length}</Text>
             <Text style={[styles.tabText, selectedTab === 'saved' && styles.tabTextActive]}>Saved</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'reviews' && styles.tabActive]}
             onPress={() => handleTabPress('reviews')}
           >
-            <Text style={[styles.tabCount, selectedTab === 'reviews' && styles.tabCountActive]}>0</Text>
             <Text style={[styles.tabText, selectedTab === 'reviews' && styles.tabTextActive]}>Reviews</Text>
           </TouchableOpacity>
         </View>
@@ -454,10 +423,10 @@ export default function ProfileScreen() {
                   <TrailCard
                     key={trail.id}
                     trail={trail}
-                    variant="vertical"
                     onPress={(id) => handleNavigateToTrail(id)}
                     onBookmarkPress={(id) => handleBookmarkPress(id)}
                     isSaved={isSaved}
+                    onSwipeStateChange={(id, swiping) => setIsCardSwiping(prev => ({ ...prev, [id]: swiping }))}
                   />
                 );
               })}

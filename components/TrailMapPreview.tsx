@@ -10,9 +10,10 @@ interface TrailMapPreviewProps {
   style?: any;
   startLatitude?: number | null;
   startLongitude?: number | null;
+  showOnlyPath?: boolean;
 }
 
-export default function TrailMapPreview({ coordinates, path, style, startLatitude = null, startLongitude = null }: TrailMapPreviewProps) {
+export default function TrailMapPreview({ coordinates, path, style, startLatitude = null, startLongitude = null, showOnlyPath = false }: TrailMapPreviewProps) {
   const coords = (coordinates && coordinates.length > 0)
     ? coordinates
     : (Array.isArray(path) ? path.map(p => ({ latitude: p[1], longitude: p[0] })) : []);
@@ -68,6 +69,7 @@ export default function TrailMapPreview({ coordinates, path, style, startLatitud
         scrollEnabled={false}
         zoomEnabled={false}
         coordinates={coords}
+        showOnlyPath={showOnlyPath}
       />
     </View>
   );

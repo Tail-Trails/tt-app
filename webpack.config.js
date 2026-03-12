@@ -29,6 +29,9 @@ module.exports = async function (env, argv) {
     // Some consumers import the non-secure submodule directly (e.g. expo-router)
     // Point to a local copy so webpack doesn't need to resolve the package subpath.
     'nanoid/non-secure': path.resolve(__dirname, 'web', 'nanoid-non-secure.js'),
+    // Map native-only packages to web shims
+    'react-native-reanimated': path.resolve(__dirname, 'web', 'shims', 'reanimated-shim.js'),
+    '@maplibre/maplibre-react-native': path.resolve(__dirname, 'web', 'shims', 'maplibre-shim.js'),
   };
 
   // Define the EXPO_ROUTER_APP_ROOT env var so expo-router can find the app directory
@@ -55,6 +58,10 @@ module.exports = async function (env, argv) {
     new webpack.NormalModuleReplacementPlugin(/^@react-native-firebase\/app$/, path.resolve(__dirname, 'web', 'shims', 'rn-firebase-shim.js')),
     new webpack.NormalModuleReplacementPlugin(/^@react-native-firebase\/auth$/, path.resolve(__dirname, 'web', 'shims', 'rn-firebase-shim.js')),
     new webpack.NormalModuleReplacementPlugin(/react-native\/Libraries\/vendor\/emitter\/EventEmitter/, path.resolve(__dirname, 'web', 'shims', 'EventEmitter.js'))
+    ,
+    // Replace reanimated and maplibre native modules with lightweight web shims
+    new webpack.NormalModuleReplacementPlugin(/^react-native-reanimated$/, path.resolve(__dirname, 'web', 'shims', 'reanimated-shim.js')),
+    new webpack.NormalModuleReplacementPlugin(/^@maplibre\/maplibre-react-native$/, path.resolve(__dirname, 'web', 'shims', 'maplibre-shim.js'))
   );
 
   // You can customize the webpack config here if needed

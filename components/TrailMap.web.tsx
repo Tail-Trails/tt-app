@@ -1,128 +1,93 @@
-import React, { useEffect, forwardRef, useRef, useImperativeHandle } from 'react';
-
-import { View } from 'react-native';
-import styles from './TrailMap.styles';
-import * as maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-// Use hosted outdoors style for web
-const OUTDOORS_STYLE_URL = 'https://api.tailtrails.club/map/style.json';
+import { useEffect, useRef } from 'react';
+import { View, StyleSheet } from 'react-native';
+import theme from '@/constants/colors';
 
 interface TrailMapProps {
-  coordinates: { latitude: number; longitude: number }[];
+  coordinates?: { latitude: number; longitude: number }[];
   style?: any;
-  scrollEnabled?: boolean;
-  zoomEnabled?: boolean;
-  showsUserLocation?: boolean;
-  followsUserLocation?: boolean;
-  showsMyLocationButton?: boolean;
-  initialRegion?: {
-    latitude: number;
-    longitude: number;
-    latitudeDelta: number;
-    longitudeDelta: number;
-  };
+  mapStyleURL?: string;
+  showOnlyPath?: boolean;
 }
 
-const TrailMap = forwardRef<any, TrailMapProps>(({ 
-  coordinates, 
-  style, 
-  initialRegion,
-  scrollEnabled = true,
-  zoomEnabled = true,
-}, ref) => {
-  const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-
-  useImperativeHandle(ref, () => ({
-    animateToRegion: (region: any, duration: number = 500) => {
-      if (mapRef.current) {
-        mapRef.current.easeTo({
-          center: [region.longitude, region.latitude],
-          zoom: 14, // Approximate zoom for the delta
-          duration: duration,
-        });
-      }
-    },
-    fitToCoordinates: (coords: any[], options: any = {}) => {
-      if (mapRef.current && coords.length > 0) {
-        const bounds = new maplibregl.LngLatBounds();
-        coords.forEach(c => bounds.extend([c.longitude, c.latitude]));
-        mapRef.current.fitBounds(bounds, { padding: options.edgePadding || 20 });
-      }
-    }
-  }));
+export default function TrailMapWeb({ coordinates = [], style, mapStyleURL }: TrailMapProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    if (typeof window === 'undefined' || !containerRef.current) return;
 
-    const center: [number, number] = initialRegion 
-      ? [initialRegion.longitude, initialRegion.latitude]
-      : coordinates.length > 0 
-        ? [coordinates[0].longitude, coordinates[0].latitude]
-        : [0, 0];
+    let mounted = true;
+    // ensure maplibre-gl CSS is available (use unpkg CDN as a fallback)
+    if (!document.querySelector('link[data-maplibre-css]')) {
+      const link = document.createElement('link');
+      link.setAttribute('rel', 'stylesheet');
+      link.setAttribute('data-maplibre-css', '1');
+      link.setAttribute('href', 'https://unpkg.com/maplibre-gl/dist/maplibre-gl.css');
+      document.head.appendChild(link);
+    }
 
-    const zoom = initialRegion ? 14 : 12;
+    // dynamic import to avoid requiring maplibre on native
+    import('maplibre-gl').then((maplibregl) => {
+      if (!mounted || !containerRef.current) return;
+      const Map = (maplibregl as any).default || maplibregl;
 
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style: OUTDOORS_STYLE_URL,
-      center: center,
-      zoom: zoom,
-      interactive: scrollEnabled && zoomEnabled,
-    });
+      const center = coordinates && coordinates.length ? [coordinates[0].longitude, coordinates[0].latitude] : [0, 0];
+      const map = new Map.Map({
+        container: containerRef.current as HTMLElement,
+        style: mapStyleURL || 'https://api.tailtrails.club/map/style.json',
+        center,
+        zoom: 13,
+      });
 
-    mapRef.current = map;
+      mapRef.current = map;
 
-    map.on('load', () => {
-      if (coordinates.length > 1) {
-        map.addSource('route', {
-          'type': 'geojson',
-          'data': {
-            'type': 'Feature',
-            'properties': {},
-            'geometry': {
-              'type': 'LineString',
-              'coordinates': coordinates.map(c => [c.longitude, c.latitude])
-            }
+      // add route if provided
+      if (coordinates && coordinates.length > 1) {
+        const coords = coordinates.map(c => [c.longitude, c.latitude]);
+        map.on('load', () => {
+          if (!map.getSource('route')) {
+            map.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } } });
+            map.addLayer({ id: 'route-line', type: 'line', source: 'route', paint: { 'line-color': theme.backgroundPrimary, 'line-width': 4 } });
+          } else {
+            const s = map.getSource('route');
+            s.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords } });
           }
         });
-
-        map.addLayer({
-          'id': 'route',
-          'type': 'line',
-          'source': 'route',
-          'layout': {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          'paint': {
-            'line-color': '#5d6b4a',
-            'line-width': 4
-          }
-        });
-
-        // Fit bounds to coordinates
-        const bounds = new maplibregl.LngLatBounds();
-        coordinates.forEach(c => bounds.extend([c.longitude, c.latitude]));
-        map.fitBounds(bounds, { padding: 20 });
       }
+
+      return undefined;
+    }).catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error('Failed to load maplibre-gl on web:', err);
     });
 
-    return () => {
-      map.remove();
-    };
-  }, [coordinates, initialRegion, scrollEnabled, zoomEnabled]);
+    return () => { mounted = false; if (mapRef.current) { try { mapRef.current.remove(); } catch {} } };
+  }, [coordinates, mapStyleURL]);
+
+  if (!coordinates || coordinates.length === 0) {
+    return <View style={[styles.empty, style]} />;
+  }
 
   return (
-    <View style={[style, styles.container]}>
-      <div 
-        ref={mapContainerRef} 
-        style={{ width: '100%', height: '100%' }} 
-      />
+    <View style={[styles.container, style as any]}>
+      <div ref={containerRef as any} style={styles.map as any} />
     </View>
   );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    height: 300,
+    backgroundColor: '#eee',
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  empty: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#f6f6f6',
+  },
 });
-
-// styles imported from TrailMap.styles.ts
-
-export default TrailMap;

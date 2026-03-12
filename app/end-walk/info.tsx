@@ -22,7 +22,7 @@ export default function InfoPage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [privacy, setPrivacy] = useState<'public' | 'private'>('public');
-  const [showMore, setShowMore] = useState(false);
+  const [showMore, setShowMore] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const rawDraft = typeof params?.draft === 'string' ? decodeURIComponent(params.draft as string) : undefined;
@@ -98,7 +98,7 @@ export default function InfoPage() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={[styles.container, { paddingTop: insets.top || 20 }]}>
+      <View style={[styles.container, { paddingTop: insets.top + 20 || 20 }]}>
         <ScrollView contentContainerStyle={styles.infoScroll}>
           <Text style={styles.infoHeader}>Name your trail</Text>
           <Text style={styles.infoSub}>This name will help you find it later</Text>
@@ -111,10 +111,10 @@ export default function InfoPage() {
             style={styles.nameInput}
           />
 
-          <TouchableOpacity style={styles.addMoreToggle} onPress={() => setShowMore(s => !s)}>
+          {/* <TouchableOpacity style={styles.addMoreToggle} onPress={() => setShowMore(s => !s)}>
             <Plus size={18} color={theme.textMuted} style={{ marginRight: 12 }} />
             <Text style={styles.addMoreText}>Add More Details</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {showMore && (
             <View style={styles.moreCard}>

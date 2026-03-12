@@ -57,13 +57,11 @@ export default function SignupScreen() {
   // });
 
     const [request, response, promptAsync] = Google.useAuthRequest({
-      // Use the env variables directly with fallback to your 'extra' logic
-      webClientId: '447944956309-t92ug0tqs40adop6mnvifqbmfsi7dtj6.apps.googleusercontent.com',
-      // webClientId: process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID || extra.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
-      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || extra.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-      androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || extra.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+      webClientId: extra.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
+      iosClientId: extra.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+      androidClientId: extra.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
       // Note: 'clientId' is usually the proxy/default ID
-      clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || extra.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+      clientId: extra.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
       scopes: ['profile', 'email'],
       responseType: 'token',
     });

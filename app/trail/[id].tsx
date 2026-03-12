@@ -728,15 +728,17 @@ export default function TrailDetailScreen() {
                 )}
                 <Text style={styles.directionsButtonText}>{isGettingDirections ? 'Opening...' : 'Get Directions'}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.startButton} onPress={() => {
-                if (true) {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }
-                console.log('Starting trail:', trail.id);
-                router.push(`/(tabs)/record?trailId=${trail.id}`);
-              }}>
-                <Text style={styles.startButtonText}>Start Trail</Text>
-              </TouchableOpacity>
+              {Platform.OS !== 'web' && (
+                <TouchableOpacity style={styles.startButton} onPress={() => {
+                  if (true) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                  console.log('Starting trail:', trail.id);
+                  router.push(`/(tabs)/record?trailId=${trail.id}`);
+                }}>
+                  <Text style={styles.startButtonText}>Start Trail</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             <TouchableOpacity style={styles.reviewsSection} onPress={() => {}}>

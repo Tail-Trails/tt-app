@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
 
 import { Navigation, MapPin, User } from 'lucide-react-native';
 import { AnimatedTabBar } from '@/components/AnimatedTabBar';
@@ -21,13 +22,15 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <MapPin size={size} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="record"
-        options={{
-          title: 'Record',
-          tabBarIcon: ({ color, size }) => <Navigation size={size} color={color} />,
-        }}
-      />
+      {Platform.OS !== 'web' && (
+        <Tabs.Screen
+          name="record"
+          options={{
+            title: 'Record',
+            tabBarIcon: ({ color, size }) => <Navigation size={size} color={color} />,
+          }}
+        />
+      )}
       <Tabs.Screen
         name="profile"
         options={{

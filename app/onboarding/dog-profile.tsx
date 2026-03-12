@@ -29,7 +29,20 @@ export default function DogProfileScreen() {
       console.log('Loading existing dog profile for editing:', dogProfile);
       setName(dogProfile.name);
       setNickname(dogProfile.nickname || '');
-      setAge(dogProfile.age.toString());
+      // prefer showing DOB if available, formatted as MM/DD/YYYY
+      if (dogProfile.dob) {
+        const d = new Date(dogProfile.dob);
+        if (!isNaN(d.getTime())) {
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          const yyyy = d.getFullYear();
+          setAge(`${mm}/${dd}/${yyyy}`);
+        } else {
+          setAge(dogProfile.age?.toString() || '');
+        }
+      } else {
+        setAge(dogProfile.age?.toString() || '');
+      }
       setSize(dogProfile.size);
       setPhoto(dogProfile.image || null);
     }
@@ -115,10 +128,46 @@ export default function DogProfileScreen() {
       return;
     }
 
-    const parsedAge = parseInt(age, 10);
-    if (!age || isNaN(parsedAge) || parsedAge < 0 || parsedAge > 30) {
-      Alert.alert('Invalid Age', 'Please enter a valid age (0-30 years)');
-      return;
+    let parsedAge: number | null = null;
+    let dobValue: string | null = null;
+
+    const dobInput = (age || '').trim();
+    const mmddyyyy = /^\d{2}\/\d{2}\/\d{4}$/;
+    const yyyymmdd = /^\d{4}-\d{2}-\d{2}$/;
+
+    if (mmddyyyy.test(dobInput)) {
+      const parts = dobInput.split('/').map((p) => parseInt(p, 10));
+      const dt = new Date(parts[2], (parts[0] || 1) - 1, parts[1] || 1);
+      if (isNaN(dt.getTime())) {
+        Alert.alert('Invalid Date', 'Please enter a valid date in MM/DD/YYYY format');
+        return;
+      }
+      const today = new Date();
+      let years = today.getFullYear() - dt.getFullYear();
+      const m = today.getMonth() - dt.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dt.getDate())) years--;
+      parsedAge = years;
+      dobValue = dt.toISOString().slice(0, 10);
+    } else if (yyyymmdd.test(dobInput)) {
+      const parts = dobInput.split('-').map((p) => parseInt(p, 10));
+      const dt = new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1);
+      if (isNaN(dt.getTime())) {
+        Alert.alert('Invalid Date', 'Please enter a valid date in YYYY-MM-DD format');
+        return;
+      }
+      const today = new Date();
+      let years = today.getFullYear() - dt.getFullYear();
+      const m = today.getMonth() - dt.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dt.getDate())) years--;
+      parsedAge = years;
+      dobValue = dobInput;
+    } else {
+      const num = parseInt(dobInput, 10);
+      if (!dobInput || isNaN(num) || num < 0 || num > 30) {
+        Alert.alert('Invalid Age/Date', 'Please enter a valid date (MM/DD/YYYY) or age (0-30 years)');
+        return;
+      }
+      parsedAge = num;
     }
 
     if (true) {
@@ -131,7 +180,8 @@ export default function DogProfileScreen() {
       params: {
         name: name.trim(),
         nickname: nickname.trim(),
-        age: parsedAge.toString(),
+        age: parsedAge!.toString(),
+        dob: dobValue || '',
         size,
         image: photo || '',
         isEditing: dogProfile ? 'true' : 'false',
@@ -251,15 +301,25 @@ export default function DogProfileScreen() {
         </View>
 
         <View style={styles.formSection}>
-          <Text style={styles.label}>Age (years) *</Text>
+          <Text style={styles.label}>Date of birth *</Text>
           <TextInput
             style={styles.input}
             value={age}
-            onChangeText={setAge}
-            placeholder="Enter age"
+            onChangeText={(text) => {
+              // format as MM/DD/YYYY while typing
+              const digits = text.replace(/\D/g, '').slice(0, 8);
+              let formatted = digits;
+              if (digits.length > 4) {
+                formatted = `${digits.slice(0,2)}/${digits.slice(2,4)}/${digits.slice(4,8)}`;
+              } else if (digits.length > 2) {
+                formatted = `${digits.slice(0,2)}/${digits.slice(2,4)}`;
+              }
+              setAge(formatted);
+            }}
+            placeholder="MM/DD/YYYY"
             placeholderTextColor="#5a6040"
-            keyboardType="numeric"
-            testID="dog-age-input"
+            keyboardType="default"
+            testID="dog-dob-input"
           />
         </View>
 

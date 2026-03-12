@@ -68,13 +68,51 @@ export default StyleSheet.create({
     borderRadius: 14,
     paddingTop: 24,
     paddingBottom: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     alignItems: 'center',
     borderWidth: 0,
     borderColor: theme.backgroundPrimary,
   },
+  dogCardRow: {
+    flexDirection: 'row',
+    gap: 4,
+    alignItems: 'stretch',
+    justifyContent: 'space-between',
+  },
+  dogCardLeft: {
+    flex: 4,
+    backgroundColor: theme.backgroundSecondary,
+    borderRadius: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4,
+  },
+  dogCardRight: {
+    flex: 6,
+    backgroundColor: theme.backgroundPrimary,
+    borderRadius: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 8,
+    justifyContent: 'center',
+    marginLeft: 4,
+    borderWidth: 2,
+    borderColor: theme.backgroundSecondary,
+  },
   dogPhotoContainer: {
     marginBottom: 16,
+  },
+  dogPhotoContainerLeft: {
+    marginBottom: 10,
+  },
+  dogPhotoLarge: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: theme.backgroundSecondaryVarient,
+    borderWidth: 0,
+    borderColor: theme.accentPrimary,
   },
   dogPhoto: {
     width: 70,
@@ -108,6 +146,29 @@ export default StyleSheet.create({
   },
   statItem: {
     alignItems: 'center',
+  },
+  /* grid style for new profile stats */
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%'
+  },
+  statBox: {
+    width: '48%',
+    alignItems: 'center',
+    paddingVertical: 8,
+    marginBottom: 16,
+  },
+  statValueLarge: {
+    ...Typography.h2(theme.accentPrimary),
+    fontSize: 18,
+    marginBottom: 4,
+  },
+  statLabelSmall: {
+    ...Typography.caption(theme.accentPrimary),
+    opacity: 0.95,
   },
   statValue: {
     ...Typography.h3(theme.accentPrimary),
@@ -154,6 +215,8 @@ export default StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+    paddingTop: 16,
+    paddingLeft: 16,
   },
   statsTitle: {
     ...Typography.label(theme.accentPrimary),
@@ -208,10 +271,12 @@ export default StyleSheet.create({
     marginBottom: 16,
     backgroundColor: theme.backgroundSecondary,
     borderRadius: 14,
-    padding: 18,
+    padding: 4,
   },
   collectiblesTitle: {
-    ...Typography.label('#e6f2d6'),
+    ...Typography.label(theme.accentPrimary),
+    paddingTop: 8,
+    paddingLeft: 12,
     marginBottom: 12,
     fontSize: 18,
   },
@@ -229,8 +294,7 @@ export default StyleSheet.create({
   collectiblePlaceholder: {
     width: 64,
     height: 64,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.03)'
+    borderRadius: 12
   },
   collectibleOverlay: {
     position: 'absolute',
@@ -238,7 +302,6 @@ export default StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: '#213011',
     borderRadius: 12,
   },
   statsLeft: {

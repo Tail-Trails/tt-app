@@ -97,6 +97,36 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  dateInput: {
+    justifyContent: 'center',
+  },
+  dateModalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  dateModalContainer: {
+    backgroundColor: theme.backgroundPrimary,
+    paddingTop: 12,
+    paddingBottom: 20,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    overflow: 'hidden',
+  },
+  dateModalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 12,
+    paddingBottom: 8,
+  },
+  dateModalButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  dateModalButtonText: {
+    color: theme.accentPrimary,
+    fontWeight: '600',
+  },
   pickerButton: {
     backgroundColor: theme.backgroundPrimary,
     borderRadius: 12,

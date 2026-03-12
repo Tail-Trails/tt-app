@@ -1,14 +1,20 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 // Shared config (use Expo env vars for web builds)
+const _runtimeExtra = ((Constants as any).expoConfig?.extra) || ((Constants as any).manifest?.extra) || {};
+
+// Use values from Expo runtime `extra` exclusively (we expect app.config.js to populate these)
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  apiKey: _runtimeExtra.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: _runtimeExtra.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: _runtimeExtra.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: _runtimeExtra.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: _runtimeExtra.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: _runtimeExtra.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
+
+console.log('Firebase config:', firebaseConfig);
 
 // Exports kept stable for the app code which expects these names:
 // - `firebaseAuth` (an auth instance, may be ignored by native wrappers)
@@ -110,7 +116,10 @@ let cached: Promise<{
 
 function ensureInit() {
   if (cached) return cached;
-  if (false) {
+  // Use web implementation when running in a web environment to avoid
+  // requiring native-only @react-native-firebase modules which will throw
+  // at runtime (we provide a shim for those when accidentally imported).
+  if (Platform.OS === 'web') {
     cached = setupWeb();
   } else {
     cached = setupNative();

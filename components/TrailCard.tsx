@@ -4,6 +4,8 @@ import { Image } from 'expo-image';
 import { Bookmark, BarChart3, MapPin, Star, MoreVertical, Navigation } from 'lucide-react-native';
 import theme from '@/constants/colors';
 import TrailMapPreview from '@/components/TrailMapPreview';
+import TrailPathPreview from '@/components/TrailPathPreview';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Trail } from '@/types/trail';
 import styles from '@/components/TrailCard.styles';
 import { Text } from '@/components';
@@ -33,6 +35,11 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
     if (trail.photo) return [trail.photo];
     return [];
   }, [trail]);
+
+  const isShowingImage = React.useMemo(() => {
+    if (images.length > 0) return (activeIndex || 0) < images.length;
+    return !!trail.photo;
+  }, [images.length, activeIndex, trail.photo]);
 
   const handleTouchStart = () => {
     setIsSwiping(true);
@@ -110,12 +117,7 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
   }
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.95}
-      delayPressIn={80}
-      onPress={() => { if (!isSwiping && onPress) onPress(trail.id); }}
-      style={[styles.largeTrailCard, containerStyle]}
-    >
+    <View style={[styles.largeTrailCard, containerStyle]}>
       <View
         style={[styles.largeTrailImageContainer, { width: '100%' }]}
         onLayout={(e) => setCardWidth(e.nativeEvent.layout.width || Dimensions.get('window').width)}
@@ -125,14 +127,22 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            nestedScrollEnabled
-            onTouchStart={handleTouchStart}
-            onScrollEndDrag={() => clearSwiping(150)}
+            nestedScrollEnabled={true}
+            scrollEventThrottle={16}
+            decelerationRate="fast"
+            snapToInterval={cardWidth}
+            snapToAlignment="center"
+            disableIntervalMomentum={true}
+            onScrollBeginDrag={() => {
+              setIsSwiping(true);
+              onSwipeStateChange?.(trail.id, true);
+            }}
             onMomentumScrollEnd={(e) => {
               const offsetX = e.nativeEvent.contentOffset.x || 0;
               const idx = Math.round(offsetX / cardWidth);
               setActiveIndex(idx);
-              clearSwiping(100);
+              setIsSwiping(false);
+              onSwipeStateChange?.(trail.id, false);
             }}
             contentContainerStyle={styles.largeTrailImageScroll}
           >
@@ -147,24 +157,59 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
           trail.photo ? (
             <Image source={{ uri: trail.photo }} style={[styles.largeTrailImage, imageStyle]} contentFit="cover" />
           ) : (
-            <View style={[styles.largeTrailImage, styles.placeholderImage]}>
-              {/* empty placeholder */}
+            <View style={[styles.largeTrailImage, imageStyle]}>
+                <TrailMapPreview
+                  coordinates={trail.coordinates}
+                  path={trail.path}
+                  style={{ flex: 1 }}
+                  startLatitude={trail.startLatitude}
+                  startLongitude={trail.startLongitude}
+                />
             </View>
           )
         )}
 
-        <View style={styles.largeTrailDots} pointerEvents="none">
-          {new Array(images.length + 1).fill(0).map((_, i) => (
-            <View key={`${trail.id}-dot-${i}`} style={[styles.dot, (activeIndex || 0) === i && styles.dotActive]} />
-          ))}
-        </View>
+        {(trail.path || trail.coordinates) && isShowingImage && (
+          <View style={styles.rightOverlay} pointerEvents="none">
+            <View style={styles.rightOverlayMap}>
+              <LinearGradient
+                colors={['transparent', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.75)' ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, borderRadius: 12 }}
+                pointerEvents="none"
+              />
+              <TrailPathPreview
+                coordinates={trail.coordinates}
+                path={trail.path}
+                style={{ flex: 1 }}
+                strokeColor="#ffffff"
+                strokeWidth={2.3}
+                backgroundColor={'transparent'}
+              />
+            </View>
+          </View>
+        )}
+
+        {images.length > 0 && (
+          <View style={styles.largeTrailDots} pointerEvents="none">
+            {new Array(images.length + 1).fill(0).map((_, i) => (
+              <View key={`${trail.id}-dot-${i}`} style={[styles.dot, (activeIndex || 0) === i && styles.dotActive]} />
+            ))}
+          </View>
+        )}
 
         <TouchableOpacity style={styles.bookmarkButton} onPress={handleBookmark}>
           <Bookmark size={18} color={isSaved ? '#000' : theme.textMuted} />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.cardContent}>
+      <TouchableOpacity
+        activeOpacity={0.95}
+        delayPressIn={80}
+        onPress={() => { if (!isSwiping && onPress) onPress(trail.id); }}
+        style={styles.cardContent}
+      >
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>{trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}</Text>
           <TouchableOpacity>
@@ -198,7 +243,7 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
             </View>
           )}
         </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 }

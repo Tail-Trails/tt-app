@@ -20,9 +20,11 @@ import DogMarker from './DogMarker';
       longitudeDelta: number;
     };
     mapStyleURL?: string;
+    showOnlyPath?: boolean;
   }
 
   const DEFAULT_STYLE = 'https://api.tailtrails.club/map/style.json';
+  const BLANK_STYLE: any = { version: 8, name: 'blank', sources: {}, layers: [] };
   // const DEFAULT_STYLE = 'https://provaccination-apophthegmatical-sindy.ngrok-free.dev/map/style.json';
   // const DEFAULT_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
   // const DEFAULT_STYLE = 'https://tiles.openfreemap.org/styles/positron';
@@ -47,6 +49,7 @@ import DogMarker from './DogMarker';
     showsMyLocationButton = false,
     initialRegion,
     mapStyleURL,
+    showOnlyPath = false,
   }, ref) => {
     const coords = coordinates ?? [];
     const nativeMapRef = useRef<any>(null);
@@ -71,8 +74,9 @@ import DogMarker from './DogMarker';
       } as any;
     }, [coords]);
 
-    // Use hosted style URL by default for native; allow override via `mapStyleURL` prop.
-    const activeStyleURI = useMemo(() => mapStyleURL ?? DEFAULT_STYLE, [mapStyleURL]);
+    // Choose style: use hosted style URL by default, or blank style when only path should be shown.
+    const activeStyle = useMemo(() => (mapStyleURL ?? DEFAULT_STYLE), [mapStyleURL]);
+    const effectiveStyle = useMemo(() => ( (typeof activeStyle === 'string' && !showOnlyPath) ? activeStyle : (showOnlyPath ? BLANK_STYLE : activeStyle) ), [activeStyle, showOnlyPath]);
 
     const zoom = useMemo(() => {
       const latDelta = initialRegion?.latitudeDelta;
@@ -106,14 +110,14 @@ import DogMarker from './DogMarker';
       }
     }));
 
-    const extraNativeProps: any = { zoomEnabled, scrollEnabled, attributionEnabled: false };
+    const extraNativeProps: any = { zoomEnabled, scrollEnabled, attributionEnabled: false, logoEnabled: !showOnlyPath };
 
     return (
       <MLMapView
-        key={activeStyleURI}
+        key={typeof effectiveStyle === 'string' ? effectiveStyle : 'blank-style'}
         ref={nativeMapRef}
         style={style}
-        mapStyle={activeStyleURI}
+        mapStyle={effectiveStyle}
         {...extraNativeProps}
       >
         {showsUserLocation && <UserLocation />}

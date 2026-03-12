@@ -18,6 +18,7 @@ export interface DogProfile {
   nickname?: string;
   size: DogSize;
   age: number;
+  dob: string;
   image?: string;
   vaccines?: Vaccine[];
   // New trait fields (optional)

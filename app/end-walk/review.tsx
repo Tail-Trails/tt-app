@@ -73,14 +73,15 @@ export default function EndWalkReview() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 20 }]}>
+      <View style={[styles.container, { paddingTop: insets.top + 20 }]}> 
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
 
-        <View style={styles.bigHeader}>
-          <Text style={styles.bottomTitle}>How was the trail?</Text>
-          <Text style={styles.bottomSubtitle}>Reviews help us make better suggestions</Text>
-        </View>
+          <View style={styles.bigHeader}>
+            <Text style={styles.bottomTitle}>How was the trail?</Text>
+            <Text style={styles.bottomSubtitle}>Reviews help us make better suggestions</Text>
+          </View>
 
-        <View style={{ paddingHorizontal: 8 }}>
+          <View style={{ paddingHorizontal: 8 }}>
           <View style={styles.starRow}>
             {[1,2,3,4,5].map((s) => (
               <TouchableOpacity key={s} style={[styles.starButton]} onPress={() => setRating(s)}>
@@ -107,33 +108,37 @@ export default function EndWalkReview() {
 
           <View style={{ height: 18 }} />
 
-          <Text style={styles.cardTitle}>Dog Traffic Level</Text>
-          <View onLayout={onTrackLayout('dog')}>
-            <Pressable onPress={handleTrackPress('dog', setDogTraffic)} style={{ height: 40, justifyContent: 'center' }}>
-              <View style={{ height: 12, backgroundColor: theme.backgroundPrimary, borderRadius: 6 }} />
-              <View style={{ position: 'absolute', left: `${dogTraffic * 100}%`, transform: [{ translateX: -12 }], top: 2 }}>
-                <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: theme.backgroundSecondaryVarient }} />
-              </View>
-            </Pressable>
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-            <Text style={styles.label}>High traffic</Text>
-            <Text style={styles.label}>Low traffic</Text>
+          <View style={styles.section}>
+            <Text style={styles.cardTitle}>Dog Traffic Level</Text>
+            <View onLayout={onTrackLayout('dog')}>
+              <Pressable onPress={handleTrackPress('dog', setDogTraffic)} style={styles.trackContainer}>
+                <View style={styles.track} />
+                <View style={{ position: 'absolute', left: `${dogTraffic * 100}%`, transform: [{ translateX: -11 }], top: 9 }}>
+                  <View style={styles.thumb} />
+                </View>
+              </Pressable>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+              <Text style={styles.label}>High traffic</Text>
+              <Text style={styles.label}>Low traffic</Text>
+            </View>
           </View>
 
           <View style={{ height: 12 }} />
-          <Text style={styles.cardTitle}>Foot Traffic Level</Text>
-          <View onLayout={onTrackLayout('foot')}>
-            <Pressable onPress={handleTrackPress('foot', setFootTraffic)} style={{ height: 40, justifyContent: 'center' }}>
-              <View style={{ height: 12, backgroundColor: theme.backgroundPrimary, borderRadius: 6 }} />
-              <View style={{ position: 'absolute', left: `${footTraffic * 100}%`, transform: [{ translateX: -12 }], top: 2 }}>
-                <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: theme.backgroundSecondaryVarient }} />
-              </View>
-            </Pressable>
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-            <Text style={styles.label}>High traffic</Text>
-            <Text style={styles.label}>Low traffic</Text>
+          <View style={styles.section}>
+            <Text style={styles.cardTitle}>Foot Traffic Level</Text>
+            <View onLayout={onTrackLayout('foot')}>
+              <Pressable onPress={handleTrackPress('foot', setFootTraffic)} style={styles.trackContainer}>
+                <View style={styles.track} />
+                <View style={{ position: 'absolute', left: `${footTraffic * 100}%`, transform: [{ translateX: -11 }], top: 9 }}>
+                  <View style={styles.thumb} />
+                </View>
+              </Pressable>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+              <Text style={styles.label}>High traffic</Text>
+              <Text style={styles.label}>Low traffic</Text>
+            </View>
           </View>
 
           <View style={{ height: 18 }} />
@@ -149,48 +154,52 @@ export default function EndWalkReview() {
           </View>
 
           <View style={{ height: 18 }} />
-          <Text style={styles.cardTitle}>Paths</Text>
-          <View onLayout={onTrackLayout('paths')}>
-            <Pressable onPress={handleTrackPress('paths', setPaths)} style={{ height: 40, justifyContent: 'center' }}>
-              <View style={{ height: 12, backgroundColor: theme.backgroundPrimary, borderRadius: 6 }} />
-              <View style={{ position: 'absolute', left: `${paths * 100}%`, transform: [{ translateX: -12 }], top: 2 }}>
-                <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: theme.backgroundSecondaryVarient }} />
-              </View>
-            </Pressable>
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-            <Text style={styles.label}>Open wide</Text>
-            <Text style={styles.label}>Narrow paths</Text>
+          <View style={styles.section}>
+            <Text style={styles.cardTitle}>Paths</Text>
+            <View onLayout={onTrackLayout('paths')}>
+              <Pressable onPress={handleTrackPress('paths', setPaths)} style={styles.trackContainer}>
+                <View style={styles.track} />
+                <View style={{ position: 'absolute', left: `${paths * 100}%`, transform: [{ translateX: -11 }], top: 9 }}>
+                  <View style={styles.thumb} />
+                </View>
+              </Pressable>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+              <Text style={styles.label}>Open wide</Text>
+              <Text style={styles.label}>Narrow paths</Text>
+            </View>
           </View>
 
           <View style={{ height: 18 }} />
-          <Text style={styles.cardTitle}>Exposure</Text>
-          <View onLayout={onTrackLayout('exposure')}>
-            <Pressable onPress={handleTrackPress('exposure', setExposure)} style={{ height: 40, justifyContent: 'center' }}>
-              <View style={{ height: 12, backgroundColor: theme.backgroundPrimary, borderRadius: 6 }} />
-              <View style={{ position: 'absolute', left: `${exposure * 100}%`, transform: [{ translateX: -12 }], top: 2 }}>
-                <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: theme.backgroundSecondaryVarient }} />
-              </View>
-            </Pressable>
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-            <Text style={styles.label}>Shaded</Text>
-            <Text style={styles.label}>Exposed</Text>
+          <View style={styles.section}>
+            <Text style={styles.cardTitle}>Exposure</Text>
+            <View onLayout={onTrackLayout('exposure')}>
+              <Pressable onPress={handleTrackPress('exposure', setExposure)} style={styles.trackContainer}>
+                <View style={styles.track} />
+                <View style={{ position: 'absolute', left: `${exposure * 100}%`, transform: [{ translateX: -11 }], top: 9 }}>
+                  <View style={styles.thumb} />
+                </View>
+              </Pressable>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+              <Text style={styles.label}>Shaded</Text>
+              <Text style={styles.label}>Exposed</Text>
+            </View>
           </View>
           <View style={{ height: 24 }} />
 
-          <View style={{ flexDirection: 'row', gap: 12, marginTop: 12, paddingHorizontal: 8 }}>
-            <TouchableOpacity style={styles.backButton} onPress={goBack}>
-              <Text style={styles.backButtonText}>Back</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.nextButtonLarge} onPress={goNext}>
-              <Text style={styles.nextButtonText}>Next →</Text>
-            </TouchableOpacity>
           </View>
+        </ScrollView>
 
-          <View style={{ height: 40 }} />
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}> 
+          <TouchableOpacity style={styles.backButton} onPress={goBack}>
+            <Text style={styles.backButtonText}>Back</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.nextButtonLarge} onPress={goNext}>
+            <Text style={styles.nextButtonText}>Next →</Text>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </>
   );
 }
