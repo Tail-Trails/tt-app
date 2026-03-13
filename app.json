@@ -2,7 +2,7 @@
   "expo": {
     "name": "TailTrails",
     "slug": "dog-walk-tracker-x2nouww",
-    "version": "1.0.11",
+    "version": "1.0.13",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tail-trails",
@@ -34,8 +34,12 @@
     },
     "android": {
       "package": "com.tailtrailsclub.app",
-      "versionCode": 12,
+      "versionCode": 14,
       "googleServicesFile": "./google-services.json",
+      "newArchEnabled": false,
+      "softwareKeyboardLayoutMode": "pan",
+      "enableProguardInReleaseBuilds": false,
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -56,7 +60,9 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
         "VIBRATE",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
       ]
     },
     "web": {
@@ -108,11 +114,9 @@
         "expo-build-properties",
         {
           "android": {
-            "softwareKeyboardLayoutMode": "pan",
-            "newArchEnabled": true,
-            "enableShrinkResourcesInReleaseBuilds": false,
-            "enableProguardInReleaseBuilds": true,
-            "extraProguardRules": "-keep class org.maplibre.** { *; }\n-keep class com.mapbox.** { *; }\n-keep class com.google.firebase.** { *; }\n-keep class com.google.android.gms.** { *; }\n-keep class com.facebook.react.fabric.** { *; }\n-keep class com.facebook.react.turbomodule.** { *; }"
+            "newArchEnabled": false,
+            "usesCleartextTraffic": true,
+            "extraProguardRules": "-keep class org.maplibre.** { *; }\n-keep class com.mapbox.** { *; }\n-keep class com.google.firebase.** { *; }"
           },
           "ios": {
             "useFrameworks": "static"
@@ -120,6 +124,7 @@
         }
       ],
       "./plugins/patch-podfile",
+      "./plugins/patch-gradle",
       "@react-native-community/datetimepicker"
     ],
     "experiments": {

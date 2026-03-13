@@ -9,7 +9,6 @@ import { UserPlus } from 'lucide-react-native';
 import { getFirebaseAuth, createUserWithEmailAndPassword, updateProfile, signInWithGoogle } from '@/lib/firebase';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
-import Constants from 'expo-constants';
 import theme from '@/constants/colors';
 import styles from './auth.styles';
 
@@ -45,26 +44,14 @@ export default function SignupScreen() {
   const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const extra = (Constants.expoConfig && (Constants.expoConfig.extra as any)) || {};
-  // const [request, response, promptAsync] = Google.useAuthRequest({
-  //   webClientId: extra.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
-  //   clientId: extra.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
-  //   iosClientId: extra.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-  //   androidClientId: extra.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-  //   scopes: ['profile', 'email'],
-  //   // request an access token so we can sign into Firebase client-side
-  //   responseType: 'token',
-  // });
-
-    const [request, response, promptAsync] = Google.useAuthRequest({
-      webClientId: extra.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
-      iosClientId: extra.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-      androidClientId: extra.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-      // Note: 'clientId' is usually the proxy/default ID
-      clientId: extra.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
-      scopes: ['profile', 'email'],
-      responseType: 'token',
-    });
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId: "447944956309-t92ug0tqs40adop6mnvifqbmfsi7dtj6.apps.googleusercontent.com",
+    iosClientId: "603763351756-ekakr88vbtlkqv620q7h8j2h3amq0fem.apps.googleusercontent.com",
+    androidClientId: "447944956309-8emn1c0n3qljs8o595g088ddd2q2ibtj.apps.googleusercontent.com",
+    clientId: "447944956309-t92ug0tqs40adop6mnvifqbmfsi7dtj6.apps.googleusercontent.com",
+    scopes: ['profile', 'email'],
+    responseType: 'token',
+  });
 
   React.useEffect(() => {
     (async () => {

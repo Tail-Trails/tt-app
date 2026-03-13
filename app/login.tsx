@@ -45,37 +45,11 @@ export default function LoginScreen() {
   const [password, setPassword] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
-  const _extraFromConstants = ((Constants as any).expoConfig?.extra) || ((Constants as any).manifest?.extra) || {};
-  const extra = {
-    EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID: _extraFromConstants.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
-    EXPO_PUBLIC_GOOGLE_CLIENT_ID: _extraFromConstants.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
-    EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: _extraFromConstants.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID: _extraFromConstants.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-  } as any;
-
-  if (typeof window !== 'undefined' && !extra.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID) {
-    // Helpful developer warning when running on web without a webClientId
-    // (Expo's Constants.expoConfig.extra isn't always populated on web/dev server).
-    // eslint-disable-next-line no-console
-    console.warn('Google web client id (EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID) is not defined. Google auth on web requires a webClientId.');
-  }
-
-  // const [request, response, promptAsync] = Google.useAuthRequest({
-  //   webClientId: extra.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
-  //   clientId: extra.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
-  //   iosClientId: extra.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-  //   androidClientId: extra.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-  //   scopes: ['profile', 'email'],
-  //   // request an access token so we can sign into Firebase client-side
-  //   responseType: 'token',
-  // });
-
   const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: extra.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID,
-    iosClientId: extra.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    androidClientId: extra.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    // Note: 'clientId' is usually the proxy/default ID
-    clientId: extra.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+    webClientId: "447944956309-t92ug0tqs40adop6mnvifqbmfsi7dtj6.apps.googleusercontent.com",
+    iosClientId: "603763351756-ekakr88vbtlkqv620q7h8j2h3amq0fem.apps.googleusercontent.com",
+    androidClientId: "447944956309-8emn1c0n3qljs8o595g088ddd2q2ibtj.apps.googleusercontent.com",
+    clientId: "447944956309-t92ug0tqs40adop6mnvifqbmfsi7dtj6.apps.googleusercontent.com",
     scopes: ['profile', 'email'],
     responseType: 'token',
   });
