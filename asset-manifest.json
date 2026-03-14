@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.js": "/static/js/main.5b303b42.js",
+    "main.js": "/static/js/main.b2dc8c6a.js",
     "static/js/42.2f26eb8d.chunk.js": "/static/js/42.2f26eb8d.chunk.js",
     "static/js/908.88be4c33.chunk.js": "/static/js/908.88be4c33.chunk.js",
     "static/js/888.8c99ba14.chunk.js": "/static/js/888.8c99ba14.chunk.js",
@@ -23,7 +23,7 @@
     "shims/lottie-shim.js": "/shims/lottie-shim.js",
     "nanoid-shim.js": "/nanoid-shim.js",
     "CNAME": "/CNAME",
-    "main.5b303b42.js.map": "/static/js/main.5b303b42.js.map",
+    "main.b2dc8c6a.js.map": "/static/js/main.b2dc8c6a.js.map",
     "42.2f26eb8d.chunk.js.map": "/static/js/42.2f26eb8d.chunk.js.map",
     "908.88be4c33.chunk.js.map": "/static/js/908.88be4c33.chunk.js.map",
     "888.8c99ba14.chunk.js.map": "/static/js/888.8c99ba14.chunk.js.map",
@@ -32,6 +32,6 @@
   },
   "entrypoints": [
     "static/js/769.7f21757e.js",
-    "static/js/main.5b303b42.js"
+    "static/js/main.b2dc8c6a.js"
   ]
 }
