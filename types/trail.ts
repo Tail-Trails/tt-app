@@ -30,6 +30,13 @@ export interface Trail {
   rating?: number;
   review?: string;
   environment_tags?: string[];
+  // Review inputs from the mobile UI
+  dogTraffic?: number;
+  footTraffic?: number;
+  paths?: number;
+  exposure?: number;
+  offLeash?: boolean;
+  wildlife?: boolean;
   createdAt?: string | Date | number;
   // Optional client/backend-provided fields
   path?: number[][];

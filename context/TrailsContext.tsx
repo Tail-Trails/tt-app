@@ -128,6 +128,13 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
         rating: trail.rating,
         review: trail.review,
         environment_tags: trail.environment_tags,
+        // New review fields from the mobile UI
+        dogTraffic: (trail as any).dogTraffic,
+        footTraffic: (trail as any).footTraffic,
+        paths: (trail as any).paths,
+        exposure: (trail as any).exposure,
+        offLeash: (trail as any).offLeash,
+        wildlife: (trail as any).wildlife
       };
 
       const accessToken = session.accessToken;

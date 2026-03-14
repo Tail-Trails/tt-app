@@ -17,6 +17,7 @@ export default function DogTraitsScreen() {
     name: string;
     nickname?: string;
     age: string;
+    dob?: string;
     size: string;
     image?: string;
     isEditing?: string;
@@ -71,6 +72,8 @@ export default function DogTraitsScreen() {
         nickname: params.nickname || undefined,
         size: params.size as any,
         age: parseInt(params.age, 10),
+        // include date of birth if provided (ISO YYYY-MM-DD)
+        dob: params.dob || undefined,
         image: params.image || undefined,
         // trait fields: sliders are 1-100 values, toggles are booleans
         dog_tolerance: dogTolerance,

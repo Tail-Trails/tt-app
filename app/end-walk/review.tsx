@@ -66,7 +66,17 @@ export default function EndWalkReview() {
 
   const goNext = () => {
     const picked = DESCRIPTIONS.filter((_, i) => selected[i]);
-    const enhanced = { ...draft, rating, tags: picked };
+    const enhanced = {
+      ...draft,
+      rating,
+      tags: picked,
+      dogTraffic,
+      footTraffic,
+      paths,
+      exposure,
+      offLeash,
+      wildlife,
+    };
     router.push(`/end-walk/info?draft=${encodeURIComponent(JSON.stringify(enhanced))}`);
   };
 

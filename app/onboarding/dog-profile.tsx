@@ -147,7 +147,10 @@ export default function DogProfileScreen() {
       const m = today.getMonth() - dt.getMonth();
       if (m < 0 || (m === 0 && today.getDate() < dt.getDate())) years--;
       parsedAge = years;
-      dobValue = dt.toISOString().slice(0, 10);
+      const mm = String(dt.getMonth() + 1).padStart(2, '0');
+      const dd = String(dt.getDate()).padStart(2, '0');
+      const yyyy = dt.getFullYear();
+      dobValue = `${mm}/${dd}/${yyyy}`;
     } else if (yyyymmdd.test(dobInput)) {
       const parts = dobInput.split('-').map((p) => parseInt(p, 10));
       const dt = new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1);
@@ -160,7 +163,10 @@ export default function DogProfileScreen() {
       const m = today.getMonth() - dt.getMonth();
       if (m < 0 || (m === 0 && today.getDate() < dt.getDate())) years--;
       parsedAge = years;
-      dobValue = dobInput;
+      const mm = String(dt.getMonth() + 1).padStart(2, '0');
+      const dd = String(dt.getDate()).padStart(2, '0');
+      const yyyy = dt.getFullYear();
+      dobValue = `${mm}/${dd}/${yyyy}`;
     } else {
       const num = parseInt(dobInput, 10);
       if (!dobInput || isNaN(num) || num < 0 || num > 30) {
