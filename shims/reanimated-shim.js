@@ -1,0 +1,1 @@
+module.exports={__esModule:!0,default:{},useSharedValue:e=>({value:e}),useAnimatedStyle:e=>e&&e(),withTiming:e=>e,withSpring:e=>e,Easing:{linear:e=>e}};
