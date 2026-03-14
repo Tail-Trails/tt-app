@@ -1,15 +1,12 @@
-import React from 'react';
-import { View } from 'react-native';
+// Minimal shim for map components on web — no-op implementations.
+// Avoid JSX so this file remains plain JS and can be minified by Terser.
+export const Map = function Map() { return null; };
+export const Camera = function Camera() { return null; };
+export const UserLocation = function UserLocation() { return null; };
+export const GeoJSONSource = function GeoJSONSource() { return null; };
+export const Layer = function Layer() { return null; };
+export const Marker = function Marker() { return null; };
 
-// Expose named exports used in native code as simple components that render nothing on web.
-export const Map = (props) => <View {...props} />;
-export const Camera = (props) => <View {...props} />;
-export const UserLocation = (props) => <View {...props} />;
-export const GeoJSONSource = (props) => <View {...props} />;
-export const Layer = (props) => <View {...props} />;
-export const Marker = (props) => <View {...props} />;
-
-// default export as an object with common components
 export default {
   Map,
   Camera,

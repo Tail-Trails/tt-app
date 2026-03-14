@@ -2,6 +2,7 @@
 `eas build --platform android --profile production --local`
 `keytool -list -v -keystore credentials/tailtrails.jks -alias tailtrails-alias`
 `adb logcat`
+`adb logcat "*:E"`
 `adb logcat | grep -i "FATAL"`
 
 PROCESS:

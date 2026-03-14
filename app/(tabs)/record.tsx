@@ -18,59 +18,49 @@ import { formatDistance, calculateTotalDistance, formatDuration } from '@/utils/
 
 const LOCATION_TRACKING_TASK = 'background-location-task';
 
-if (true) {
-  TaskManager.defineTask(LOCATION_TRACKING_TASK, async ({ data, error }: { data: any; error: any }) => {
-    if (error) {
-      console.error('Background location error:', error);
-      return;
-    }
-    if (data) {
-      const { locations } = data as any;
-      const location = locations[0];
+TaskManager.defineTask(LOCATION_TRACKING_TASK, async ({ data, error }: any) => {
+  if (error) return;
+  if (data) {
+    const { locations } = data;
+    const location = locations[0];
+    if (!location) return;
 
-      if (location) {
-        console.log('Background location update:', location.coords);
+    try {
+      // Get existing coords
+      const coordsStr = await AsyncStorage.getItem('recording_coordinates');
+      let coords = coordsStr ? JSON.parse(coordsStr) : [];
+      
+      const newCoord = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
 
-        try {
-          const coordsStr = await AsyncStorage.getItem('recording_coordinates');
-          const coords = coordsStr ? JSON.parse(coordsStr) : [];
+      // Simple duplicate prevention (prevents bloating storage with identical points)
+      const lastCoord = coords[coords.length - 1];
+      if (lastCoord && 
+          lastCoord.latitude === newCoord.latitude && 
+          lastCoord.longitude === newCoord.longitude) {
+        return;
+      }
 
-          const newCoord = {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          };
-
-          coords.push(newCoord);
-          await AsyncStorage.setItem('recording_coordinates', JSON.stringify(coords));
-
-          if (location.coords.altitude) {
-            const currentElevation = Math.max(0, location.coords.altitude);
-            const maxElevationStr = await AsyncStorage.getItem('recording_max_elevation');
-            const maxElevation = maxElevationStr ? parseFloat(maxElevationStr) : 0;
-
-            if (currentElevation > maxElevation) {
-              await AsyncStorage.setItem('recording_max_elevation', currentElevation.toString());
-            }
-          }
-
-          if (location.coords.speed && location.coords.speed > 0) {
-            const currentSpeed = location.coords.speed * 3.6;
-            const maxSpeedStr = await AsyncStorage.getItem('recording_max_speed');
-            const maxSpeed = maxSpeedStr ? parseFloat(maxSpeedStr) : 0;
-
-            if (currentSpeed > maxSpeed) {
-              await AsyncStorage.setItem('recording_max_speed', currentSpeed.toString());
-            }
-          }
-
-          await AsyncStorage.setItem('recording_last_update', Date.now().toString());
-        } catch (err) {
-          console.error('Error storing location:', err);
+      coords.push(newCoord);
+      await AsyncStorage.setItem('recording_coordinates', JSON.stringify(coords));
+      
+      // Update Elevation/Speed only if they exist
+      if (location.coords.altitude) {
+        const alt = Math.max(0, location.coords.altitude);
+        const maxAlt = await AsyncStorage.getItem('recording_max_elevation');
+        if (!maxAlt || alt > parseFloat(maxAlt)) {
+          await AsyncStorage.setItem('recording_max_elevation', alt.toString());
         }
       }
+
+      await AsyncStorage.setItem('recording_last_update', Date.now().toString());
+    } catch (err) {
+      console.error('BG Task Storage Error:', err);
     }
-  });
-}
+  }
+});
 
 export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail } = {}) {
   const { saveTrail, getTrailById, getTrailWithUser } = useTrails();
@@ -100,13 +90,9 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isLoadingPermission, setIsLoadingPermission] = useState<boolean>(true);
   const [startLocation, setStartLocation] = useState<{ city?: string; country?: string } | null>(null);
-  // geocoding removed — we rely on coordinates only
-
   const locationSubscription = useRef<Location.LocationSubscription | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   const bottomSheetHeight = Dimensions.get('window').height * 0.5;
-  // Collapsed bottom sheet height (reduced for a slimmer compact overlay)
   const collapsedHeight = 40;
   const navbarHeight = Platform.OS === 'ios' ? 100 : 92;
   const bottomSheetAnim = useRef(new Animated.Value(collapsedHeight)).current;
@@ -206,8 +192,8 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
         const sub = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.Balanced,
-            distanceInterval: 2,
-            timeInterval: 1000,
+            distanceInterval: 8,
+            timeInterval: 10000,
           },
           (loc) => {
             if (!active) return;
@@ -384,15 +370,17 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
       try {
         await Location.startLocationUpdatesAsync(LOCATION_TRACKING_TASK, {
           accuracy: Location.Accuracy.BestForNavigation,
-          distanceInterval: 3,
+          distanceInterval: 8,
           timeInterval: 1000,
           foregroundService: {
             notificationTitle: 'Recording Trail',
             notificationBody: 'TailTrails is tracking your walk',
-            notificationColor: '#2563eb',
+            notificationColor: theme.accentPrimary
           },
-          pausesUpdatesAutomatically: false,
-          showsBackgroundLocationIndicator: true,
+        // --- ADD THESE FOR IOS ---
+          pausesUpdatesAutomatically: false, // Prevents iOS from "sleeping" the task
+          showsBackgroundLocationIndicator: true, // Shows the blue pill/bar in the status bar
+          activityType: Location.ActivityType.Fitness, // Tells iOS this is a workout/walk
         });
         console.log('Background location tracking started successfully');
       } catch (bgLocationError: any) {
@@ -409,8 +397,8 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
       locationSubscription.current = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.BestForNavigation,
-          distanceInterval: 3,
-          timeInterval: 1000,
+          distanceInterval: 8,
+          timeInterval: 10000,
         },
         async (location) => {
           const coord = {

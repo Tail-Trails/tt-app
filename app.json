@@ -2,7 +2,7 @@
   "expo": {
     "name": "TailTrails",
     "slug": "dog-walk-tracker-x2nouww",
-    "version": "1.0.13",
+    "version": "1.0.16",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tail-trails",
@@ -20,21 +20,23 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to use your location.",
-        "NSLocationAlwaysUsageDescription": "Allow $(PRODUCT_NAME) to use your location.",
-        "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to use your location.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "TailTrails needs your location to record your dog's walking path even when the screen is locked.",
+        "NSLocationAlwaysUsageDescription": "TailTrails tracks your walk in the background so you can lock your phone while enjoying your time with your dog.",
+        "NSLocationWhenInUseUsageDescription": "TailTrails uses your location to show your real-time position on the map.",
+        "NSLocationTemporaryUsageDescriptionDictionary": {
+          "HighAccuracy": "TailTrails needs high accuracy location to precisely map your walking trail."
+        },
         "UIBackgroundModes": [
           "location",
           "fetch"
         ],
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
-        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
-        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone"
+        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera"
       }
     },
     "android": {
       "package": "com.tailtrailsclub.app",
-      "versionCode": 14,
+      "versionCode": 17,
       "googleServicesFile": "./google-services.json",
       "newArchEnabled": false,
       "softwareKeyboardLayoutMode": "pan",
@@ -62,7 +64,9 @@
         "VIBRATE",
         "POST_NOTIFICATIONS",
         "INTERNET",
-        "ACCESS_NETWORK_STATE"
+        "ACCESS_NETWORK_STATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "WAKE_LOCK"
       ]
     },
     "web": {
