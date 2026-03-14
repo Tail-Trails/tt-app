@@ -4,14 +4,13 @@ import Constants from 'expo-constants';
 // Shared config (use Expo env vars for web builds)
 const _runtimeExtra = ((Constants as any).expoConfig?.extra) || ((Constants as any).manifest?.extra) || {};
 
-// Use values from Expo runtime `extra` exclusively (we expect app.config.js to populate these)
 const firebaseConfig = {
-  apiKey: _runtimeExtra.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: _runtimeExtra.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: _runtimeExtra.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: _runtimeExtra.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: _runtimeExtra.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: _runtimeExtra.EXPO_PUBLIC_FIREBASE_APP_ID,
+  apiKey: 'AIzaSyBZzdwvQQiDUTAJEwd9hnWAyYLHIjLl7jg',
+  authDomain: 'tail-trails.firebaseapp.com',
+  projectId: 'tail-trails',
+  storageBucket: 'tail-trails.firebasestorage.app',
+  messagingSenderId: '447944956309',
+  appId: '1:447944956309:web:7967f07356acd5e912be9c',
 };
 
 console.log('Firebase config:', firebaseConfig);
