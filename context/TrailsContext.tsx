@@ -12,42 +12,37 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
   const [isSavedLoading, setIsSavedLoading] = useState<boolean>(true);
 
   const loadTrails = useCallback(async () => {
-    if (!user || !session) {
-      // even unauthenticated users can fetch public trails
-      try {
-        const resp = await fetch(`${API_URL}/trail`);
-        if (resp.ok) {
-          const data = await resp.json();
-          setTrails(data || []);
-        } else {
-          console.error('Failed to load trails (public):', resp.status);
-          setTrails([]);
-        }
-      } catch (err) {
-        console.error('Failed to load trails:', err);
-        setTrails([]);
-      } finally {
-        setIsLoading(false);
-      }
+    // Only load trails for the authenticated user using /trail/me.
+    // Do not call the root `/trail` endpoint.
+    if (!session?.accessToken) {
+      setTrails([]);
+      setIsLoading(false);
       return;
     }
 
     try {
-      console.log('Loading trails for user:', user.id);
-      const resp = await fetch(`${API_URL}/trail`, {
+      console.log('Loading my trails for user:', user?.id);
+      const resp = await fetch(`${API_URL}/trail/me`, {
         headers: {
           'Authorization': `Bearer ${session?.accessToken}`,
         },
       });
       if (resp.ok) {
-        const data = await resp.json();
+        const text = await resp.text();
+        let data: any = [];
+        try {
+          data = JSON.parse(text);
+        } catch (err) {
+          console.error('TrailsContext.loadTrails: failed to parse JSON', err);
+        }
         setTrails(data || []);
       } else {
-        console.error('Failed to load trails:', resp.status);
+        console.error('Failed to load my trails:', resp.status);
         setTrails([]);
       }
     } catch (error) {
       console.error('Failed to load trails:', error);
+      setTrails([]);
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +64,13 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
         },
       });
       if (resp.ok) {
-        const data = await resp.json();
+        const text = await resp.text();
+        let data: any = [];
+        try {
+          data = JSON.parse(text);
+        } catch (err) {
+          console.error('TrailsContext.loadSavedTrails: failed to parse JSON', err);
+        }
         setSavedTrails(data || []);
       } else {
         console.error('Failed to load my trails:', resp.status);
@@ -273,7 +274,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     }
   }, [trails, session]);
 
-  const loadNearbyTrails = useCallback(async (latitude?: number, longitude?: number, distanceKm: number = 10) => {
+  const loadNearbyTrails = useCallback(async (latitude?: number, longitude?: number, distanceKm: number = 100) => {
     try {
       console.log('Loading nearby trails:', { latitude, longitude, distanceKm });
 

@@ -41,6 +41,15 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
     return !!trail.photo;
   }, [images.length, activeIndex, trail.photo]);
 
+  const distanceFromUserValue = React.useMemo(() => {
+    return (trail as any).distanceFromUser ?? (trail as any).distance_from_user ?? (trail as any).distanceFromUserMeters ?? (trail as any).distance_from_user_meters;
+  }, [trail]);
+
+  const dogMatchValue = React.useMemo(() => {
+    const v = (trail as any).dogMatchScore ?? (trail as any).dog_match_score ?? (trail as any).dogMatch;
+    return typeof v === 'number' ? v : undefined;
+  }, [trail]);
+
   const handleTouchStart = () => {
     setIsSwiping(true);
     onSwipeStateChange?.(trail.id, true);
@@ -100,14 +109,28 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
                 <Text style={styles.trailBadgeText}>{trail.difficulty}</Text>
               </View>
             )}
-            <View style={styles.trailBadge}>
-              <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-              <Text style={styles.trailBadgeText}>{formatDistance(trail.distance)}</Text>
-            </View>
-            {trail.rating && (
+            {Number.isFinite((trail as any).distance) && (
+              <View style={styles.trailBadge}>
+                <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
+                <Text style={styles.trailBadgeText}>{formatDistance((trail as any).distance)}</Text>
+              </View>
+            )}
+            {Number.isFinite(distanceFromUserValue) && (
+              <View style={styles.trailBadge}>
+                <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
+                <Text style={styles.trailBadgeText}>{formatDistance(distanceFromUserValue as number)}</Text>
+              </View>
+            )}
+            {Number.isFinite((trail as any).rating) && (
               <View style={styles.trailBadge}>
                 <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
-                <Text style={styles.trailBadgeText}>{trail.rating.toFixed(1)}</Text>
+                <Text style={styles.trailBadgeText}>{(trail as any).rating.toFixed(1)}</Text>
+              </View>
+            )}
+            {Number.isFinite(dogMatchValue) && (
+              <View style={styles.trailBadge}>
+                <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
+                <Text style={styles.trailBadgeText}>{`${Math.round(dogMatchValue as number)}%`}</Text>
               </View>
             )}
           </View>
@@ -226,20 +249,28 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
               <Text style={styles.badgeText}>{trail.difficulty}</Text>
             </View>
           )}
-          <View style={styles.badge}>
-            <Navigation size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-            <Text style={styles.badgeText}>{formatDistance(trail.distance)}</Text>
-          </View>
-          {typeof (trail as any).distance_from_user === 'number' && (
+          {Number.isFinite((trail as any).distance) && (
             <View style={styles.badge}>
-              <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-              <Text style={styles.badgeText}>{formatDistance((trail as any).distance_from_user)}</Text>
+              <Navigation size={14} color={theme.accentPrimary} strokeWidth={2.5} />
+              <Text style={styles.badgeText}>{formatDistance((trail as any).distance)}</Text>
             </View>
           )}
-          {trail.rating && (
+          {Number.isFinite(distanceFromUserValue) && (
+            <View style={styles.badge}>
+              <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
+              <Text style={styles.badgeText}>{formatDistance(distanceFromUserValue as number)}</Text>
+            </View>
+          )}
+          {Number.isFinite((trail as any).rating) && (
             <View style={styles.badge}>
               <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
-              <Text style={styles.badgeText}>{trail.rating.toFixed(1)}</Text>
+              <Text style={styles.badgeText}>{(trail as any).rating.toFixed(1)}</Text>
+            </View>
+          )}
+          {Number.isFinite(dogMatchValue) && (
+            <View style={styles.badge}>
+              <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
+              <Text style={styles.badgeText}>{`${Math.round(dogMatchValue as number)}%`}</Text>
             </View>
           )}
         </View>

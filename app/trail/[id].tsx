@@ -559,7 +559,7 @@ export default function TrailDetailScreen() {
               </View>
               <View style={styles.statCard}>
                 <Text style={styles.statLabel}>MATCH</Text>
-                <Text style={styles.statValue}>80%</Text>
+                <Text style={styles.statValue}>{trail.dogMatchScore ? `${trail.dogMatchScore}%` : 'N/A'}</Text>
               </View>
             </View>
 

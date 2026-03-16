@@ -3,6 +3,7 @@ import { View, TextInput, Pressable, TouchableOpacity, StyleSheet, KeyboardAvoid
 import { Text } from '@/components';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import * as AuthSession from 'expo-auth-session';
 import { useAuth } from '@/context/AuthContext';
 import { firebaseAuthExchange } from '@/lib/api';
 import * as WebBrowser from 'expo-web-browser';
@@ -45,6 +46,13 @@ export default function LoginScreen() {
   const [password, setPassword] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
+  const redirectUri = AuthSession.makeRedirectUri({
+    scheme: 'tail-trails',
+    preferLocalhost: true,
+  });
+
+  console.log("My Redirect URI is:", redirectUri);
+  
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: "447944956309-t92ug0tqs40adop6mnvifqbmfsi7dtj6.apps.googleusercontent.com",
     iosClientId: "603763351756-ekakr88vbtlkqv620q7h8j2h3amq0fem.apps.googleusercontent.com",
@@ -52,6 +60,7 @@ export default function LoginScreen() {
     clientId: "447944956309-t92ug0tqs40adop6mnvifqbmfsi7dtj6.apps.googleusercontent.com",
     scopes: ['profile', 'email'],
     responseType: 'token',
+    redirectUri: redirectUri,
   });
 
   React.useEffect(() => {
@@ -120,15 +129,29 @@ export default function LoginScreen() {
     }
   };
 
+  const handleGooglePress = async () => {
+    if (!request) {
+      Alert.alert('Google Sign-In not available');
+      return;
+    }
+    try {
+      // Trigger the Expo AuthSession flow
+      await promptAsync();
+    } catch (err: any) {
+      console.error('Google prompt error', err);
+      Alert.alert('Google Sign-In Error', err?.message || String(err));
+    }
+  };
+
   const webKeyProps: any = typeof window !== 'undefined'
     ? {
-        onKeyDown: (e: any) => {
-          const k = e?.nativeEvent?.key || e?.key;
-          if (k === 'Enter') {
-            handleSignIn();
-          }
-        },
-      }
+      onKeyDown: (e: any) => {
+        const k = e?.nativeEvent?.key || e?.key;
+        if (k === 'Enter') {
+          handleSignIn();
+        }
+      },
+    }
     : {};
 
   return (
@@ -137,7 +160,7 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.content}>
-          <View style={styles.header}>
+        <View style={styles.header}>
           <Image
             source={{ uri: 'https://api.tailtrails.club/assets/logo' }}
             style={styles.logo}
@@ -191,6 +214,14 @@ export default function LoginScreen() {
               <Text style={styles.buttonText}>Sign In</Text>
             )}
           </Pressable>
+
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={handleGooglePress}
+            disabled={!request}
+          >
+            <Text style={styles.secondaryButtonText}>Log in with Google</Text>
+          </TouchableOpacity>
 
           {/* ... */}
 

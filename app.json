@@ -2,7 +2,7 @@
   "expo": {
     "name": "TailTrails",
     "slug": "dog-walk-tracker-x2nouww",
-    "version": "1.0.16",
+    "version": "1.0.17",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tail-trails",
@@ -31,12 +31,20 @@
           "fetch"
         ],
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
-        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera"
+        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "tail-trails",
+              "com.googleusercontent.apps.447944956309-t3me1erabpnf99e12gsc8ogf9mt84dtj"
+            ]
+          }
+        ]
       }
     },
     "android": {
       "package": "com.tailtrailsclub.app",
-      "versionCode": 17,
+      "versionCode": 18,
       "googleServicesFile": "./google-services.json",
       "newArchEnabled": false,
       "softwareKeyboardLayoutMode": "pan",

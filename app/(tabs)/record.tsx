@@ -15,6 +15,7 @@ import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
 import { Coordinate, Trail } from '@/types/trail';
 import { formatDistance, calculateTotalDistance, formatDuration } from '@/utils/distance';
+import { useKeepAwake } from 'expo-keep-awake';
 
 const LOCATION_TRACKING_TASK = 'background-location-task';
 
@@ -29,7 +30,7 @@ TaskManager.defineTask(LOCATION_TRACKING_TASK, async ({ data, error }: any) => {
       // Get existing coords
       const coordsStr = await AsyncStorage.getItem('recording_coordinates');
       let coords = coordsStr ? JSON.parse(coordsStr) : [];
-      
+
       const newCoord = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -37,15 +38,15 @@ TaskManager.defineTask(LOCATION_TRACKING_TASK, async ({ data, error }: any) => {
 
       // Simple duplicate prevention (prevents bloating storage with identical points)
       const lastCoord = coords[coords.length - 1];
-      if (lastCoord && 
-          lastCoord.latitude === newCoord.latitude && 
-          lastCoord.longitude === newCoord.longitude) {
+      if (lastCoord &&
+        lastCoord.latitude === newCoord.latitude &&
+        lastCoord.longitude === newCoord.longitude) {
         return;
       }
 
       coords.push(newCoord);
       await AsyncStorage.setItem('recording_coordinates', JSON.stringify(coords));
-      
+
       // Update Elevation/Speed only if they exist
       if (location.coords.altitude) {
         const alt = Math.max(0, location.coords.altitude);
@@ -79,10 +80,8 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
     }
   }
 
-
   const [initialTrail, setInitialTrail] = useState<Trail | undefined>(incomingTrail ?? paramTrail ?? undefined);
   const mapRef = useRef<any>(null);
-
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [coordinates, setCoordinates] = useState<Coordinate[]>([]);
   const [currentLocation, setCurrentLocation] = useState<Coordinate | null>(null);
@@ -107,6 +106,9 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   const [followMode, setFollowMode] = useState<boolean>(!!initialTrail);
   const [userLocationFollow, setUserLocationFollow] = useState<Coordinate | null>(null);
   const followLocationRef = useRef<Location.LocationSubscription | null>(null);
+
+  // 1. Keep the JS thread alive while this screen is mounted/active
+  useKeepAwake();
 
   useEffect(() => {
     if (true) {
@@ -377,10 +379,12 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
             notificationBody: 'TailTrails is tracking your walk',
             notificationColor: theme.accentPrimary
           },
-        // --- ADD THESE FOR IOS ---
-          pausesUpdatesAutomatically: false, // Prevents iOS from "sleeping" the task
-          showsBackgroundLocationIndicator: true, // Shows the blue pill/bar in the status bar
-          activityType: Location.ActivityType.Fitness, // Tells iOS this is a workout/walk
+          // --- CRITICAL IOS SETTINGS ---
+          pausesUpdatesAutomatically: false, // Prevents iOS from "detecting" a stop
+          showsBackgroundLocationIndicator: true, // Shows the blue pill in status bar
+          activityType: Location.ActivityType.Fitness, // Tells iOS this is a workout
+          deferredUpdatesInterval: 5000, // Wait 5 seconds before batching
+          deferredUpdatesDistance: 5,    // Wait 5 meters before batching
         });
         console.log('Background location tracking started successfully');
       } catch (bgLocationError: any) {
@@ -633,7 +637,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
     return;
   };
 
-  
+
   if (isLoadingPermission && true) {
     return (
       <View style={styles.loadingContainer}>
@@ -671,10 +675,10 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   // Normalize trail coordinates: API returns `path` as [lon, lat] arrays, convert to {latitude,longitude}
   const initialTrailCoordinates: Coordinate[] | undefined = initialTrail
     ? (initialTrail.coordinates && initialTrail.coordinates.length > 0
-        ? initialTrail.coordinates
-        : initialTrail.path && initialTrail.path.length > 0
-          ? initialTrail.path.map((p: any) => ({ latitude: p[1], longitude: p[0] }))
-          : undefined)
+      ? initialTrail.coordinates
+      : initialTrail.path && initialTrail.path.length > 0
+        ? initialTrail.path.map((p: any) => ({ latitude: p[1], longitude: p[0] }))
+        : undefined)
     : undefined;
 
   const progress = initialTrail && isRecording && coordinates.length > 0 && initialTrailCoordinates && initialTrailCoordinates.length > 0
@@ -720,34 +724,34 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
 
   return (
     <View style={styles.container}>
-          {(currentLocation || initialTrail) && (
-            <TrailMap
-              ref={mapRef}
-              coordinates={initialTrail && !isRecording ? initialTrailCoordinates ?? initialTrail.coordinates : coordinates}
-              style={styles.map}
-              initialRegion={
-                currentLocation
-                  ? {
-                      latitude: currentLocation.latitude,
-                      longitude: currentLocation.longitude,
-                      latitudeDelta: 0.01,
-                      longitudeDelta: 0.01,
-                    }
-                  : initialTrailCoordinates && initialTrailCoordinates.length > 0
-                  ? {
-                      latitude: initialTrailCoordinates[0].latitude,
-                      longitude: initialTrailCoordinates[0].longitude,
-                      latitudeDelta: 0.01,
-                      longitudeDelta: 0.01,
-                    }
-                  : undefined
+      {(currentLocation || initialTrail) && (
+        <TrailMap
+          ref={mapRef}
+          coordinates={initialTrail && !isRecording ? initialTrailCoordinates ?? initialTrail.coordinates : coordinates}
+          style={styles.map}
+          initialRegion={
+            currentLocation
+              ? {
+                latitude: currentLocation.latitude,
+                longitude: currentLocation.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
               }
-              userLocation={userLocationFollow ?? currentLocation}
-              showsUserLocation
-              followsUserLocation={followMode || isRecording}
-              showsMyLocationButton={false}
-            />
-          )}
+              : initialTrailCoordinates && initialTrailCoordinates.length > 0
+                ? {
+                  latitude: initialTrailCoordinates[0].latitude,
+                  longitude: initialTrailCoordinates[0].longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }
+                : undefined
+          }
+          userLocation={userLocationFollow ?? currentLocation}
+          showsUserLocation
+          followsUserLocation={followMode || isRecording}
+          showsMyLocationButton={false}
+        />
+      )}
 
       <TouchableOpacity
         style={styles.recenterButton}
@@ -805,7 +809,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
           />
         </ScrollView>
       </Animated.View>
-      
+
     </View>
   );
 }

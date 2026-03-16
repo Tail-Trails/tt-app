@@ -55,8 +55,8 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const totalWalks = trails.length;
-  const totalTime = trails.reduce((acc, trail) => acc + (trail.duration || 0), 0);
-  const totalDistance = trails.reduce((acc, trail) => acc + trail.distance, 0);
+  const totalTime = trails.reduce((acc, trail) => acc + (Number.isFinite((trail as any).duration) ? (trail as any).duration : 0), 0);
+  const totalDistance = trails.reduce((acc, trail) => acc + (Number.isFinite((trail as any).distance) ? (trail as any).distance : 0), 0);
 
   const getDayStreak = () => {
     try {
@@ -245,6 +245,16 @@ export default function ProfileScreen() {
   };
 
   const displayedTrails = getDisplayedTrails();
+
+  React.useEffect(() => {
+    if (displayedTrails && displayedTrails.length > 0) {
+      try {
+        console.log('ProfileScreen.displayedTrails sample:', displayedTrails[0]);
+      } catch (err) {
+        // ignore
+      }
+    }
+  }, [displayedTrails]);
 
   return (
     <View style={styles.container}>

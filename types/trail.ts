@@ -27,7 +27,7 @@ export interface Trail {
   speed?: number;
   maxElevation?: number;
   user_id?: string;
-  rating?: number;
+  rating: number;
   review?: string;
   environment_tags?: string[];
   // Review inputs from the mobile UI
@@ -42,5 +42,6 @@ export interface Trail {
   path?: number[][];
   startLatitude?: number;
   startLongitude?: number;
-  distance_from_user?: number;
+  distanceFromUser?: number;
+  dogMatchScore: number;
 }
