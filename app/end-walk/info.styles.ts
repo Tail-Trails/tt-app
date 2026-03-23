@@ -4,14 +4,17 @@ import { Typography } from '@/constants/typography';
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     backgroundColor: theme.backgroundSecondary,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingHorizontal: 0,
+    paddingBottom: 0,
   },
   infoScroll: {
-    paddingHorizontal: 20,
-    paddingBottom: 140,
+    flex: 1,
+    padding: 24,
+    width: '100%',
+    maxWidth: 920,
+    alignSelf: 'center',
   },
   closeButton: {
     width: 44,
@@ -40,30 +43,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontSize: 18,
   },
-  addMoreToggle: {
-    marginVertical: 18,
-    backgroundColor: theme.backgroundSecondary,
-    borderRadius: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 22,
-    borderWidth: 1,
-    borderColor: theme.borderSubtle,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addMoreText: {
-    ...Typography.h2(theme.textMuted),
-    fontSize: 16,
-  },
   moreCard: {
-    backgroundColor: theme.backgroundSecondary,
-    borderRadius: 18,
+    marginBottom: 24,
     padding: 18,
-    marginBottom: 12,
-    borderWidth: 1,
+    borderRadius: 16,
+    borderWidth: 1.5,
     borderColor: theme.borderSubtle,
-    overflow: 'hidden',
+    backgroundColor: theme.backgroundSecondary,
   },
   cardTitle: {
     ...Typography.h2(theme.accentPrimary),

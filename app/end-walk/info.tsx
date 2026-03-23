@@ -6,23 +6,19 @@ import * as Location from 'expo-location';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Plus } from 'lucide-react-native';
 import { useTrails } from '@/context/TrailsContext';
 import styles from './info.styles';
-import theme from '@/constants/colors';
 
 export default function InfoPage() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { saveTrail } = useTrails();
-
   const [draft, setDraft] = useState<any>(null);
   const [name, setName] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
-  const [notes, setNotes] = useState('');
+  const [description, setDescription] = useState('');
   const [privacy, setPrivacy] = useState<'public' | 'private'>('public');
-  const [showMore, setShowMore] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const rawDraft = typeof params?.draft === 'string' ? decodeURIComponent(params.draft as string) : undefined;
@@ -33,7 +29,7 @@ export default function InfoPage() {
       const parsed = JSON.parse(rawDraft);
       setDraft(parsed);
       setName(parsed?.name || '');
-      setNotes(parsed?.notes || '');
+      setDescription(parsed?.description || '');
       setPhotos(parsed?.photos || []);
       setPrivacy(parsed?.privacy || 'public');
     } catch (e) {
@@ -64,7 +60,7 @@ export default function InfoPage() {
       const toSave = {
         ...draft,
         name: name || draft.name || 'Untitled trail',
-        notes: notes || draft.notes,
+        description: description || draft.description,
         photos,
         privacy,
       };
@@ -111,50 +107,44 @@ export default function InfoPage() {
             style={styles.nameInput}
           />
 
-          {/* <TouchableOpacity style={styles.addMoreToggle} onPress={() => setShowMore(s => !s)}>
-            <Plus size={18} color={theme.textMuted} style={{ marginRight: 12 }} />
-            <Text style={styles.addMoreText}>Add More Details</Text>
-          </TouchableOpacity> */}
+          <View style={styles.moreCard}>
+            <Text style={styles.cardTitle}>Add photos?</Text>
+            <Text style={styles.cardSub}>Show highlights from your walk</Text>
 
-          {showMore && (
-            <View style={styles.moreCard}>
-              <Text style={styles.cardTitle}>Add photos?</Text>
-              <Text style={styles.cardSub}>Show highlights from your walk</Text>
+            <TouchableOpacity style={styles.addPhotoBox} onPress={pickImages}>
+              <Text style={styles.plusSign}>+</Text>
+            </TouchableOpacity>
 
-              <TouchableOpacity style={styles.addPhotoBox} onPress={pickImages}>
-                <Text style={styles.plusSign}>+</Text>
-              </TouchableOpacity>
+            <View style={styles.photoRow}>
+              {photos.map((p, i) => {
+                const extraStyle: any = { zIndex: i };
+                if (i === 1) extraStyle.transform = [{ rotate: '-6deg' }, { translateY: 6 }];
+                if (i === 2) extraStyle.transform = [{ rotate: '-3deg' }, { translateY: 3 }];
+                return <RNImage key={i} source={{ uri: p }} style={[styles.thumb, extraStyle]} />;
+              })}
+            </View>
 
-              <View style={styles.photoRow}>
-                {photos.map((p, i) => {
-                  const extraStyle: any = { zIndex: i };
-                  if (i === 1) extraStyle.transform = [{ rotate: '-6deg' }, { translateY: 6 }];
-                  if (i === 2) extraStyle.transform = [{ rotate: '-3deg' }, { translateY: 3 }];
-                  return <RNImage key={i} source={{ uri: p }} style={[styles.thumb, extraStyle]} />;
-                })}
-              </View>
+            <Text style={styles.cardTitle}>Anything you'd like to share?</Text>
+            <Text style={styles.cardSub}>Share helpful information regarding the trail</Text>
+            <TextInput
+              placeholder="Anything other dog walkers should know?"
+              placeholderTextColor="rgba(255,255,255,0.25)"
+              value={description}
+              onChangeText={setDescription}
+              style={styles.notesInput}
+              multiline
+            />
 
-              <Text style={styles.cardTitle}>Anything you'd like to share?</Text>
-              <Text style={styles.cardSub}>Share helpful information regarding the trail</Text>
-              <TextInput
-                placeholder="Anything other dog walkers should know?"
-                placeholderTextColor="rgba(255,255,255,0.25)"
-                value={notes}
-                onChangeText={setNotes}
-                style={styles.notesInput}
-                multiline
-              />
-
-              <Text style={[styles.cardTitle, { marginTop: 18 }]}>Privacy</Text>
+            {/* <Text style={[styles.cardTitle, { marginTop: 18 }]}>Privacy</Text>
               <Text style={styles.cardSub}>Choose who can see your trail</Text>
               <TouchableOpacity
                 style={styles.privacyButton}
                 onPress={() => setPrivacy(p => (p === 'public' ? 'private' : 'public'))}
               >
                 <Text style={styles.privacyText}>{privacy === 'public' ? 'Public' : 'Private'}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+              </TouchableOpacity> */}
+          </View>
+
           <View style={{ height: 24 }} />
 
           <View style={styles.bottomRow}>

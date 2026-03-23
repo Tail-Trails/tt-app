@@ -3,7 +3,7 @@ import { View, TouchableOpacity, ScrollView, Platform, Alert, ActivityIndicator,
 import { Text } from '@/components';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { ChevronLeft } from 'lucide-react-native';
+import { ArrowLeft, ChevronLeft } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './dog-traits.styles';
 import theme from '@/constants/colors';
@@ -21,7 +21,10 @@ export default function DogTraitsScreen() {
     size: string;
     image?: string;
     isEditing?: string;
+    from?: string;
   }>();
+  const openedFromSettings = params.from === 'settings';
+  const openedFromTab = params.from === 'profile' || params.from === 'settings';
   const { user } = useAuth();
   const { dogProfile, refreshDogProfile, createDogProfile, updateDogProfile } = useDogs();
   const insets = useSafeAreaInsets();
@@ -37,11 +40,15 @@ export default function DogTraitsScreen() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const isEditing = params.isEditing === 'true';
 
+  const handleCancel = () => {
+    router.back();
+  };
+
   useEffect(() => {
     if (dogProfile && isEditing) {
       // load existing trait values when editing
       // load existing trait values when editing (fallbacks kept)
-      setDogTolerance(dogProfile.dog_tolerance ?? 50);
+      setDogTolerance(dogProfile.dogTolerance ?? 50);
       setNervousAroundPeople(!!dogProfile.nervous_around_people);
       setOffleashReliability(dogProfile.offleash_reliability ?? 50);
       setStimulationTolerance(dogProfile.stimulation_tolerance ?? 50);
@@ -76,13 +83,13 @@ export default function DogTraitsScreen() {
         dob: params.dob || undefined,
         image: params.image || undefined,
         // trait fields: sliders are 1-100 values, toggles are booleans
-        dog_tolerance: dogTolerance,
-        nervous_around_people: nervousAroundPeople,
-        offleash_reliability: offleashReliability,
-        stimulation_tolerance: stimulationTolerance,
-        high_prey_drive: highPreyDrive,
-        walking_need: walkingNeed,
-        sensitive_to_heat: sensitiveToHeat,
+        dogTolerance: dogTolerance,
+        nervousAroundPeople: nervousAroundPeople,
+        offleashReliability: offleashReliability,
+        stimulationTolerance: stimulationTolerance,
+        highPreyDrive: highPreyDrive,
+        walkingNeed: walkingNeed,
+        sensitiveToHeat: sensitiveToHeat,
       };
 
       console.log('Dog profile data:', profileData);
@@ -112,10 +119,13 @@ export default function DogTraitsScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View style={[styles.container, { paddingTop: insets.top + 20 }]}> 
+      <View style={[styles.container, { paddingTop: insets.top + 20 }]}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-
+          <TouchableOpacity onPress={handleCancel} style={styles.header}>
+            <ArrowLeft size={20} color={theme.accentPrimary} />
+          </TouchableOpacity>
           <View style={styles.header}>
+
             <Text style={styles.title}>Dog Traits</Text>
             <Text style={styles.subtitle}>Help us understand your dog</Text>
           </View>
@@ -237,26 +247,30 @@ export default function DogTraitsScreen() {
         </ScrollView>
 
         <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-            disabled={isSaving}
-            testID="back-button"
-          >
-            <ChevronLeft size={24} color="#FFFE77" />
-            <Text style={styles.backButtonText}>Back</Text>
-          </TouchableOpacity>
+          {!(openedFromSettings && isEditing) && (
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+              disabled={isSaving}
+              testID="back-button"
+            >
+              <ChevronLeft size={24} color="#FFFE77" />
+              <Text style={styles.backButtonText}>Back</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={[styles.finishButton, isSaving && styles.finishButtonDisabled]}
-            onPress={handleFinish}
+            onPress={async () => {
+              await handleFinish();
+            }}
             disabled={isSaving}
-            testID="finish-button"
+            testID={openedFromSettings && isEditing ? 'save-button' : 'finish-button'}
           >
             {isSaving ? (
               <ActivityIndicator color="#1a1f0a" />
             ) : (
-              <Text style={styles.finishButtonText}>{isEditing ? 'Save' : 'Finish'}</Text>
+              <Text style={styles.finishButtonText}>{openedFromSettings && isEditing ? 'Save' : (isEditing ? 'Save' : 'Finish')}</Text>
             )}
           </TouchableOpacity>
         </View>

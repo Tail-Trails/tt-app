@@ -235,7 +235,7 @@ export default function ProfileScreen() {
     if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    router.push('/onboarding/dog-profile');
+    router.push({ pathname: '/onboarding/dog-profile', params: { from: 'profile' } } as any);
   };
 
   const getDisplayedTrails = () => {
@@ -448,7 +448,7 @@ export default function ProfileScreen() {
                 {selectedTab === 'created'
                   ? 'No trails created yet'
                   : selectedTab === 'saved'
-                    ? 'No trails saved yet'
+                    ? 'Trail saving, coming soon!'
                     : 'No reviews yet'}
               </Text>
             </View>

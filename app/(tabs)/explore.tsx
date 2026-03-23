@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { getBestAvailableLocation } from '@/utils/location';
 import * as Haptics from 'expo-haptics';
-import { MapPin, Search, Heart, Umbrella, Bookmark, Star, X, BarChart3, Navigation, Icon, ChevronLeft, SlidersHorizontal, ArrowRight, MoreVertical } from 'lucide-react-native';
+import { MapPin, Search, Heart, Umbrella, Bookmark, Star, X, BarChart3, Navigation, Icon, ChevronLeft, SlidersHorizontal, ArrowRight, MoreVertical, Trees, TrafficCone, Mountain } from 'lucide-react-native';
 import theme from '@/constants/colors';
 import { useTrails } from '@/context/TrailsContext';
 import { Trail } from '@/types/trail';
@@ -19,18 +19,21 @@ import TrailCard from '@/components/TrailCard';
 import styles from './explore.styles';
 
 
+// TODO: For you (match score within 30Km), Nearby, Beaches, Forest, Road, Cliff
 const CATEGORIES = [
+  { id: 'for-you', name: 'For You', icon: Star },
   { id: 'nearby', name: 'Nearby', icon: MapPin },
-  { id: 'popular', name: 'Popular', icon: Heart },
   { id: 'beaches', name: 'Beaches', icon: Umbrella },
+  { id: 'forest', name: 'Forest', icon: Trees },
+  { id: 'road', name: 'Road', icon: TrafficCone },
+  { id: 'cliff', name: 'Cliff', icon: Mountain },
 ];
-
 
 export default function ExploreScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { loadNearbyTrails, saveTrailBookmark, removeTrailBookmark, isTrailSaved } = useTrails();
-  const [selectedCategory, setSelectedCategory] = useState<string>('nearby');
+  const [selectedCategory, setSelectedCategory] = useState<string>('for-you');
   const [nearbyTrails, setNearbyTrails] = useState<Trail[]>([]);
   const [isLoadingNearby, setIsLoadingNearby] = useState<boolean>(true);
   const [, setUserCity] = useState<string | undefined>(undefined);
@@ -45,39 +48,6 @@ export default function ExploreScreen() {
   const mainScrollRef = React.useRef<ScrollView>(null);
 
   const loadUserLocationAndNearbyTrails = useCallback(async () => {
-    if (false) {
-      setCurrentLocation('Current location');
-      // Try to get a quick browser location; if unavailable, load without coords
-      try {
-        if (navigator && navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(async (pos) => {
-            try {
-              const trails = await loadNearbyTrails(pos.coords.latitude, pos.coords.longitude);
-              setNearbyTrails(trails);
-            } catch (err) {
-              console.error('Failed to load nearby trails with browser location:', err);
-              const trails = await loadNearbyTrails();
-              setNearbyTrails(trails);
-            } finally {
-              setIsLoadingNearby(false);
-            }
-          }, async () => {
-            const trails = await loadNearbyTrails();
-            setNearbyTrails(trails);
-            setIsLoadingNearby(false);
-          });
-          return;
-        }
-      } catch (err) {
-        console.error('Geolocation not available on web:', err);
-      }
-
-      const trails = await loadNearbyTrails();
-      setNearbyTrails(trails);
-      setIsLoadingNearby(false);
-      return;
-    }
-
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
 
@@ -284,7 +254,7 @@ export default function ExploreScreen() {
         stickyHeaderIndices={[0]}
       >
         <View style={[styles.stickyHeader, { paddingTop: insets.top + 16 }]}>
-          <View style={styles.stickySearchContainer}>
+          {/* <View style={styles.stickySearchContainer}>
             <TouchableOpacity
               style={styles.searchBar}
               onPress={handleSearchBarPress}
@@ -297,7 +267,7 @@ export default function ExploreScreen() {
               </View>
             </TouchableOpacity>
             
-          </View>
+          </View> */}
 
           <View style={styles.categoriesSection}>
             <ScrollView

@@ -5,10 +5,15 @@ import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Waves, TreePine, TrafficCone, Mountain } from 'lucide-react-native';
 import styles from './review.styles';
+import Slider from '@react-native-community/slider';
 import theme from '@/constants/colors';
 
 const DESCRIPTIONS = ['Beach', 'Forest', 'Road', 'Cliff'];
 const ICONS = [Waves, TreePine, TrafficCone, Mountain];
+
+// TODO: Add review free text on B flow (ignore C flow for now)
+// TODO: rig up average rating on explore + trail
+// TODO: make backend for review and add new screen to click through to reviews from rating on trail card
 
 export default function EndWalkReview() {
   const router = useRouter();
@@ -29,13 +34,12 @@ export default function EndWalkReview() {
 
   const [rating, setRating] = useState<number>(initialRating);
   const [selected, setSelected] = useState<Record<number, boolean>>({});
-  const [dogTraffic, setDogTraffic] = useState(0.5);
-  const [footTraffic, setFootTraffic] = useState(0.5);
-  const [paths, setPaths] = useState(0.5);
-  const [exposure, setExposure] = useState(0.5);
+  const [dogTraffic, setDogTraffic] = useState(50);
+  const [footTraffic, setFootTraffic] = useState(50);
+  const [paths, setPaths] = useState(50);
+  const [exposure, setExposure] = useState(50);
   const [offLeash, setOffLeash] = useState(false);
   const [wildlife, setWildlife] = useState(false);
-  const trackRefs = useRef<Record<string, { width: number }>>({});
 
   useEffect(() => {
     // if rating came from params, prefill a selection (optional)
@@ -46,19 +50,6 @@ export default function EndWalkReview() {
     setSelected(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
-  const onTrackLayout = (key: string) => (e: LayoutChangeEvent) => {
-    const { width } = e.nativeEvent.layout;
-    trackRefs.current[key] = { width };
-  };
-
-  const handleTrackPress = (key: string, setter: (v: number) => void) => (e: any) => {
-    const x = e.nativeEvent.locationX;
-    const w = trackRefs.current[key]?.width || 1;
-    let v = x / w;
-    if (v < 0) v = 0;
-    if (v > 1) v = 1;
-    setter(v);
-  };
 
   const goBack = () => {
     router.push(`/end-walk/summary?draft=${encodeURIComponent(JSON.stringify(draft || {}))}`);
@@ -120,34 +111,40 @@ export default function EndWalkReview() {
 
           <View style={styles.section}>
             <Text style={styles.cardTitle}>Dog Traffic Level</Text>
-            <View onLayout={onTrackLayout('dog')}>
-              <Pressable onPress={handleTrackPress('dog', setDogTraffic)} style={styles.trackContainer}>
-                <View style={styles.track} />
-                <View style={{ position: 'absolute', left: `${dogTraffic * 100}%`, transform: [{ translateX: -11 }], top: 9 }}>
-                  <View style={styles.thumb} />
-                </View>
-              </Pressable>
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-              <Text style={styles.label}>High traffic</Text>
-              <Text style={styles.label}>Low traffic</Text>
+            <Slider
+              minimumValue={1}
+              maximumValue={100}
+              step={1}
+              value={dogTraffic}
+              onValueChange={(v: number) => setDogTraffic(Math.round(v))}
+              minimumTrackTintColor="#3d4520"
+              maximumTrackTintColor="#646a3a"
+              thumbTintColor="#FFFFFF"
+              style={styles.slider}
+            />
+            <View style={styles.helperRow}>
+              <Text style={styles.helperLeft}>High traffic</Text>
+              <Text style={styles.helperRight}>Low traffic</Text>
             </View>
           </View>
 
           <View style={{ height: 12 }} />
           <View style={styles.section}>
             <Text style={styles.cardTitle}>Foot Traffic Level</Text>
-            <View onLayout={onTrackLayout('foot')}>
-              <Pressable onPress={handleTrackPress('foot', setFootTraffic)} style={styles.trackContainer}>
-                <View style={styles.track} />
-                <View style={{ position: 'absolute', left: `${footTraffic * 100}%`, transform: [{ translateX: -11 }], top: 9 }}>
-                  <View style={styles.thumb} />
-                </View>
-              </Pressable>
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-              <Text style={styles.label}>High traffic</Text>
-              <Text style={styles.label}>Low traffic</Text>
+            <Slider
+              minimumValue={1}
+              maximumValue={100}
+              step={1}
+              value={footTraffic}
+              onValueChange={(v: number) => setFootTraffic(Math.round(v))}
+              minimumTrackTintColor="#3d4520"
+              maximumTrackTintColor="#646a3a"
+              thumbTintColor="#FFFFFF"
+              style={styles.slider}
+            />
+            <View style={styles.helperRow}>
+              <Text style={styles.helperLeft}>High traffic</Text>
+              <Text style={styles.helperRight}>Low traffic</Text>
             </View>
           </View>
 
@@ -166,34 +163,40 @@ export default function EndWalkReview() {
           <View style={{ height: 18 }} />
           <View style={styles.section}>
             <Text style={styles.cardTitle}>Paths</Text>
-            <View onLayout={onTrackLayout('paths')}>
-              <Pressable onPress={handleTrackPress('paths', setPaths)} style={styles.trackContainer}>
-                <View style={styles.track} />
-                <View style={{ position: 'absolute', left: `${paths * 100}%`, transform: [{ translateX: -11 }], top: 9 }}>
-                  <View style={styles.thumb} />
-                </View>
-              </Pressable>
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-              <Text style={styles.label}>Open wide</Text>
-              <Text style={styles.label}>Narrow paths</Text>
+            <Slider
+              minimumValue={1}
+              maximumValue={100}
+              step={1}
+              value={paths}
+              onValueChange={(v: number) => setPaths(Math.round(v))}
+              minimumTrackTintColor="#3d4520"
+              maximumTrackTintColor="#646a3a"
+              thumbTintColor="#FFFFFF"
+              style={styles.slider}
+            />
+            <View style={styles.helperRow}>
+              <Text style={styles.helperLeft}>Open wide</Text>
+              <Text style={styles.helperRight}>Narrow paths</Text>
             </View>
           </View>
 
           <View style={{ height: 18 }} />
           <View style={styles.section}>
             <Text style={styles.cardTitle}>Exposure</Text>
-            <View onLayout={onTrackLayout('exposure')}>
-              <Pressable onPress={handleTrackPress('exposure', setExposure)} style={styles.trackContainer}>
-                <View style={styles.track} />
-                <View style={{ position: 'absolute', left: `${exposure * 100}%`, transform: [{ translateX: -11 }], top: 9 }}>
-                  <View style={styles.thumb} />
-                </View>
-              </Pressable>
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-              <Text style={styles.label}>Shaded</Text>
-              <Text style={styles.label}>Exposed</Text>
+            <Slider
+              minimumValue={1}
+              maximumValue={100}
+              step={1}
+              value={exposure}
+              onValueChange={(v: number) => setExposure(Math.round(v))}
+              minimumTrackTintColor="#3d4520"
+              maximumTrackTintColor="#646a3a"
+              thumbTintColor="#FFFFFF"
+              style={styles.slider}
+            />
+            <View style={styles.helperRow}>
+              <Text style={styles.helperLeft}>Shaded</Text>
+              <Text style={styles.helperRight}>Exposed</Text>
             </View>
           </View>
           <View style={{ height: 24 }} />

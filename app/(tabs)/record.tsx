@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, TextInput, ScrollView } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { View, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, ScrollView } from 'react-native';
 import { Text } from '@/components';
 import TrailMap from '@/components/TrailMap';
 import * as Location from 'expo-location';
@@ -7,17 +7,20 @@ import * as TaskManager from 'expo-task-manager';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Square, Play, MapPin, Watch, Bell, ChevronUp, Navigation, ChevronDown, Upload } from 'lucide-react-native';
+import { MapPin, Navigation } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 import styles from './record.styles';
 import theme from '@/constants/colors';
 import RecordOverlay from '@/components/RecordOverlay';
 import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
 import { Coordinate, Trail } from '@/types/trail';
-import { formatDistance, calculateTotalDistance, formatDuration } from '@/utils/distance';
+import { calculateTotalDistance } from '@/utils/distance';
 import { useKeepAwake } from 'expo-keep-awake';
 
 const LOCATION_TRACKING_TASK = 'background-location-task';
+
+// TODO: trail drops when record starts - fix this
 
 TaskManager.defineTask(LOCATION_TRACKING_TASK, async ({ data, error }: any) => {
   if (error) return;
@@ -637,6 +640,58 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
     return;
   };
 
+  const cancelRecording = async () => {
+    Alert.alert(
+      'Cancel recording?',
+      'Discard this recording and all collected data. This cannot be undone.',
+      [
+        { text: 'Keep Recording', style: 'cancel' },
+        {
+          text: 'Discard',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+              const hasTask = await TaskManager.isTaskRegisteredAsync(LOCATION_TRACKING_TASK);
+              if (hasTask) {
+                await Location.stopLocationUpdatesAsync(LOCATION_TRACKING_TASK);
+              }
+            } catch (err) {
+              console.warn('Error stopping background task on cancel:', err);
+            }
+
+            if (locationSubscription.current) {
+              locationSubscription.current.remove();
+              locationSubscription.current = null;
+            }
+
+            if (timerRef.current) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+            }
+
+            try {
+              await AsyncStorage.removeItem('recording_start_time');
+              await AsyncStorage.removeItem('recording_coordinates');
+              await AsyncStorage.removeItem('recording_max_elevation');
+              await AsyncStorage.removeItem('recording_max_speed');
+              await AsyncStorage.removeItem('recording_last_update');
+            } catch (err) {
+              console.warn('Error clearing recording storage on cancel:', err);
+            }
+
+            setIsRecording(false);
+            setCoordinates([]);
+            setDuration(0);
+            setMaxElevation(0);
+            setMaxSpeed(0);
+          },
+        },
+      ]
+    );
+  };
+
 
   if (isLoadingPermission && true) {
     return (
@@ -716,6 +771,45 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
           }, 500);
         }
       }
+    }
+  };
+
+  const handleCamera = async () => {
+    try {
+      if (Platform.OS === 'web') {
+        Alert.alert('Not supported', 'Camera capture is not supported on web.');
+        return;
+      }
+
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Camera permission is required to take photos');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.7,
+        base64: false,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) return;
+
+      const uri = result.assets[0].uri;
+      // Save photo URIs to recording_photos so they can be associated with this recording later
+      try {
+        const photosStr = await AsyncStorage.getItem('recording_photos');
+        const photos = photosStr ? JSON.parse(photosStr) : [];
+        photos.push({ uri, timestamp: Date.now() });
+        await AsyncStorage.setItem('recording_photos', JSON.stringify(photos));
+        Alert.alert('Photo saved', 'Captured photo saved to this recording.');
+      } catch (err) {
+        console.error('Error saving recording photo:', err);
+        Alert.alert('Error', 'Failed to save photo');
+      }
+    } catch (err) {
+      console.error('Camera error', err);
+      Alert.alert('Error', 'Failed to open camera');
     }
   };
 
@@ -806,6 +900,8 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
               setFollowMode(false);
               router.back();
             }}
+            onCancel={cancelRecording}
+            onCamera={handleCamera}
           />
         </ScrollView>
       </Animated.View>

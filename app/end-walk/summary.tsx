@@ -4,6 +4,7 @@ import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './summary.styles';
 import { formatDuration } from '@/utils/distance';
+import { ArrowLeft } from 'lucide-react-native';
 
 export default function EndWalkSummary() {
   const router = useRouter();
@@ -23,7 +24,9 @@ export default function EndWalkSummary() {
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 20 }]}>
 
+        {/* TODO: fix this!!!! */}
         <View style={styles.bigHeader}>
+          <ArrowLeft size={20} color={styles.hugeTitle.color} onPress={() => router.push('/record')} />
           <Text style={styles.hugeTitle}>Great walk today{draft && draft.name ? `\n${draft.name}!` : ' Username!'} 👏</Text>
           <Text style={styles.bigSubtitle}>{draft && draft.userName ? `${draft.userName}` : 'DogName'} enjoyed every step</Text>
         </View>

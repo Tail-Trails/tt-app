@@ -16,6 +16,8 @@ type Props = {
   onStart?: () => void;
   onStop: () => void;
   onClose?: () => void;
+  onCancel?: () => void;
+  onCamera?: () => void;
 };
 
 export default function RecordOverlay({
@@ -31,6 +33,8 @@ export default function RecordOverlay({
   onStart,
   onStop,
   onClose,
+  onCancel,
+  onCamera,
 }: Props) {
   const formattedDistance = `${(distance / 1000).toFixed(2)}km`;
   const formattedElevation = `${Math.round(elevation)}m`;
@@ -97,8 +101,13 @@ export default function RecordOverlay({
               <RNText style={styles.stopText}>Stop</RNText>
             </View>
           </TouchableOpacity>
+          {onCancel ? (
+            <TouchableOpacity style={styles.cancelButton} onPress={onCancel} activeOpacity={0.8}>
+              <RNText style={styles.cancelText}>Cancel</RNText>
+            </TouchableOpacity>
+          ) : null}
 
-          <TouchableOpacity style={styles.cameraButton} onPress={() => {}} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.cameraButton} onPress={() => { if (onCamera) onCamera(); }} activeOpacity={0.8}>
             <Camera size={20} color={theme.accentPrimary} />
           </TouchableOpacity>
         </View>
@@ -224,6 +233,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     borderRadius: 20,
     minWidth: 140,
+  },
+  cancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  cancelText: {
+    ...Typography.label('#9ca07e'),
   },
   recordButtonText: {
     ...Typography.button(theme.backgroundPrimary),

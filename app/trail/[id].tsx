@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   View,
-  StyleSheet,
   ActivityIndicator,
   Platform,
   TouchableOpacity,
@@ -11,17 +10,16 @@ import {
   Animated,
   ScrollView,
   Dimensions,
+  PanResponder,
 } from 'react-native';
 import { Text } from '@/components';
-
 import { router, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
 import TrailMapPreview from '@/components/TrailMapPreview';
 import * as Location from 'expo-location';
-import { Clock, MapPin, Calendar, Edit3, Check, X, Navigation, TrendingUp, Tag, Camera, Activity, Star, ArrowLeft, Share2, Bookmark, MoreVertical, ChevronRight } from 'lucide-react-native';
+import { MapPin, Calendar, Edit3, Check, X, Navigation, Camera, Star, ArrowLeft, Bookmark, MoreVertical, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
 import { Trail } from '@/types/trail';
@@ -31,6 +29,7 @@ import theme from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './[id].styles';
 import { Typography } from '@/constants/typography';
+
 
 const ENVIRONMENT_TAG_OPTIONS = [
   'Forest', 'Urban', 'Beach', 'Mountain', 'Rural', 'Park',
@@ -59,6 +58,28 @@ export default function TrailDetailScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const [heroActiveIndex, setHeroActiveIndex] = useState<number>(0);
+  // Bottom sheet animation state (same pattern as record.tsx)
+  const bottomSheetHeight = Dimensions.get('window').height * 0.6;
+  const collapsedHeight = 96;
+  const navbarHeight = Platform.OS === 'ios' ? 100 : 92;
+  // Start with the bottom sheet expanded by default so the bottom card
+  // occupies most of the screen; user can pull down to reveal the hero.
+  const bottomSheetAnim = useRef(new Animated.Value(bottomSheetHeight)).current;
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
+  const windowHeight = Dimensions.get('window').height;
+  const heroMaxHeight = windowHeight * 0.75;
+  // Use a reasonable default collapsed hero height (small preview) to avoid large gaps
+  const heroMinHeight = windowHeight * 0.38;
+  // Ensure heroMaxHeight is larger than heroMinHeight
+  const effectiveHeroMax = Math.max(heroMaxHeight, heroMinHeight + 80);
+  // Invert the mapping so a larger bottom sheet (expanded) yields a
+  // smaller hero height; collapsing the bottom sheet increases the
+  // hero so it can be pulled down to reveal more of the map/image.
+  const heroHeight = bottomSheetAnim.interpolate({
+    inputRange: [collapsedHeight, bottomSheetHeight],
+    outputRange: [effectiveHeroMax, heroMinHeight],
+    extrapolate: 'clamp',
+  });
   // Helper to render native icons on mobile and an emoji fallback on web where some icon libs
   // can produce text nodes that raise "Text strings must be rendered within a <Text> component".
   const IconOrEmoji = ({ IconComponent, emoji, size = 18, color }: { IconComponent: any; emoji?: string; size?: number; color?: string }) => {
@@ -74,6 +95,64 @@ export default function TrailDetailScreen() {
     loadTrail();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  const initialHeight = useRef<number>(0);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 5;
+      },
+      onPanResponderGrant: () => {
+        initialHeight.current = (bottomSheetAnim as any)._value;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        const newValue = initialHeight.current - gestureState.dy;
+        if (newValue >= collapsedHeight && newValue <= bottomSheetHeight) {
+          bottomSheetAnim.setValue(newValue);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        const threshold = (bottomSheetHeight + collapsedHeight) / 2;
+        const currentValue = (bottomSheetAnim as any)._value;
+
+        if (gestureState.dy < -50) {
+          expandBottomSheet();
+        } else if (gestureState.dy > 50) {
+          collapseBottomSheet();
+        } else if (currentValue > threshold) {
+          expandBottomSheet();
+        } else {
+          collapseBottomSheet();
+        }
+      },
+    })
+  ).current;
+
+  const expandBottomSheet = () => {
+    setIsExpanded(true);
+    Animated.spring(bottomSheetAnim, {
+      toValue: bottomSheetHeight,
+      useNativeDriver: false,
+      tension: 50,
+      friction: 8,
+    }).start();
+  };
+
+  const collapseBottomSheet = () => {
+    setIsExpanded(false);
+    Animated.spring(bottomSheetAnim, {
+      toValue: collapsedHeight,
+      useNativeDriver: false,
+      tension: 50,
+      friction: 8,
+    }).start();
+  };
+
+  const toggleBottomSheet = () => {
+    if (isExpanded) collapseBottomSheet(); else expandBottomSheet();
+  };
 
   const loadTrail = async () => {
     if (typeof id !== 'string') {
@@ -348,6 +427,16 @@ export default function TrailDetailScreen() {
     Alert.alert('Options', 'Mark as completed option coming soon!');
   };
 
+  const handleEdit = () => {
+    if (true) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    console.log('Edit pressed, id=', id, 'trail?.userId=', trail?.userId, 'user?.id=', user?.id);
+    if (typeof id === 'string') {
+      router.push(`/trail/${id}/edit`);
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -375,7 +464,8 @@ export default function TrailDetailScreen() {
     longitudeDelta: 0.01,
   } : undefined;
 
-  const canEdit = trail.user_id === user?.id;
+  const canEdit = trail.userId === user?.id;
+  console.log('Can edit: ', canEdit, trail.userId, '-', user?.id)
 
   const heroSlidesCount = ((trail as any).images?.length || 0) + (((trail as any).images?.length || 0) > 0 ? 1 : (trail.photo ? 1 : 0));
 
@@ -398,13 +488,12 @@ export default function TrailDetailScreen() {
         <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
           <ArrowLeft size={24} color={theme.accentPrimary} />
         </TouchableOpacity>
-        <View style={styles.headerRightButtons}>
-          <TouchableOpacity style={styles.headerButton} onPress={handleSave}>
-            <Bookmark size={22} color={theme.accentPrimary} fill={isSaved ? theme.accentPrimary : 'none'} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton} onPress={handleMore}>
-            <MoreVertical size={22} color={theme.accentPrimary} />
-          </TouchableOpacity>
+        <View style={[styles.headerRightButtons]}>
+          {canEdit && (
+            <TouchableOpacity style={styles.headerButton} onPress={handleEdit}>
+              <Edit3 size={22} color={theme.accentPrimary} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -418,7 +507,7 @@ export default function TrailDetailScreen() {
         scrollEventThrottle={16}
       >
         <View style={styles.heroSection}>
-          <View style={styles.heroImageContainer}>
+          <Animated.View style={[styles.heroImageContainer, { height: heroHeight as any }]}> 
             {Array.isArray((trail as any).images) && (trail as any).images.length > 0 ? (
               <ScrollView
                 horizontal
@@ -476,298 +565,301 @@ export default function TrailDetailScreen() {
                 })}
               </View>
             )}
-
-            {canEdit && (
-              <TouchableOpacity
-                style={styles.changePhotoFab}
-                onPress={handlePickImage}
-                disabled={isUploadingPhoto}
-              >
-                {isUploadingPhoto ? (
-                  <ActivityIndicator color={theme.textPrimary} size="small" />
-                ) : (
-                  <Camera size={20} color={theme.textPrimary} />
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
+          </Animated.View>
         </View>
 
-        <View style={styles.contentWrapper}>
-          <View style={styles.content}>
-            <View style={styles.titleSection}>
-              <View style={styles.dateRow}>
-                <IconOrEmoji IconComponent={Calendar} emoji="📅" size={16} color={theme.textMuted} />
-                <Text style={styles.dateText}>{new Date(trail.createdAt ?? trail.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
+        {/* content moved into bottom sheet to allow hero image/map to be revealed */}
+      </Animated.ScrollView>
+
+      <Animated.View
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: Animated.add(bottomSheetAnim, navbarHeight),
+          backgroundColor: theme.backgroundPrimary,
+          borderTopLeftRadius: 16,
+          borderTopRightRadius: 16,
+          overflow: 'hidden',
+          elevation: 6,
+        }}
+      >
+        <View {...panResponder.panHandlers} style={{ paddingTop: 8, alignItems: 'center' }}>
+          <TouchableOpacity
+            style={{ width: '100%', alignItems: 'center', paddingVertical: 8 }}
+            onPress={toggleBottomSheet}
+            activeOpacity={0.8}
+          >
+            <View style={{ width: 48, height: 6, borderRadius: 3, backgroundColor: '#d1d5db' }} />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: isExpanded ? navbarHeight : 12 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.contentWrapper}>
+            <View style={styles.content}>
+              <View style={styles.titleSection}>
+                <View style={styles.dateRow}>
+                  <IconOrEmoji IconComponent={Calendar} emoji="📅" size={16} color={theme.textMuted} />
+                  <Text style={styles.dateText}>{new Date(trail.createdAt ?? trail.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
+                </View>
+                {canEdit && isEditingName ? (
+                  <View style={styles.nameEditContainer}>
+                    <TextInput
+                      style={styles.nameInput}
+                      value={editedName}
+                      onChangeText={setEditedName}
+                      placeholder="Enter trail name"
+                      autoFocus
+                      placeholderTextColor="#9ca3af"
+                    />
+                    <View style={styles.editButtons}>
+                      <TouchableOpacity
+                        style={[styles.iconButton, styles.saveIconButton]}
+                        onPress={handleSaveName}
+                      >
+                        <Check size={18} color="#fff" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.iconButton, styles.cancelIconButton]}
+                        onPress={handleCancelEdit}
+                      >
+                        <X size={18} color={theme.textPrimary} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.titleRow}>
+                    <Text style={styles.title}>{trail.name || `Trail ${new Date(trail.createdAt ?? trail.date).toLocaleDateString()}`}</Text>
+                  </View>
+                )}
+
+                <View style={styles.authorRow}>
+                  {user?.name ? (
+                        <View style={styles.avatar}>
+                          <Image
+                            source={user?.image ? { uri: user.image } : undefined}
+                            style={{ width: '100%', height: '100%', borderRadius: 18 }}
+                            contentFit="cover"
+                            cachePolicy="memory-disk"
+                          />
+                        </View>
+                  ) : (
+                    <View style={styles.avatar} />
+                  )}
+                  <Text style={styles.authorName}>{user?.name || 'John Snow'}</Text>
+                </View>
               </View>
-              {canEdit && isEditingName ? (
-                <View style={styles.nameEditContainer}>
+
+              <View style={styles.statsSection}>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>ESTIMATED TIME</Text>
+                  <Text style={styles.statValue}>{formatDuration(trail.duration)}</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>DISTANCE</Text>
+                  <Text style={styles.statValue}>{formatDistance(trail.distance)}</Text>
+                </View>
+
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>ELEVATION</Text>
+                  <Text style={styles.statValue}>{trail.elevation ? `${Math.round(trail.elevation)}m` : '0m'}</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>MATCH</Text>
+                  <Text style={styles.statValue}>{trail.dogMatchScore ? `${trail.dogMatchScore}%` : 'N/A'}</Text>
+                </View>
+              </View>
+
+              {(trail.description || trail.review) && !isEditingDetails && (
+                <View style={styles.reviewCard}>
+                  <Text style={styles.reviewText}>{trail.description || trail.review}</Text>
+                </View>
+              )}
+
+              {trail.city && (
+                <View style={styles.locationRow}>
+                  <MapPin size={16} color={theme.textMuted} />
+                  <Text style={styles.location}>{trail.city}, {trail.country || 'Unknown'}</Text>
+                </View>
+              )}
+
+              {canEdit && isEditingDetails && (
+                <View style={styles.editSection}>
+                  <Text style={styles.editSectionTitle}>Trail Name</Text>
                   <TextInput
-                    style={styles.nameInput}
-                    value={editedName}
-                    onChangeText={setEditedName}
+                    style={styles.nameInputInDetails}
+                    value={editedNameInDetails}
+                    onChangeText={setEditedNameInDetails}
                     placeholder="Enter trail name"
-                    autoFocus
                     placeholderTextColor="#9ca3af"
                   />
-                  <View style={styles.editButtons}>
+
+                  <Text style={[styles.editSectionTitle, { marginTop: 24 }]}>Rating</Text>
+                  <View style={styles.ratingStars}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <TouchableOpacity
+                        key={star}
+                        onPress={() => {
+                          if (true) {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          }
+                          setEditedRating(star);
+                        }}
+                        style={styles.starButton}
+                      >
+                        <Star
+                          size={32}
+                          color={star <= editedRating ? '#f59e0b' : '#d1d5db'}
+                          fill={star <= editedRating ? '#f59e0b' : 'none'}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  <Text style={[styles.editSectionTitle, { marginTop: 24 }]}>Review</Text>
+                  <TextInput
+                    style={styles.reviewInput}
+                    value={editedReview}
+                    onChangeText={setEditedReview}
+                    placeholder="Share your experience on this trail..."
+                    placeholderTextColor="#9ca3af"
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                  />
+
+                  <Text style={[styles.editSectionTitle, { marginTop: 24 }]}>Difficulty</Text>
+                  <View style={styles.difficultyOptions}>
+                    {DIFFICULTY_OPTIONS.map((difficulty) => (
+                      <TouchableOpacity
+                        key={difficulty}
+                        style={[
+                          styles.difficultyChip,
+                          editedDifficulty === difficulty && styles.difficultyChipSelected,
+                        ]}
+                        onPress={() => {
+                          if (true) {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          }
+                          setEditedDifficulty(difficulty);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.difficultyChipText,
+                            editedDifficulty === difficulty && styles.difficultyChipTextSelected,
+                          ]}
+                        >
+                          {difficulty}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  <Text style={[styles.editSectionTitle, { marginTop: 24 }]}>Environment Tags</Text>
+                  <View style={styles.tagsGrid}>
+                    {ENVIRONMENT_TAG_OPTIONS.map((tag) => (
+                      <TouchableOpacity
+                        key={tag}
+                        style={[
+                          styles.editTagChip,
+                          editedTags.includes(tag) && styles.editTagChipSelected,
+                        ]}
+                        onPress={() => toggleTag(tag)}
+                      >
+                        <Text
+                          style={[
+                            styles.editTagChipText,
+                            editedTags.includes(tag) && styles.editTagChipTextSelected,
+                          ]}
+                        >
+                          {tag}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  <View style={styles.editActionButtons}>
                     <TouchableOpacity
-                      style={[styles.iconButton, styles.saveIconButton]}
-                      onPress={handleSaveName}
+                      style={[styles.actionButton, styles.cancelActionButton]}
+                      onPress={handleCancelDetailsEdit}
                     >
-                      <Check size={18} color="#fff" />
+                      <X size={20} color={theme.textPrimary} />
+                      <Text style={styles.cancelActionText}>Cancel</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.iconButton, styles.cancelIconButton]}
-                      onPress={handleCancelEdit}
+                      style={[styles.actionButton, styles.saveActionButton]}
+                      onPress={handleSaveDetails}
                     >
-                      <X size={18} color={theme.textPrimary} />
+                      <Check size={20} color="#fff" />
+                      <Text style={styles.saveActionText}>Save</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
-              ) : (
-                <View style={styles.titleRow}>
-                  <Text style={styles.title}>{trail.name || `Trail ${new Date(trail.createdAt ?? trail.date).toLocaleDateString()}`}</Text>
-                </View>
               )}
 
-              <View style={styles.authorRow}>
-                {user?.name ? (
-                  <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{user.name.split(' ').map(s=>s[0]).slice(0,2).join('')}</Text>
+              <View style={styles.mapSection}>
+                <View style={styles.buttonsRow}>
+                  <TouchableOpacity
+                    style={[styles.directionsButton, isGettingDirections && { opacity: 0.7 }]}
+                    onPress={handleGetDirections}
+                    disabled={isGettingDirections}
+                  >
+                    {isGettingDirections ? (
+                      <ActivityIndicator size="small" color={theme.accentPrimary} />
+                    ) : (
+                      <Navigation size={32} color={theme.accentPrimary} />
+                    )}
+                  </TouchableOpacity>
+
+                  {Platform.OS !== 'web' && (
+                    <TouchableOpacity style={styles.startButtonInline} onPress={() => {
+                      if (true) {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      }
+                      console.log('Starting trail:', trail.id);
+                      router.push(`/(tabs)/record?trailId=${trail.id}`);
+                    }}>
+                      <Text style={styles.startButtonText}>Start Trail</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+
+              <TouchableOpacity style={styles.reviewsSection} onPress={() => {}}>
+                <Text style={styles.reviewsTitle}>REVIEWS (1)</Text>
+                <View style={styles.reviewsRow}>
+                  <View style={styles.reviewStars}>
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} size={24} color={s <= (trail.rating || 0) ? theme.accentPrimary : theme.backgroundSecondaryVarient} fill={s <= (trail.rating || 0) ? theme.accentPrimary : 'none'} />
+                    ))}
                   </View>
-                ) : (
-                  <View style={styles.avatar} />
-                )}
-                <Text style={styles.authorName}>{user?.name || 'John Snow'}</Text>
-              </View>
-            </View>
-
-            <View style={styles.statsSection}>
-              <View style={styles.statCard}>
-                <Text style={styles.statLabel}>ESTIMATED TIME</Text>
-                <Text style={styles.statValue}>{formatDuration(trail.duration)}</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statLabel}>DISTANCE</Text>
-                <Text style={styles.statValue}>{formatDistance(trail.distance)}</Text>
-              </View>
-
-              <View style={styles.statCard}>
-                <Text style={styles.statLabel}>ELEVATION</Text>
-                <Text style={styles.statValue}>{trail.elevation ? `${Math.round(trail.elevation)}m` : '0m'}</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statLabel}>MATCH</Text>
-                <Text style={styles.statValue}>{trail.dogMatchScore ? `${trail.dogMatchScore}%` : 'N/A'}</Text>
-              </View>
-            </View>
-
-            {(trail.description || trail.review) && !isEditingDetails && (
-              <View style={styles.reviewCard}>
-                <Text style={styles.reviewText}>{trail.description || trail.review}</Text>
-              </View>
-            )}
-
-            {trail.city && (
-              <View style={styles.locationRow}>
-                <MapPin size={16} color={theme.textMuted} />
-                <Text style={styles.location}>{trail.city}, {trail.country || 'Unknown'}</Text>
-              </View>
-            )}
-
-            {canEdit && !isEditingDetails && (
-              <TouchableOpacity
-                style={styles.editDetailsButton}
-                onPress={() => {
-                  if (true) {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }
-                  setIsEditingDetails(true);
-                }}
-              >
-                <Edit3 size={18} color={theme.backgroundPrimary} />
-                <Text style={styles.editDetailsText}>Edit Trail Details</Text>
+                  <IconOrEmoji IconComponent={ChevronRight} emoji=">" size={24} color={theme.textMuted} />
+                </View>
               </TouchableOpacity>
-            )}
 
-            {canEdit && isEditingDetails && (
-              <View style={styles.editSection}>
-                <Text style={styles.editSectionTitle}>Trail Name</Text>
-                <TextInput
-                  style={styles.nameInputInDetails}
-                  value={editedNameInDetails}
-                  onChangeText={setEditedNameInDetails}
-                  placeholder="Enter trail name"
-                  placeholderTextColor="#9ca3af"
-                />
-
-                <Text style={[styles.editSectionTitle, { marginTop: 24 }]}>Rating</Text>
-                <View style={styles.ratingStars}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <TouchableOpacity
-                      key={star}
-                      onPress={() => {
-                        if (true) {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        }
-                        setEditedRating(star);
-                      }}
-                      style={styles.starButton}
-                    >
-                      <Star
-                        size={32}
-                        color={star <= editedRating ? '#f59e0b' : '#d1d5db'}
-                        fill={star <= editedRating ? '#f59e0b' : 'none'}
-                      />
-                    </TouchableOpacity>
-                  ))}
+              {trail.environment_tags && trail.environment_tags.length > 0 && !isEditingDetails && (
+                <View style={styles.tagsSection}>
+                  <Text style={styles.reviewsTitle}>TERRAIN TAGS</Text>
+                  <View style={styles.tagsGrid}>
+                    {trail.environment_tags.map((tag: string, index: number) => (
+                      <View key={index} style={styles.tagChip}>
+                        <Text style={styles.tagText}>{tag}</Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
-
-                <Text style={[styles.editSectionTitle, { marginTop: 24 }]}>Review</Text>
-                <TextInput
-                  style={styles.reviewInput}
-                  value={editedReview}
-                  onChangeText={setEditedReview}
-                  placeholder="Share your experience on this trail..."
-                  placeholderTextColor="#9ca3af"
-                  multiline
-                  numberOfLines={4}
-                  textAlignVertical="top"
-                />
-
-                <Text style={[styles.editSectionTitle, { marginTop: 24 }]}>Difficulty</Text>
-                <View style={styles.difficultyOptions}>
-                  {DIFFICULTY_OPTIONS.map((difficulty) => (
-                    <TouchableOpacity
-                      key={difficulty}
-                      style={[
-                        styles.difficultyChip,
-                        editedDifficulty === difficulty && styles.difficultyChipSelected,
-                      ]}
-                      onPress={() => {
-                        if (true) {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        }
-                        setEditedDifficulty(difficulty);
-                      }}
-                    >
-                      <Text
-                        style={[
-                          styles.difficultyChipText,
-                          editedDifficulty === difficulty && styles.difficultyChipTextSelected,
-                        ]}
-                      >
-                        {difficulty}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <Text style={[styles.editSectionTitle, { marginTop: 24 }]}>Environment Tags</Text>
-                <View style={styles.tagsGrid}>
-                  {ENVIRONMENT_TAG_OPTIONS.map((tag) => (
-                    <TouchableOpacity
-                      key={tag}
-                      style={[
-                        styles.editTagChip,
-                        editedTags.includes(tag) && styles.editTagChipSelected,
-                      ]}
-                      onPress={() => toggleTag(tag)}
-                    >
-                      <Text
-                        style={[
-                          styles.editTagChipText,
-                          editedTags.includes(tag) && styles.editTagChipTextSelected,
-                        ]}
-                      >
-                        {tag}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <View style={styles.editActionButtons}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.cancelActionButton]}
-                    onPress={handleCancelDetailsEdit}
-                  >
-                    <X size={20} color={theme.textPrimary} />
-                    <Text style={styles.cancelActionText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.saveActionButton]}
-                    onPress={handleSaveDetails}
-                  >
-                    <Check size={20} color="#fff" />
-                    <Text style={styles.saveActionText}>Save</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-
-            <View style={styles.mapSection}>
-              <View style={styles.mapContainer}>
-                <TrailMapPreview
-                  coordinates={coords}
-                  path={trail.path}
-                  startLatitude={trail.startLatitude}
-                  startLongitude={trail.startLongitude}
-                  style={styles.map}
-                />
-              </View>
-              <TouchableOpacity
-                style={[styles.directionsButton, isGettingDirections && { opacity: 0.7 }]}
-                onPress={handleGetDirections}
-                disabled={isGettingDirections}
-              >
-                {isGettingDirections ? (
-                  <ActivityIndicator size="small" color={theme.accentPrimary} />
-                ) : (
-                  <Navigation size={18} color={theme.accentPrimary} />
-                )}
-                <Text style={styles.directionsButtonText}>{isGettingDirections ? 'Opening...' : 'Get Directions'}</Text>
-              </TouchableOpacity>
-              {Platform.OS !== 'web' && (
-                <TouchableOpacity style={styles.startButton} onPress={() => {
-                  if (true) {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }
-                  console.log('Starting trail:', trail.id);
-                  router.push(`/(tabs)/record?trailId=${trail.id}`);
-                }}>
-                  <Text style={styles.startButtonText}>Start Trail</Text>
-                </TouchableOpacity>
               )}
             </View>
-
-            <TouchableOpacity style={styles.reviewsSection} onPress={() => {}}>
-              <Text style={styles.reviewsTitle}>REVIEWS (12)</Text>
-              <View style={styles.reviewsRow}>
-                <View style={styles.reviewStars}>
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star key={s} size={24} color={s <= (trail.rating || 0) ? theme.accentPrimary : theme.backgroundSecondaryVarient} fill={s <= (trail.rating || 0) ? theme.accentPrimary : 'none'} />
-                  ))}
-                </View>
-                <IconOrEmoji IconComponent={ChevronRight} emoji=">" size={24} color={theme.textMuted} />
-              </View>
-            </TouchableOpacity>
-
-            {trail.environment_tags && trail.environment_tags.length > 0 && !isEditingDetails && (
-              <View style={styles.tagsSection}>
-                <Text style={styles.reviewsTitle}>TERRAIN TAGS</Text>
-                <View style={styles.tagsGrid}>
-                  {trail.environment_tags.map((tag: string, index: number) => (
-                    <View key={index} style={styles.tagChip}>
-                      <Text style={styles.tagText}>{tag}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
           </View>
-        </View>
-      </Animated.ScrollView>
+        </ScrollView>
+      </Animated.View>
     </View>
   );
 }

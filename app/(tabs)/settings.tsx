@@ -4,6 +4,7 @@ import { Text } from '@/components';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useDogs } from '@/context/DogsContext';
 import styles from './settings.styles';
 import theme from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
@@ -13,6 +14,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const auth = useAuth();
+  const { dogProfile } = useDogs();
   const [showLoader, setShowLoader] = useState(false);
 
   const handleRow = (label: string, path?: string) => {
@@ -59,11 +61,32 @@ export default function SettingsScreen() {
 
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Dog Account</Text>
-          <TouchableOpacity style={styles.row} onPress={() => handleRow('Dog Profile', '/onboarding/dog-profile')}>
+          <TouchableOpacity style={styles.row} onPress={() => router.push({ pathname: '/onboarding/dog-profile', params: { from: 'settings' } } as any)}>
             <Text style={styles.rowText}>Dog Profile</Text>
             <ChevronRight size={18} color={theme.accentPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.row} onPress={() => handleRow('Dog Traits', '/onboarding/dog-traits')}>
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => {
+              if (dogProfile) {
+                router.push({
+                  pathname: '/onboarding/dog-traits',
+                  params: {
+                    from: 'settings',
+                    name: dogProfile.name,
+                    nickname: dogProfile.nickname || '',
+                    age: dogProfile.age?.toString() || '',
+                    dob: dogProfile.dob || '',
+                    size: dogProfile.size || '',
+                    image: dogProfile.image || '',
+                    isEditing: 'true',
+                  },
+                } as any);
+              } else {
+                router.push('/onboarding/dog-traits');
+              }
+            }}
+          >
             <Text style={styles.rowText}>Dog Traits</Text>
             <ChevronRight size={18} color={theme.accentPrimary} />
           </TouchableOpacity>

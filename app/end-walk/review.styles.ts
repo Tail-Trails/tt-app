@@ -69,6 +69,24 @@ const styles = StyleSheet.create({
         borderRadius: 11,
         backgroundColor: '#FFFFFF',
     },
+    slider: {
+        height: 40,
+        marginVertical: 6,
+    },
+    helperRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    helperLeft: {
+        ...Typography.caption(theme.textMuted),
+        textAlign: 'left',
+    },
+    helperRight: {
+        ...Typography.caption(theme.textMuted),
+        textAlign: 'right',
+    },
     chip: {
         paddingHorizontal: 20,
         paddingVertical: 12,

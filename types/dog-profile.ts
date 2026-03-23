@@ -22,13 +22,13 @@ export interface DogProfile {
   image?: string;
   vaccines?: Vaccine[];
   // New trait fields (optional)
-  dog_tolerance?: number; // 1-100
-  nervous_around_people?: boolean;
-  offleash_reliability?: number; // 1-100
-  stimulation_tolerance?: number; // 1-100
-  high_prey_drive?: boolean;
-  walking_need?: number; // 1-100
-  sensitive_to_heat?: boolean;
+  dogTolerance?: number; // 1-100
+  nervousAroundPeople?: boolean;
+  offleashReliability?: number; // 1-100
+  stimulationTolerance?: number; // 1-100
+  highPreyDrive?: boolean;
+  walkingNeed?: number; // 1-100
+  sensitiveToHeat?: boolean;
   created_at?: string;
   updated_at?: string;
 }

@@ -106,6 +106,7 @@ function RootLayoutNav() {
         <Stack.Screen name="signup" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="trail/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="trail/[id]/edit" options={{ headerShown: false }} />
       </Stack>
 
       {/* Feedback Modal */}

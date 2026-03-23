@@ -52,6 +52,8 @@ export default function TrailPathPreview({ coordinates, path, size = 80, strokeC
     return { pointsAttr: mapped.join(' '), vbW, vbH, pad };
   }, [pts]);
 
+  // TODO: don't want to have the gradient have a rounded bottom right edge
+
   const containerStyle = style ? style : { width: size, height: size };
 
   return (

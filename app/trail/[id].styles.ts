@@ -103,6 +103,16 @@ const styles = StyleSheet.create({
         elevation: 6,
     },
 
+    collapseButton: {
+        position: 'absolute',
+        bottom: 12,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 20,
+    },
+
     addPhotoContainer: {
         width: '100%',
         height: 280,
@@ -129,7 +139,7 @@ const styles = StyleSheet.create({
     },
     contentWrapper: {
         backgroundColor: theme.backgroundPrimary,
-        marginTop: -40,
+        marginTop: -24,
         zIndex: 10,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
@@ -137,7 +147,7 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: 24,
-        paddingTop: 20,
+        paddingTop: 28,
     },
     titleSection: {
         marginBottom: 20,
@@ -431,6 +441,12 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
+    buttonsRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+    },
     webMapPlaceholder: {
         justifyContent: 'center',
         alignItems: 'center',
@@ -441,14 +457,14 @@ const styles = StyleSheet.create({
         ...Typography.caption(theme.backgroundSecondary),
     },
     directionsButton: {
+        width: 56,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: theme.backgroundPrimary,
+        backgroundColor: theme.backgroundSecondary,
         borderRadius: 12,
         paddingVertical: 16,
-        paddingHorizontal: 24,
-        gap: 10,
+        paddingHorizontal: 16,
         shadowColor: theme.backgroundPrimary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
@@ -511,6 +527,19 @@ const styles = StyleSheet.create({
         shadowRadius: 12,
         elevation: 6,
         marginBottom: 24,
+    },
+    startButtonInline: {
+        flex: 1,
+        backgroundColor: theme.accentPrimary,
+        borderRadius: 16,
+        paddingVertical: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.16,
+        shadowRadius: 12,
+        elevation: 6
     },
     startButtonText: {
         ...Typography.h2(theme.backgroundPrimary),

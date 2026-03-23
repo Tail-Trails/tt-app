@@ -1,12 +1,13 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { View, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { Image } from 'expo-image';
-import { Bookmark, BarChart3, MapPin, Star, MoreVertical, Navigation } from 'lucide-react-native';
+import { Bookmark, BarChart3, MapPin, Star, MoreVertical, Navigation, Ruler } from 'lucide-react-native';
 import theme from '@/constants/colors';
 import TrailMapPreview from '@/components/TrailMapPreview';
 import TrailPathPreview from '@/components/TrailPathPreview';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Trail } from '@/types/trail';
+import { useDogs } from '@/context/DogsContext';
 import styles from '@/components/TrailCard.styles';
 import { Text } from '@/components';
 import { formatDistance } from '@/utils/distance';
@@ -27,6 +28,12 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
   const [isSwiping, setIsSwiping] = React.useState(false);
   const [cardWidth, setCardWidth] = React.useState<number>(Dimensions.get('window').width);
   const anim = React.useRef(new Animated.Value(1)).current;
+  const { dogProfile } = useDogs();
+
+  const dog = React.useMemo(() => {
+    if (!dogProfile) return null;
+    return dogProfile; // For now we just take the first dog, but this could be enhanced to select the most relevant dog for the trail
+  }, [dogProfile]);
 
   const images: string[] = React.useMemo(() => {
     if (Array.isArray((trail as any).images) && (trail as any).images.length > 0) {
@@ -140,56 +147,36 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
   }
 
   return (
-    <View style={[styles.largeTrailCard, containerStyle]}>
+    <TouchableOpacity
+      activeOpacity={0.95}
+      delayPressIn={80}
+      onPress={() => { if (!isSwiping && onPress) onPress(trail.id); }}
+      style={[styles.largeTrailCard, containerStyle]}
+    >
       <View
         style={[styles.largeTrailImageContainer, { width: '100%' }]}
         onLayout={(e) => setCardWidth(e.nativeEvent.layout.width || Dimensions.get('window').width)}
       >
+        {/* Show only the first image (if available), remove side-scroll, make whole image area clickable */}
         {images.length > 0 ? (
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            nestedScrollEnabled={true}
-            scrollEventThrottle={16}
-            decelerationRate="fast"
-            snapToInterval={cardWidth}
-            snapToAlignment="center"
-            disableIntervalMomentum={true}
-            onScrollBeginDrag={() => {
-              setIsSwiping(true);
-              onSwipeStateChange?.(trail.id, true);
-            }}
-            onMomentumScrollEnd={(e) => {
-              const offsetX = e.nativeEvent.contentOffset.x || 0;
-              const idx = Math.round(offsetX / cardWidth);
-              setActiveIndex(idx);
-              setIsSwiping(false);
-              onSwipeStateChange?.(trail.id, false);
-            }}
-            contentContainerStyle={styles.largeTrailImageScroll}
-          >
-            {images.map((url, i) => (
-              <Image key={`${trail.id}-img-${i}`} source={{ uri: url }} style={[styles.largeTrailImage, { width: cardWidth }, imageStyle]} contentFit="cover" />
-            ))}
-            <View style={[styles.largeTrailImage, { width: cardWidth }]}>
-              <TrailMapPreview coordinates={trail.coordinates} path={trail.path} style={{ flex: 1 }} startLatitude={trail.startLatitude} startLongitude={trail.startLongitude} />
-            </View>
-          </ScrollView>
+          <Image
+            key={`${trail.id}-img-0`}
+            source={{ uri: images[0] }}
+            style={[styles.largeTrailImage, { width: cardWidth }, imageStyle]}
+            contentFit="cover"
+          />
+        ) : trail.photo ? (
+          <Image source={{ uri: trail.photo }} style={[styles.largeTrailImage, { width: cardWidth }, imageStyle]} contentFit="cover" />
         ) : (
-          trail.photo ? (
-            <Image source={{ uri: trail.photo }} style={[styles.largeTrailImage, imageStyle]} contentFit="cover" />
-          ) : (
-            <View style={[styles.largeTrailImage, imageStyle]}>
-                <TrailMapPreview
-                  coordinates={trail.coordinates}
-                  path={trail.path}
-                  style={{ flex: 1 }}
-                  startLatitude={trail.startLatitude}
-                  startLongitude={trail.startLongitude}
-                />
-            </View>
-          )
+          <View style={[styles.largeTrailImage, { width: cardWidth }, imageStyle]}>
+            <TrailMapPreview
+              coordinates={trail.coordinates}
+              path={trail.path}
+              style={{ flex: 1 }}
+              startLatitude={trail.startLatitude}
+              startLongitude={trail.startLongitude}
+            />
+          </View>
         )}
 
         {(trail.path || trail.coordinates) && isShowingImage && (
@@ -214,35 +201,31 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
           </View>
         )}
 
-        {images.length > 0 && (
-          <View style={styles.largeTrailDots} pointerEvents="none">
-            {new Array(images.length + 1).fill(0).map((_, i) => (
-              <View key={`${trail.id}-dot-${i}`} style={[styles.dot, (activeIndex || 0) === i && styles.dotActive]} />
-            ))}
-          </View>
-        )}
+        {/* removed horizontal dots/indicator since side-scroll was removed */}
 
-        <TouchableOpacity style={styles.bookmarkButton} onPress={handleBookmark}>
+        {/* <TouchableOpacity style={styles.bookmarkButton} onPress={handleBookmark}>
           <Bookmark size={18} color={isSaved ? '#000' : theme.textMuted} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
-      <TouchableOpacity
-        activeOpacity={0.95}
-        delayPressIn={80}
-        onPress={() => { if (!isSwiping && onPress) onPress(trail.id); }}
-        style={styles.cardContent}
-      >
+      {/* TODO: fix distance from you in profile */}
+      <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>{trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}</Text>
-          <TouchableOpacity>
+          {/* <TouchableOpacity>
             <MoreVertical size={20} color={theme.textPrimary} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
-        <Text style={styles.cardLocation}>{trail.city ? `${trail.city}, ` : ''}{trail.country || 'Portugal'}</Text>
+        <Text style={styles.cardLocation}>{formatDistance(distanceFromUserValue as number)} from you</Text>
 
         <View style={styles.cardBadges}>
+          {Number.isFinite(dogMatchValue) && (
+            <View style={styles.badge}>
+              <Image source={{ uri: dog?.image }} style={{ width: 14, height: 14, borderRadius: 7 }} contentFit="cover" />
+              <Text style={styles.badgeText}>{`${Math.round(dogMatchValue as number)}%`}</Text>
+            </View>
+          )}
           {trail.difficulty && (
             <View style={styles.badge}>
               <BarChart3 size={14} color={theme.accentPrimary} strokeWidth={2.5} />
@@ -251,14 +234,8 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
           )}
           {Number.isFinite((trail as any).distance) && (
             <View style={styles.badge}>
-              <Navigation size={14} color={theme.accentPrimary} strokeWidth={2.5} />
+              {/* <Ruler size={14} color={theme.accentPrimary} strokeWidth={2.5} /> */}
               <Text style={styles.badgeText}>{formatDistance((trail as any).distance)}</Text>
-            </View>
-          )}
-          {Number.isFinite(distanceFromUserValue) && (
-            <View style={styles.badge}>
-              <MapPin size={14} color={theme.accentPrimary} strokeWidth={2.5} />
-              <Text style={styles.badgeText}>{formatDistance(distanceFromUserValue as number)}</Text>
             </View>
           )}
           {Number.isFinite((trail as any).rating) && (
@@ -267,14 +244,9 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
               <Text style={styles.badgeText}>{(trail as any).rating.toFixed(1)}</Text>
             </View>
           )}
-          {Number.isFinite(dogMatchValue) && (
-            <View style={styles.badge}>
-              <Star size={14} color={theme.accentPrimary} fill={theme.accentPrimary} strokeWidth={2} />
-              <Text style={styles.badgeText}>{`${Math.round(dogMatchValue as number)}%`}</Text>
-            </View>
-          )}
+          
         </View>
-      </TouchableOpacity>
-    </View>
+      </View>
+    </TouchableOpacity>
   );
 }

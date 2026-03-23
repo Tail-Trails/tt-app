@@ -275,5 +275,3 @@ If you want, I can:
 - Add a ready-to-use `eas.json` (if you decide to use EAS later).
 - Add a GitHub Action workflow for Android builds and Release uploads (requires storing keystore as a secret).
 - Add a local `scripts/` helper to generate `key.properties` and run the Gradle commands.
-
-Marking this task complete in the project TODO list once you've confirmed these instructions meet your needs.

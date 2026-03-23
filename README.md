@@ -308,3 +308,5 @@ For mobile apps, you'll configure your app's deep linking scheme in `app.json`.
 
 - Check [Expo's documentation](https://docs.expo.dev/) for native APIs
 - Browse [React Native's documentation](https://reactnative.dev/docs/getting-started) for core components
+
+TODO: standardize back buttons across all the frontend screens (currently some use text, some use icons, some use both)

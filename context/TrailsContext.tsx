@@ -274,7 +274,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     }
   }, [trails, session]);
 
-  const loadNearbyTrails = useCallback(async (latitude?: number, longitude?: number, distanceKm: number = 100) => {
+  const loadNearbyTrails = useCallback(async (latitude?: number, longitude?: number, distanceKm: number = 35) => {
     try {
       console.log('Loading nearby trails:', { latitude, longitude, distanceKm });
 
