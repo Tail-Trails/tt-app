@@ -251,32 +251,6 @@
         }
       }
     },
-    "/trail": {
-      "get": {
-        "tags": [
-          "trails"
-        ],
-        "summary": "Get Trails",
-        "description": "Get all trails.",
-        "operationId": "get_trails_trail_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/TrailSchema"
-                  },
-                  "type": "array",
-                  "title": "Response Get Trails Trail Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/trail/nearby": {
       "get": {
         "tags": [
@@ -285,6 +259,72 @@
         "summary": "Get Nearby Trails",
         "description": "Get all nearby trails for the current authenticated user.",
         "operationId": "get_nearby_trails_trail_nearby_get",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Latitude"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Longitude"
+            }
+          },
+          {
+            "name": "distance_km",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 35,
+              "title": "Distance Km"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrailSchema"
+                  },
+                  "title": "Response Get Nearby Trails Trail Nearby Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trail/for-you": {
+      "get": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Get For You Trails",
+        "description": "Get all for you trails for the current authenticated user.",
+        "operationId": "get_for_you_trails_trail_for_you_get",
         "parameters": [
           {
             "name": "latitude",
@@ -325,7 +365,83 @@
                   "items": {
                     "$ref": "#/components/schemas/TrailSchema"
                   },
-                  "title": "Response Get Nearby Trails Trail Nearby Get"
+                  "title": "Response Get For You Trails Trail For You Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trail/tag": {
+      "get": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Get Tag Trails",
+        "description": "Get all tag trails for the current authenticated user.",
+        "operationId": "get_tag_trails_trail_tag_get",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Latitude"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Longitude"
+            }
+          },
+          {
+            "name": "chosen_tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "Beach",
+              "title": "Chosen Tag"
+            }
+          },
+          {
+            "name": "distance_km",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 10,
+              "title": "Distance Km"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrailSchema"
+                  },
+                  "title": "Response Get Tag Trails Trail Tag Get"
                 }
               }
             }
@@ -351,17 +467,47 @@
         "summary": "Get My Trails",
         "description": "Get all trails created by the current authenticated user.",
         "operationId": "get_my_trails_trail_me_get",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Latitude"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Longitude"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/TrailSchema"
                   },
-                  "type": "array",
                   "title": "Response Get My Trails Trail Me Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -373,16 +519,59 @@
           "trails"
         ],
         "summary": "Create My Trail",
-        "description": "Create a new trail for the current authenticated user.",
+        "description": "Create a new trail for the current authenticated user (JSON body only).",
         "operationId": "create_my_trail_trail_me_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrailSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trail/me/upload": {
+      "post": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Create My Trail Upload",
+        "description": "Create a new trail with direct file uploads. The `trail` form field must contain the JSON payload.",
+        "operationId": "create_my_trail_upload_trail_me_upload_post",
         "requestBody": {
           "content": {
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Body_create_my_trail_trail_me_post"
+                "$ref": "#/components/schemas/Body_create_my_trail_upload_trail_me_upload_post"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -1071,6 +1260,50 @@
         }
       }
     },
+    "/assets/collectibles": {
+      "get": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Get Collectibles",
+        "description": "Get the collectibles metadata.",
+        "operationId": "get_collectibles_assets_collectibles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assets/stats": {
+      "get": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Get Stats",
+        "description": "Get the stats metadata.",
+        "operationId": "get_stats_assets_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/uploads/presign": {
       "post": {
         "tags": [
@@ -1334,27 +1567,10 @@
   },
   "components": {
     "schemas": {
-      "Body_create_my_trail_trail_me_post": {
+      "Body_create_my_trail_upload_trail_me_upload_post": {
         "properties": {
-          "trail_data": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/CreateTrailSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "trail": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Trail"
           },
           "files": {
@@ -1374,7 +1590,10 @@
           }
         },
         "type": "object",
-        "title": "Body_create_my_trail_trail_me_post"
+        "required": [
+          "trail"
+        ],
+        "title": "Body_create_my_trail_upload_trail_me_upload_post"
       },
       "Body_upload_file_uploads_post": {
         "properties": {
@@ -1455,9 +1674,17 @@
             "type": "string",
             "title": "Size"
           },
-          "age": {
-            "type": "integer",
-            "title": "Age"
+          "dob": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dob"
           },
           "image": {
             "anyOf": [
@@ -1470,33 +1697,88 @@
             ],
             "title": "Image"
           },
-          "personalityTags": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Personalitytags",
-            "default": []
+          "dogTolerance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dogtolerance"
           },
-          "vaccines": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Vaccines",
-            "default": []
+          "nervousAroundPeople": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nervousaroundpeople"
           },
-          "recallReliability": {
-            "type": "string",
-            "title": "Recallreliability"
+          "offleashReliability": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offleashreliability"
+          },
+          "stimulationTolerance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulationtolerance"
+          },
+          "highPreyDrive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Highpreydrive"
+          },
+          "walkingNeed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Walkingneed"
+          },
+          "sensitiveToHeat": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sensitivetoheat"
           }
         },
         "type": "object",
         "required": [
           "name",
-          "size",
-          "age",
-          "recallReliability"
+          "size"
         ],
         "title": "CreateDogSchema",
         "description": "Schema for creating a dog."
@@ -1513,6 +1795,17 @@
               }
             ],
             "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
           },
           "distance": {
             "type": "number",
@@ -1549,39 +1842,6 @@
             ],
             "title": "Path"
           },
-          "city": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "City"
-          },
-          "country": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Country"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
           "tags": {
             "items": {
               "type": "string"
@@ -1589,50 +1849,6 @@
             "type": "array",
             "title": "Tags",
             "default": []
-          },
-          "elevation": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Elevation"
-          },
-          "surfaceType": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Surfacetype"
-          },
-          "difficulty": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Difficulty"
-          },
-          "location": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Location"
           },
           "pace": {
             "anyOf": [
@@ -1678,24 +1894,71 @@
             ],
             "title": "Rating"
           },
-          "review": {
+          "dogTraffic": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Review"
+            "title": "Dogtraffic"
           },
-          "environmentTags": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Environmenttags",
-            "default": []
+          "footTraffic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foottraffic"
+          },
+          "paths": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paths"
+          },
+          "exposure": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exposure"
+          },
+          "offLeash": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offleash"
+          },
+          "wildlife": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wildlife"
           },
           "urls": {
             "items": {
@@ -1735,9 +1998,17 @@
             "type": "string",
             "title": "Size"
           },
-          "age": {
-            "type": "integer",
-            "title": "Age"
+          "dob": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dob"
           },
           "image": {
             "anyOf": [
@@ -1750,25 +2021,82 @@
             ],
             "title": "Image"
           },
-          "personalityTags": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Personalitytags",
-            "default": []
+          "dogTolerance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dogtolerance"
           },
-          "vaccines": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Vaccines",
-            "default": []
+          "nervousAroundPeople": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nervousaroundpeople"
           },
-          "recallReliability": {
-            "type": "string",
-            "title": "Recallreliability"
+          "offleashReliability": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offleashreliability"
+          },
+          "stimulationTolerance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulationtolerance"
+          },
+          "highPreyDrive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Highpreydrive"
+          },
+          "walkingNeed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Walkingneed"
+          },
+          "sensitiveToHeat": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sensitivetoheat"
           },
           "id": {
             "type": "string",
@@ -1795,8 +2123,6 @@
         "required": [
           "name",
           "size",
-          "age",
-          "recallReliability",
           "id",
           "userId",
           "createdAt",
@@ -2112,6 +2438,17 @@
             ],
             "title": "Name"
           },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
           "distance": {
             "type": "number",
             "title": "Distance"
@@ -2147,39 +2484,6 @@
             ],
             "title": "Path"
           },
-          "city": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "City"
-          },
-          "country": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Country"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
           "tags": {
             "items": {
               "type": "string"
@@ -2187,50 +2491,6 @@
             "type": "array",
             "title": "Tags",
             "default": []
-          },
-          "elevation": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Elevation"
-          },
-          "surfaceType": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Surfacetype"
-          },
-          "difficulty": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Difficulty"
-          },
-          "location": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Location"
           },
           "pace": {
             "anyOf": [
@@ -2276,24 +2536,71 @@
             ],
             "title": "Rating"
           },
-          "review": {
+          "dogTraffic": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Review"
+            "title": "Dogtraffic"
           },
-          "environmentTags": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Environmenttags",
-            "default": []
+          "footTraffic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foottraffic"
+          },
+          "paths": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paths"
+          },
+          "exposure": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exposure"
+          },
+          "offLeash": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offleash"
+          },
+          "wildlife": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wildlife"
           },
           "id": {
             "type": "string",
@@ -2355,6 +2662,17 @@
             "type": "array",
             "title": "Images",
             "default": []
+          },
+          "dogMatchScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dogmatchscore"
           }
         },
         "type": "object",
@@ -2390,9 +2708,17 @@
             "type": "string",
             "title": "Size"
           },
-          "age": {
-            "type": "integer",
-            "title": "Age"
+          "dob": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dob"
           },
           "image": {
             "anyOf": [
@@ -2405,33 +2731,88 @@
             ],
             "title": "Image"
           },
-          "personalityTags": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Personalitytags",
-            "default": []
+          "dogTolerance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dogtolerance"
           },
-          "vaccines": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Vaccines",
-            "default": []
+          "nervousAroundPeople": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nervousaroundpeople"
           },
-          "recallReliability": {
-            "type": "string",
-            "title": "Recallreliability"
+          "offleashReliability": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offleashreliability"
+          },
+          "stimulationTolerance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulationtolerance"
+          },
+          "highPreyDrive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Highpreydrive"
+          },
+          "walkingNeed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Walkingneed"
+          },
+          "sensitiveToHeat": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sensitivetoheat"
           }
         },
         "type": "object",
         "required": [
           "name",
-          "size",
-          "age",
-          "recallReliability"
+          "size"
         ],
         "title": "UpdateDogSchema",
         "description": "Schema for updating a dog."
@@ -2448,6 +2829,17 @@
               }
             ],
             "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
           },
           "distance": {
             "type": "number",
@@ -2484,39 +2876,6 @@
             ],
             "title": "Path"
           },
-          "city": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "City"
-          },
-          "country": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Country"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
           "tags": {
             "items": {
               "type": "string"
@@ -2524,50 +2883,6 @@
             "type": "array",
             "title": "Tags",
             "default": []
-          },
-          "elevation": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Elevation"
-          },
-          "surfaceType": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Surfacetype"
-          },
-          "difficulty": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Difficulty"
-          },
-          "location": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Location"
           },
           "pace": {
             "anyOf": [
@@ -2613,24 +2928,71 @@
             ],
             "title": "Rating"
           },
-          "review": {
+          "dogTraffic": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Review"
+            "title": "Dogtraffic"
           },
-          "environmentTags": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Environmenttags",
-            "default": []
+          "footTraffic": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foottraffic"
+          },
+          "paths": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paths"
+          },
+          "exposure": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exposure"
+          },
+          "offLeash": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offleash"
+          },
+          "wildlife": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wildlife"
           },
           "urls": {
             "items": {

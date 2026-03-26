@@ -21,6 +21,9 @@ import DogMarker from './DogMarker';
     };
     mapStyleURL?: string;
     showOnlyPath?: boolean;
+    routeColor?: string;
+    routeWidth?: number;
+    routeOpacity?: number;
   }
 
   const DEFAULT_STYLE = 'https://api.tailtrails.club/map/style.json';
@@ -50,6 +53,9 @@ import DogMarker from './DogMarker';
     initialRegion,
     mapStyleURL,
     showOnlyPath = false,
+    routeColor,
+    routeWidth,
+    routeOpacity,
   }, ref) => {
     const coords = coordinates ?? [];
     const nativeMapRef = useRef<any>(null);
@@ -141,13 +147,21 @@ import DogMarker from './DogMarker';
             <Layer
               id="routeLine"
               type="line"
-              paint={{ 'line-color': theme.backgroundPrimary, 'line-width': 4 }}
+              paint={{
+                'line-color': routeColor ?? theme.backgroundPrimary,
+                'line-width': routeWidth ?? 4,
+                'line-opacity': routeOpacity ?? 1,
+              }}
             />
           </GeoJSONSource>
         )}
 
         {userLocation && (
-          <Marker id="userMarker" lngLat={[userLocation.longitude, userLocation.latitude] as [number, number]}>
+          <Marker
+            key={`user-${userLocation.latitude}-${userLocation.longitude}`}
+            id="userMarker"
+            lngLat={[userLocation.longitude, userLocation.latitude] as [number, number]}
+          >
             <DogMarker size={50} color={theme.backgroundPrimary} />
           </Marker>
         )}

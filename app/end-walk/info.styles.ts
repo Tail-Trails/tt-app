@@ -136,6 +136,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  doneButtonDisabled: {
+    opacity: 0.5,
+  },
   doneText: {
     ...Typography.h2(theme.backgroundPrimary),
     fontSize: 16,

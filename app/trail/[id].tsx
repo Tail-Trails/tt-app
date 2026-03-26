@@ -824,7 +824,7 @@ export default function TrailDetailScreen() {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       }
                       console.log('Starting trail:', trail.id);
-                      router.push(`/(tabs)/record?trailId=${trail.id}`);
+                      router.push(`/(tabs)/follow?trailId=${trail.id}`);
                     }}>
                       <Text style={styles.startButtonText}>Start Trail</Text>
                     </TouchableOpacity>

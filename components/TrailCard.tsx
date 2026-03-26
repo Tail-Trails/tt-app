@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { Image } from 'expo-image';
-import { Bookmark, BarChart3, MapPin, Star, MoreVertical, Navigation, Ruler } from 'lucide-react-native';
+import { Bookmark, BarChart3, MapPin, Star, MoreVertical, Navigation, Ruler, Umbrella, Trees, TrafficCone, Mountain } from 'lucide-react-native';
 import theme from '@/constants/colors';
 import TrailMapPreview from '@/components/TrailMapPreview';
 import TrailPathPreview from '@/components/TrailPathPreview';
@@ -57,6 +57,30 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
     return typeof v === 'number' ? v : undefined;
   }, [trail]);
 
+  const tagIcons = React.useMemo(() => {
+    const tags: string[] = (trail as any).environment_tags || (trail as any).tags || [];
+    if (!Array.isArray(tags) || tags.length === 0) return [] as React.ReactNode[];
+
+    const mapKey = (t: string) => (t || '').toString().toLowerCase();
+    const TAG_ICON_MAP: Record<string, any> = {
+      beach: Umbrella,
+      forest: Trees,
+      road: TrafficCone,
+      cliff: Mountain,
+      mountain: Mountain,
+    };
+
+    return tags
+      .map((t: string) => ({ raw: t, key: mapKey(t), Icon: TAG_ICON_MAP[mapKey(t)] }))
+      .filter(x => x.Icon)
+      .slice(0, 4)
+      .map(x => (
+        <View key={`tag-${String(x.raw)}`} style={styles.tagIcon}>
+          <x.Icon size={14} color={theme.accentPrimary} strokeWidth={2} />
+        </View>
+      ));
+  }, [trail]);
+
   const handleTouchStart = () => {
     setIsSwiping(true);
     onSwipeStateChange?.(trail.id, true);
@@ -110,6 +134,7 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
           <Text style={styles.trailName}>{trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}</Text>
           <Text style={styles.trailLocation}>{trail.city ? `${trail.city}, ${trail.country || 'Unknown'}` : 'Location unknown'}</Text>
           <View style={styles.trailBadges}>
+            {tagIcons}
             {trail.difficulty && (
               <View style={styles.trailBadge}>
                 <BarChart3 size={14} color={theme.accentPrimary} strokeWidth={2.5} />
@@ -208,7 +233,6 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
         </TouchableOpacity> */}
       </View>
 
-      {/* TODO: fix distance from you in profile */}
       <View style={styles.cardContent}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>{trail.name || `Trail ${new Date(trail.date).toLocaleDateString()}`}</Text>
@@ -220,6 +244,7 @@ export default function TrailCard({ trail, onPress, onBookmarkPress, isSaved, on
         <Text style={styles.cardLocation}>{formatDistance(distanceFromUserValue as number)} from you</Text>
 
         <View style={styles.cardBadges}>
+          {tagIcons}
           {Number.isFinite(dogMatchValue) && (
             <View style={styles.badge}>
               <Image source={{ uri: dog?.image }} style={{ width: 14, height: 14, borderRadius: 7 }} contentFit="cover" />

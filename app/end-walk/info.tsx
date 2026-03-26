@@ -152,7 +152,11 @@ export default function InfoPage() {
               <Text style={styles.backText}>Back</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.doneButton} onPress={onDone} disabled={saving}>
+            <TouchableOpacity
+              style={[styles.doneButton, (saving || !name.trim()) && styles.doneButtonDisabled]}
+              onPress={onDone}
+              disabled={saving || !name.trim()}
+            >
               {saving ? <ActivityIndicator color="#000" /> : <Text style={styles.doneText}>Done</Text>}
             </TouchableOpacity>
           </View>

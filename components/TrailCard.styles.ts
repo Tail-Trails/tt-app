@@ -138,6 +138,16 @@ export default StyleSheet.create({
   badgeText: {
     ...Typography.caption(theme.textPrimary),
   },
+  tagIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(25,30,7,0.75)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
 
   /* Vertical / Profile variant */
   trailCard: {

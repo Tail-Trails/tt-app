@@ -1,29 +1,23 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { View, ScrollView, TouchableOpacity, Platform, ActivityIndicator, Animated, TextInput, Modal, FlatList, Dimensions } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Animated, TextInput, Modal, FlatList } from 'react-native';
 import { Text } from '@/components';
 import LottieLoader from '@/components/LottieLoader';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { getBestAvailableLocation } from '@/utils/location';
 import * as Haptics from 'expo-haptics';
-import { MapPin, Search, Heart, Umbrella, Bookmark, Star, X, BarChart3, Navigation, Icon, ChevronLeft, SlidersHorizontal, ArrowRight, MoreVertical, Trees, TrafficCone, Mountain } from 'lucide-react-native';
+import { MapPin, Umbrella, Star, X, Navigation, ChevronLeft, Trees, TrafficCone, Mountain } from 'lucide-react-native';
 import theme from '@/constants/colors';
 import { useTrails } from '@/context/TrailsContext';
 import { Trail } from '@/types/trail';
-import { formatDistance } from '@/utils/distance';
-import TrailMapPreview from '@/components/TrailMapPreview';
 import TrailCard from '@/components/TrailCard';
 import styles from './explore.styles';
 
-
-// TODO: For you (match score within 30Km), Nearby, Beaches, Forest, Road, Cliff
 const CATEGORIES = [
   { id: 'for-you', name: 'For You', icon: Star },
   { id: 'nearby', name: 'Nearby', icon: MapPin },
-  { id: 'beaches', name: 'Beaches', icon: Umbrella },
+  { id: 'beach', name: 'Beach', icon: Umbrella },
   { id: 'forest', name: 'Forest', icon: Trees },
   { id: 'road', name: 'Road', icon: TrafficCone },
   { id: 'cliff', name: 'Cliff', icon: Mountain },
@@ -32,10 +26,11 @@ const CATEGORIES = [
 export default function ExploreScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { loadNearbyTrails, saveTrailBookmark, removeTrailBookmark, isTrailSaved } = useTrails();
+  const { loadNearbyTrails, loadForYouTrails, loadTrailsByTag, saveTrailBookmark, removeTrailBookmark, isTrailSaved } = useTrails();
   const [selectedCategory, setSelectedCategory] = useState<string>('for-you');
   const [nearbyTrails, setNearbyTrails] = useState<Trail[]>([]);
   const [isLoadingNearby, setIsLoadingNearby] = useState<boolean>(true);
+  const [locationCoords, setLocationCoords] = useState<{ latitude: number; longitude: number } | undefined>(undefined);
   const [, setUserCity] = useState<string | undefined>(undefined);
   const [bookmarkAnimations, setBookmarkAnimations] = useState<Record<string, Animated.Value>>({});
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -58,23 +53,19 @@ export default function ExploreScreen() {
         setUserCity(undefined);
         if (location) {
           setCurrentLocation('Current location');
-          const trails = await loadNearbyTrails(location.coords.latitude, location.coords.longitude);
-          setNearbyTrails(trails);
+          setLocationCoords({ latitude: location.coords.latitude, longitude: location.coords.longitude });
         } else {
           setCurrentLocation('Location unavailable');
-          const trails = await loadNearbyTrails();
-          setNearbyTrails(trails);
+          setLocationCoords(undefined);
         }
       } else {
         setCurrentLocation('Location unavailable');
-        const trails = await loadNearbyTrails();
-        setNearbyTrails(trails);
+        setLocationCoords(undefined);
       }
     } catch (error) {
       console.error('Error loading location:', error);
       setCurrentLocation('Location unavailable');
-      const trails = await loadNearbyTrails();
-      setNearbyTrails(trails);
+      setLocationCoords(undefined);
     } finally {
       setIsLoadingNearby(false);
     }
@@ -90,6 +81,37 @@ export default function ExploreScreen() {
       loadUserLocationAndNearbyTrails();
     }, [loadUserLocationAndNearbyTrails])
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadForCategory = async () => {
+      setIsLoadingNearby(true);
+      try {
+        if (selectedCategory === 'for-you') {
+          const trails = await loadForYouTrails(locationCoords?.latitude, locationCoords?.longitude);
+          if (!cancelled) setNearbyTrails(trails);
+        } else if (selectedCategory === 'nearby') {
+          const trails = await loadNearbyTrails(locationCoords?.latitude, locationCoords?.longitude);
+          if (!cancelled) setNearbyTrails(trails);
+        } else if (selectedCategory === 'beaches' || selectedCategory === 'forest' || selectedCategory === 'road' || selectedCategory === 'cliff') {
+          const tagMap: Record<string, string> = { beaches: 'Beach', forest: 'Forest', road: 'Road', cliff: 'Cliff' };
+          const tag = tagMap[selectedCategory] || selectedCategory;
+          const trails = await loadTrailsByTag(tag, locationCoords?.latitude, locationCoords?.longitude);
+          if (!cancelled) setNearbyTrails(trails);
+        } else {
+          if (!cancelled) setNearbyTrails([]);
+        }
+      } catch (err) {
+        console.error('Failed to load category trails:', err);
+        if (!cancelled) setNearbyTrails([]);
+      } finally {
+        if (!cancelled) setIsLoadingNearby(false);
+      }
+    };
+
+    loadForCategory();
+    return () => { cancelled = true; };
+  }, [selectedCategory, locationCoords, loadNearbyTrails, loadForYouTrails, loadTrailsByTag]);
 
   const loadSearchSuggestions = useCallback(() => {
     const query = searchQuery.toLowerCase();

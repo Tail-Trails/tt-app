@@ -2,14 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import { View, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, ScrollView } from 'react-native';
 import { Text } from '@/components';
 import TrailMap from '@/components/TrailMap';
-// Using react-native-background-geolocation for all tracking (no Expo TaskManager/Location)
+import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
 import * as Haptics from 'expo-haptics';
-import BackgroundGeolocation, { Location as BGLocation, State as BGState, MotionChangeEvent } from 'react-native-background-geolocation';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MapPin, Navigation } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
-import styles from './record.styles';
+import styles from './follow.styles';
 import theme from '@/constants/colors';
 import RecordOverlay from '@/components/RecordOverlay';
 import { useTrails } from '@/context/TrailsContext';
@@ -18,9 +18,48 @@ import { Coordinate, Trail } from '@/types/trail';
 import { calculateTotalDistance } from '@/utils/distance';
 import { useKeepAwake } from 'expo-keep-awake';
 
-// Background task removed — the native SDK will deliver locations via its own listeners
+const LOCATION_TRACKING_TASK = 'background-location-task';
 
-export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail } = {}) {
+TaskManager.defineTask(LOCATION_TRACKING_TASK, async ({ data, error }: any) => {
+  if (error) return;
+  if (data) {
+    const { locations } = data;
+    const location = locations[0];
+    if (!location) return;
+
+    try {
+      const coordsStr = await AsyncStorage.getItem('recording_coordinates');
+      let coords = coordsStr ? JSON.parse(coordsStr) : [];
+
+      const newCoord = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+
+      const lastCoord = coords[coords.length - 1];
+      if (lastCoord && lastCoord.latitude === newCoord.latitude && lastCoord.longitude === newCoord.longitude) {
+        return;
+      }
+
+      coords.push(newCoord);
+      await AsyncStorage.setItem('recording_coordinates', JSON.stringify(coords));
+
+      if (location.coords.altitude) {
+        const alt = Math.max(0, location.coords.altitude);
+        const maxAlt = await AsyncStorage.getItem('recording_max_elevation');
+        if (!maxAlt || alt > parseFloat(maxAlt)) {
+          await AsyncStorage.setItem('recording_max_elevation', alt.toString());
+        }
+      }
+
+      await AsyncStorage.setItem('recording_last_update', Date.now().toString());
+    } catch (err) {
+      console.error('BG Task Storage Error:', err);
+    }
+  }
+});
+
+export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail } = {}) {
   const { saveTrail, getTrailById, getTrailWithUser } = useTrails();
   const { user } = useAuth();
   const params = useLocalSearchParams();
@@ -44,7 +83,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isLoadingPermission, setIsLoadingPermission] = useState<boolean>(true);
   const [startLocation, setStartLocation] = useState<{ city?: string; country?: string } | null>(null);
-  const locationSubscription = useRef<any>(null);
+  const locationSubscription = useRef<Location.LocationSubscription | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const bottomSheetHeight = Dimensions.get('window').height * 0.5;
   const collapsedHeight = 40;
@@ -59,67 +98,9 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
 
   const [followMode, setFollowMode] = useState<boolean>(!!initialTrail);
   const [userLocationFollow, setUserLocationFollow] = useState<Coordinate | null>(null);
-  const followLocationRef = useRef<any>(null);
+  const followLocationRef = useRef<Location.LocationSubscription | null>(null);
 
   useKeepAwake();
-
-  const bgReady = useRef<boolean>(false);
-  const isRecordingRef = useRef<boolean>(isRecording);
-
-  useEffect(() => { isRecordingRef.current = isRecording; }, [isRecording]);
-
-  useEffect(() => {
-    // initialize background-geolocation SDK if available
-    let mounted = true;
-
-    const initBG = async () => {
-      try {
-        const cfg: any = {
-          desiredAccuracy: (BackgroundGeolocation as any).DESIRED_ACCURACY_HIGH,
-          distanceFilter: 8,
-          stopOnTerminate: false,
-          startOnBoot: false,
-          debug: false,
-          logLevel: (BackgroundGeolocation as any).LOG_LEVEL_OFF,
-          reset: false,
-        };
-
-        const state: BGState = await BackgroundGeolocation.ready(cfg);
-
-        if (!mounted) return;
-        bgReady.current = true;
-
-        BackgroundGeolocation.onLocation(async (location: BGLocation) => {
-          const coord = { latitude: location.coords.latitude, longitude: location.coords.longitude };
-          setCurrentLocation(coord);
-
-          // persist and append when recording (use ref so handler sees latest value)
-          if (isRecordingRef.current) {
-            setCoordinates(prev => {
-              const newCoords = [...prev, coord];
-              AsyncStorage.setItem('recording_coordinates', JSON.stringify(newCoords)).catch(() => {});
-              return newCoords;
-            });
-          }
-        }, (err) => {
-          console.warn('BG onLocation error', err);
-        });
-
-        BackgroundGeolocation.onMotionChange((event: MotionChangeEvent) => {
-          // can be used for activity detection
-        });
-      } catch (err) {
-        // SDK not available or not configured — we'll fallback to Expo Location
-        bgReady.current = false;
-        // don't log noisy errors
-      }
-    };
-
-    initBG();
-
-    return () => { mounted = false; BackgroundGeolocation.removeListeners(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     requestPermissions();
@@ -172,29 +153,51 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
     let active = true;
 
     const startFollow = async () => {
-      if (!bgReady.current) {
-        Alert.alert('Background SDK Required', 'This feature requires the native background-geolocation SDK and a custom build.');
-        return;
+      if (!hasPermission) {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission required', 'Location permission is required to follow the trail');
+          return;
+        }
+        setHasPermission(true);
       }
 
       try {
-        await BackgroundGeolocation.start();
-        // onLocation handler will update `currentLocation`
+        const sub = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.Balanced,
+            distanceInterval: 8,
+            timeInterval: 10000,
+          },
+          (loc) => {
+            if (!active) return;
+            const coord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
+            setUserLocationFollow(coord);
+            setCurrentLocation(coord);
+          }
+        );
+        followLocationRef.current = sub;
       } catch (err) {
-        console.error('Follow start error', err);
+        console.error('Follow watchPosition error', err);
       }
     };
 
     if (followMode) {
       startFollow();
     } else {
-      try { BackgroundGeolocation.stop(); } catch (err) { /* ignore */ }
+      if (followLocationRef.current) {
+        followLocationRef.current.remove();
+        followLocationRef.current = null;
+      }
       setUserLocationFollow(null);
     }
 
     return () => {
       active = false;
-      try { BackgroundGeolocation.stop(); } catch (err) { /* ignore */ }
+      if (followLocationRef.current) {
+        followLocationRef.current.remove();
+        followLocationRef.current = null;
+      }
     };
   }, [followMode, hasPermission]);
 
@@ -232,37 +235,51 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
 
   const requestPermissions = async () => {
     try {
-      if (!bgReady.current) {
-        Alert.alert('Background SDK Required', 'This feature requires the native background-geolocation SDK and a custom build.');
-        setHasPermission(false);
-        setIsLoadingPermission(false);
-        return;
-      }
+      const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
 
-      try {
-        // Request permission via the native SDK
-        // requestPermission may prompt the OS permission dialog
-        // @ts-ignore
-        await BackgroundGeolocation.requestPermission();
-      } catch (permErr) {
-        // Non-fatal — continue to try to get position
-      }
-
-      try {
-        // Get an initial position from the native SDK
-        // @ts-ignore
-        const loc = await BackgroundGeolocation.getCurrentPosition({ timeout: 30 });
-        if (loc && loc.coords) {
-          setCurrentLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+      if (foregroundStatus === 'granted') {
+        try {
+          const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
+          if (backgroundStatus !== 'granted') {
+            Alert.alert(
+              'Background Location Required',
+              'To continue recording your trail when the screen is locked, please enable "Allow all the time" in location settings.',
+              [{ text: 'OK' }]
+            );
+          }
+        } catch (bgError: any) {
+          console.warn('Background permission error (non-critical):', bgError.message);
         }
+
         setHasPermission(true);
-      } catch (err) {
-        console.warn('BG getCurrentPosition failed', err);
-        // still consider permission granted if SDK is available
-        setHasPermission(true);
+
+        try {
+          const location = await (await import('@/utils/location')).getBestAvailableLocation({ accuracy: Location.Accuracy.Balanced });
+          if (location) {
+            const coord = { latitude: location.coords.latitude, longitude: location.coords.longitude };
+            setCurrentLocation(coord);
+          }
+        } catch (locError: any) {
+          console.warn('Error getting initial location:', locError?.message || locError);
+        }
+      } else {
+        setHasPermission(false);
+        Alert.alert('Permission Required', 'Location permission is required to track your walks.', [{ text: 'OK' }]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Permission error:', error);
+      const errorMessage = error.message || 'Failed to get location permission';
+
+      if (errorMessage.includes('NSLocation') || errorMessage.includes('Info.plist')) {
+        Alert.alert(
+          'Configuration Error',
+          'This app needs to be built with a custom development build to use location tracking. Expo Go doesn\'t support background location tracking.\n\nPlease contact support or build a custom development client.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert('Error', errorMessage);
+      }
+
       setHasPermission(false);
     } finally {
       setIsLoadingPermission(false);
@@ -285,32 +302,75 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
       await AsyncStorage.removeItem('recording_max_speed');
       await AsyncStorage.removeItem('recording_last_update');
 
-      // Try to seed an initial location from the native SDK
-      let initialCoord: Coordinate | null = null;
-      if (bgReady.current) {
-        try {
-          // @ts-ignore
-          const loc = await BackgroundGeolocation.getCurrentPosition({ timeout: 30 });
-          if (loc && loc.coords) {
-            initialCoord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-            await AsyncStorage.setItem('recording_coordinates', JSON.stringify([initialCoord]));
-            setCoordinates([initialCoord]);
-            setCurrentLocation(initialCoord);
-          }
-        } catch (err) {
-          // ignore — BG will deliver updates shortly
-        }
-      }
+      const location = await (await import('@/utils/location')).getBestAvailableLocation({ accuracy: Location.Accuracy.Balanced });
 
       setStartLocation(null);
 
+      const initialCoord = { latitude: location.coords.latitude, longitude: location.coords.longitude };
+      await AsyncStorage.setItem('recording_coordinates', JSON.stringify([initialCoord]));
+      setCoordinates([initialCoord]);
+      setCurrentLocation(initialCoord);
+
       try {
-        // Start native SDK to deliver location updates
-        await BackgroundGeolocation.start();
-      } catch (bgErr) {
-        console.warn('BackgroundGeolocation.start() failed', bgErr);
-        Alert.alert('Background Tracking Unavailable', 'Background location tracking requires a custom development build.');
+        await Location.startLocationUpdatesAsync(LOCATION_TRACKING_TASK, {
+          accuracy: Location.Accuracy.BestForNavigation,
+          distanceInterval: 10,
+          timeInterval: 3000,
+          foregroundService: {
+            notificationTitle: 'Recording Trail',
+            notificationBody: 'TailTrails is tracking your walk',
+            notificationColor: theme.accentPrimary
+          },
+          pausesUpdatesAutomatically: false,
+          showsBackgroundLocationIndicator: true,
+          activityType: Location.ActivityType.Fitness,
+        //   deferredUpdatesInterval: 5000,
+        //   deferredUpdatesDistance: 5,
+        });
+      } catch (bgLocationError: any) {
+        console.warn('Background location not available:', bgLocationError.message);
+        if (bgLocationError.message?.includes('Background location') || bgLocationError.message?.includes('UIBackgroundModes')) {
+          Alert.alert('Background Tracking Unavailable', 'Background location tracking requires a custom development build. The app will continue recording in foreground mode only. Please keep the app open while recording.', [{ text: 'OK' }]);
+        }
       }
+
+      locationSubscription.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          distanceInterval: 8,
+          timeInterval: 10000,
+        },
+        async (location) => {
+          const coord = { latitude: location.coords.latitude, longitude: location.coords.longitude };
+          setCurrentLocation(coord);
+
+          setCoordinates(prev => {
+            const newCoords = [...prev, coord];
+            AsyncStorage.setItem('recording_coordinates', JSON.stringify(newCoords)).catch(err => {
+              console.error('Error saving coordinates:', err);
+            });
+            return newCoords;
+          });
+
+          if (location.coords.altitude) {
+            const currentElevation = Math.max(0, location.coords.altitude);
+            setElevation(currentElevation);
+            if (currentElevation > maxElevation) {
+              setMaxElevation(currentElevation);
+              await AsyncStorage.setItem('recording_max_elevation', currentElevation.toString());
+            }
+          }
+
+          if (location.coords.speed && location.coords.speed > 0) {
+            const currentSpeed = location.coords.speed * 3.6;
+            setSpeed(currentSpeed);
+            if (currentSpeed > maxSpeed) {
+              setMaxSpeed(currentSpeed);
+              await AsyncStorage.setItem('recording_max_speed', currentSpeed.toString());
+            }
+          }
+        }
+      );
 
       timerRef.current = setInterval(async () => {
         try {
@@ -366,21 +426,10 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
     if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (mapRef.current) {
       try {
-        let coord = currentLocation;
-        if (bgReady.current) {
-          try {
-            // @ts-ignore
-            const loc = await BackgroundGeolocation.getCurrentPosition({ timeout: 30 });
-            if (loc && loc.coords) coord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-          } catch (err) {
-            // ignore and fallback to currentLocation
-          }
-        }
-
-        if (coord) {
-          setCurrentLocation(coord);
-          mapRef.current.animateToRegion({ latitude: coord.latitude, longitude: coord.longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 }, 500);
-        }
+        const location = await (await import('@/utils/location')).getBestAvailableLocation({ accuracy: Location.Accuracy.Balanced });
+        const coord = { latitude: location.coords.latitude, longitude: location.coords.longitude };
+        setCurrentLocation(coord);
+        mapRef.current.animateToRegion({ latitude: coord.latitude, longitude: coord.longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 }, 500);
       } catch (error) {
         console.error('Error getting current location:', error);
         if (currentLocation) {
@@ -456,26 +505,17 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   const stopRecording = async () => {
     if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     try {
-      await BackgroundGeolocation.stop();
-    } catch (err) {
-      console.warn('BG stop error', err);
+      const hasTask = await TaskManager.isTaskRegisteredAsync(LOCATION_TRACKING_TASK);
+      if (hasTask) await Location.stopLocationUpdatesAsync(LOCATION_TRACKING_TASK);
+    } catch (error) {
+      console.error('Error stopping background location:', error);
     }
 
+    if (locationSubscription.current) { locationSubscription.current.remove(); locationSubscription.current = null; }
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
 
-    // Prefer locations captured by the native SDK
-    let finalCoords: Coordinate[] = [];
-    try {
-      // @ts-ignore
-      const locations = await BackgroundGeolocation.getLocations();
-      if (locations && locations.length > 0) {
-        finalCoords = locations.map((l: any) => ({ latitude: l.coords.latitude, longitude: l.coords.longitude }));
-      }
-    } catch (err) {
-      console.warn('BG getLocations failed, falling back to AsyncStorage', err);
-      const coordsStr = await AsyncStorage.getItem('recording_coordinates');
-      finalCoords = coordsStr ? JSON.parse(coordsStr) : coordinates;
-    }
+    const coordsStr = await AsyncStorage.getItem('recording_coordinates');
+    const finalCoords = coordsStr ? JSON.parse(coordsStr) : coordinates;
 
     const maxElevationStr = await AsyncStorage.getItem('recording_max_elevation');
     const finalMaxElevation = maxElevationStr ? parseFloat(maxElevationStr) : maxElevation;
@@ -535,7 +575,8 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
     Alert.alert('Cancel recording?', 'Discard this recording and all collected data. This cannot be undone.', [
       { text: 'Keep Recording', style: 'cancel' },
       { text: 'Discard', style: 'destructive', onPress: async () => {
-        try { if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); await BackgroundGeolocation.stop(); } catch (err) { console.warn('Error stopping background task on cancel:', err); }
+        try { if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); const hasTask = await TaskManager.isTaskRegisteredAsync(LOCATION_TRACKING_TASK); if (hasTask) await Location.stopLocationUpdatesAsync(LOCATION_TRACKING_TASK); } catch (err) { console.warn('Error stopping background task on cancel:', err); }
+        if (locationSubscription.current) { locationSubscription.current.remove(); locationSubscription.current = null; }
         if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
         try { await AsyncStorage.removeItem('recording_start_time'); await AsyncStorage.removeItem('recording_coordinates'); await AsyncStorage.removeItem('recording_max_elevation'); await AsyncStorage.removeItem('recording_max_speed'); await AsyncStorage.removeItem('recording_last_update'); } catch (err) { console.warn('Error clearing recording storage on cancel:', err); }
         setIsRecording(false); setCoordinates([]); setDuration(0); setMaxElevation(0); setMaxSpeed(0);
@@ -622,7 +663,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
             progress={progress}
             showProgress={showProgress}
             onStart={startRecording}
-            startLabel="Start Trail"
+            startLabel="Follow Trail"
             onStop={stopRecording}
             onClose={() => { if (followLocationRef.current) { followLocationRef.current.remove(); followLocationRef.current = null; } setFollowMode(false); router.back(); }}
             onCancel={cancelRecording}
@@ -634,4 +675,3 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
     </View>
   );
 }
-

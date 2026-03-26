@@ -1,6 +1,8 @@
 import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { Text } from '@/components';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import { useAccount } from '@/context/AccountContext';
+import { useDogs } from '@/context/DogsContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './summary.styles';
 import { formatDuration } from '@/utils/distance';
@@ -19,16 +21,20 @@ export default function EndWalkSummary() {
     console.warn('Failed to parse draft param in end-walk summary', err);
   }
 
+  const { userProfile } = useAccount();
+  const { dogProfile } = useDogs();
+
+  const displayUserName = userProfile?.name || (draft && draft.userName) || 'Username!';
+  const displayDogName = dogProfile?.name || (draft && draft.dogName) || 'DogName';
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 20 }]}>
-
-        {/* TODO: fix this!!!! */}
         <View style={styles.bigHeader}>
           <ArrowLeft size={20} color={styles.hugeTitle.color} onPress={() => router.push('/record')} />
-          <Text style={styles.hugeTitle}>Great walk today{draft && draft.name ? `\n${draft.name}!` : ' Username!'} 👏</Text>
-          <Text style={styles.bigSubtitle}>{draft && draft.userName ? `${draft.userName}` : 'DogName'} enjoyed every step</Text>
+          <Text style={styles.hugeTitle}>Great walk today{draft && draft.name ? `\n${draft.name}!` : ` ${displayUserName}`} 👏</Text>
+          <Text style={styles.bigSubtitle}>{displayDogName} enjoyed every step</Text>
         </View>
 
         <View style={styles.statsGridTop}>

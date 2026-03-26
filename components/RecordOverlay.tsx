@@ -13,6 +13,7 @@ type Props = {
   speed: number;
   progress: number;
   showProgress: boolean;
+  startLabel?: string;
   onStart?: () => void;
   onStop: () => void;
   onClose?: () => void;
@@ -30,6 +31,7 @@ export default function RecordOverlay({
   speed,
   progress,
   showProgress,
+  startLabel = 'Start Trail',
   onStart,
   onStop,
   onClose,
@@ -43,7 +45,7 @@ export default function RecordOverlay({
     return (
       <View style={styles.container}>
         <TouchableOpacity style={styles.recordButton} onPress={onStart} activeOpacity={0.8}>
-          <RNText style={styles.recordButtonText}>Start Trail</RNText>
+          <RNText style={styles.recordButtonText}>{startLabel}</RNText>
         </TouchableOpacity>
       </View>
     );

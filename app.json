@@ -2,7 +2,7 @@
   "expo": {
     "name": "TailTrails",
     "slug": "dog-walk-tracker-x2nouww",
-    "version": "1.0.17",
+    "version": "1.0.20",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tail-trails",
@@ -23,13 +23,20 @@
         "NSLocationAlwaysAndWhenInUseUsageDescription": "TailTrails needs your location to record your dog's walking path even when the screen is locked.",
         "NSLocationAlwaysUsageDescription": "TailTrails tracks your walk in the background so you can lock your phone while enjoying your time with your dog.",
         "NSLocationWhenInUseUsageDescription": "TailTrails uses your location to show your real-time position on the map.",
+        "NSMotionUsageDescription": "TailTrails uses motion data to detect when you're walking and optimize location tracking for your walk.",
         "NSLocationTemporaryUsageDescriptionDictionary": {
           "HighAccuracy": "TailTrails needs high accuracy location to precisely map your walking trail."
         },
         "UIBackgroundModes": [
           "location",
-          "fetch"
+          "fetch",
+          "processing"
         ],
+        "BGTaskSchedulerPermittedIdentifiers": [
+          "com.transistorsoft.fetch",
+          "com.transistorsoft.customtask"
+        ],
+        "TSLocationManagerLicense": "<YOUR IOS LICENSE KEY>",
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
         "CFBundleURLTypes": [
@@ -44,7 +51,7 @@
     },
     "android": {
       "package": "com.tailtrailsclub.app",
-      "versionCode": 18,
+      "versionCode": 21,
       "googleServicesFile": "./google-services.json",
       "newArchEnabled": false,
       "softwareKeyboardLayoutMode": "pan",
@@ -133,6 +140,18 @@
           "ios": {
             "useFrameworks": "static"
           }
+        }
+      ],
+      [
+        "react-native-background-geolocation",
+        {
+          "license": "YOUR ANDROID LICENSE KEY"
+        }
+      ],
+      [
+        "expo-gradle-ext-vars",
+        {
+          "googlePlayServicesLocationVersion": "21.1.0"
         }
       ],
       "./plugins/patch-podfile",

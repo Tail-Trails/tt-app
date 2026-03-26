@@ -3,6 +3,8 @@ import createContextHook from '@nkzw/create-context-hook';
 import { useAuth } from '@/context/AuthContext';
 import { Trail } from '@/types/trail';
 import { API_URL } from '@/lib/api';
+import { getBestAvailableLocation } from '@/utils/location';
+import * as Location from 'expo-location';
 
 export const [TrailsContext, useTrails] = createContextHook(() => {
   const { user, session } = useAuth();
@@ -22,7 +24,31 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
 
     try {
       console.log('Loading my trails for user:', user?.id);
-      const resp = await fetch(`${API_URL}/trail/me`, {
+      // Ensure we have foreground location permission and a location before calling /trail/me
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.warn('Location permission not granted; skipping /trail/me fetch');
+        setTrails([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Try to include user's current location so backend can return distances
+      let url = `${API_URL}/trail/me`;
+      try {
+        const loc = await getBestAvailableLocation();
+        if (loc && loc.coords) {
+          const lat = encodeURIComponent(String(loc.coords.latitude));
+          const lng = encodeURIComponent(String(loc.coords.longitude));
+          url += `?latitude=${lat}&longitude=${lng}`;
+        } else {
+          console.warn('No location available; calling /trail/me without coords');
+        }
+      } catch (err) {
+        console.warn('Failed to get location for /trail/me call:', err);
+      }
+
+      const resp = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${session?.accessToken}`,
         },
@@ -58,7 +84,30 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
 
     try {
       console.log('Loading my trails for user:', user?.id);
-      const resp = await fetch(`${API_URL}/trail/me`, {
+      // Ensure we have foreground location permission and a location before calling /trail/me
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.warn('Location permission not granted; skipping /trail/me fetch');
+        setSavedTrails([]);
+        setIsSavedLoading(false);
+        return;
+      }
+
+      let url = `${API_URL}/trail/me`;
+      try {
+        const loc = await getBestAvailableLocation();
+        if (loc && loc.coords) {
+          const lat = encodeURIComponent(String(loc.coords.latitude));
+          const lng = encodeURIComponent(String(loc.coords.longitude));
+          url += `?latitude=${lat}&longitude=${lng}`;
+        } else {
+          console.warn('No location available; calling /trail/me without coords');
+        }
+      } catch (err) {
+        console.warn('Failed to get location for /trail/me call:', err);
+      }
+
+      const resp = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${session?.accessToken}`,
         },
@@ -314,6 +363,80 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     }
   }, [session]);
 
+  const loadForYouTrails = useCallback(async (latitude?: number, longitude?: number, distanceKm: number = 10) => {
+    try {
+      if (!session?.accessToken) return [] as Trail[];
+
+      // Ensure we have coordinates
+      let lat = latitude;
+      let lng = longitude;
+      if (typeof lat !== 'number' || typeof lng !== 'number') {
+        try {
+          const loc = await getBestAvailableLocation();
+          if (loc && loc.coords) {
+            lat = loc.coords.latitude;
+            lng = loc.coords.longitude;
+          } else {
+            console.warn('No location available for /trail/for-you');
+            return [] as Trail[];
+          }
+        } catch (err) {
+          console.warn('Failed to get location for /trail/for-you call:', err);
+          return [] as Trail[];
+        }
+      }
+
+      const resp = await fetch(`${API_URL}/trail/for-you?latitude=${encodeURIComponent(lat as number)}&longitude=${encodeURIComponent(lng as number)}&distance_km=${encodeURIComponent(distanceKm)}`,
+        { headers: { 'Authorization': `Bearer ${session.accessToken}` } }
+      );
+      if (resp.ok) {
+        const data = await resp.json();
+        return data as Trail[];
+      }
+      console.error('/trail/for-you failed:', resp.status);
+      return [] as Trail[];
+    } catch (err) {
+      console.error('Error loading for-you trails:', err);
+      return [] as Trail[];
+    }
+  }, [session]);
+
+  const loadTrailsByTag = useCallback(async (chosenTag: string, latitude?: number, longitude?: number, distanceKm: number = 10) => {
+    try {
+      if (!session?.accessToken) return [] as Trail[];
+
+      let lat = latitude;
+      let lng = longitude;
+      if (typeof lat !== 'number' || typeof lng !== 'number') {
+        try {
+          const loc = await getBestAvailableLocation();
+          if (loc && loc.coords) {
+            lat = loc.coords.latitude;
+            lng = loc.coords.longitude;
+          } else {
+            console.warn('No location available for /trail/tag');
+            return [] as Trail[];
+          }
+        } catch (err) {
+          console.warn('Failed to get location for /trail/tag call:', err);
+          return [] as Trail[];
+        }
+      }
+
+      const q = `latitude=${encodeURIComponent(lat as number)}&longitude=${encodeURIComponent(lng as number)}&chosen_tag=${encodeURIComponent(chosenTag)}&distance_km=${encodeURIComponent(distanceKm)}`;
+      const resp = await fetch(`${API_URL}/trail/tag?${q}`, { headers: { 'Authorization': `Bearer ${session.accessToken}` } });
+      if (resp.ok) {
+        const data = await resp.json();
+        return data as Trail[];
+      }
+      // console.error('/trail/tag failed:', resp.status);
+      return [] as Trail[];
+    } catch (err) {
+      console.error('Error loading tag trails:', err);
+      return [] as Trail[];
+    }
+  }, [session]);
+
   const updateTrailName = useCallback(async (id: string, name: string) => {
     try {
       console.log('Updating trail name via API:', id, name);
@@ -458,10 +581,13 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     updateTrailPhoto,
     updateTrailDetails,
     loadNearbyTrails,
+    loadForYouTrails,
+    loadTrailsByTag,
     saveTrailBookmark,
     removeTrailBookmark,
     isTrailSaved,
     getTrailWithUser,
-  }), [trails, savedTrails, isLoading, isSavedLoading, saveTrail, deleteTrail, getTrailById, updateTrailName, updateTrailPhoto, updateTrailDetails, loadNearbyTrails, saveTrailBookmark, removeTrailBookmark, isTrailSaved, getTrailWithUser]);
+  }), [trails, savedTrails, isLoading, isSavedLoading, saveTrail, deleteTrail, getTrailById, updateTrailName, updateTrailPhoto, updateTrailDetails, loadNearbyTrails, loadForYouTrails, loadTrailsByTag, saveTrailBookmark, removeTrailBookmark, isTrailSaved, getTrailWithUser]);
+  // include new loaders in dependency list
 });
 
