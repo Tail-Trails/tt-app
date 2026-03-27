@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState } from "react";
+import * as Notifications from 'expo-notifications';
+import { useEffect, useState } from "react";
 import { StyleSheet, View, Modal, TouchableOpacity, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Alert } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import colors from "@/constants/colors";
@@ -23,6 +24,15 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 });
 
 const queryClient = new QueryClient();
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true, 
+    shouldShowList: true,
+  }),
+});
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, session } = useAuth();

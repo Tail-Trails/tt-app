@@ -249,7 +249,7 @@ export default function ProfileScreen() {
   React.useEffect(() => {
     if (displayedTrails && displayedTrails.length > 0) {
       try {
-        console.log('ProfileScreen.displayedTrails sample:', displayedTrails[0]);
+        // console.log('ProfileScreen.displayedTrails sample:', displayedTrails[0]);
       } catch (err) {
         // ignore
       }

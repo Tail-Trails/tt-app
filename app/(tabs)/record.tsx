@@ -17,6 +17,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Coordinate, Trail } from '@/types/trail';
 import { calculateTotalDistance } from '@/utils/distance';
 import { useKeepAwake } from 'expo-keep-awake';
+import { LocationWatchdog } from '@/components/LocationWatchdog';
 
 // Background task removed — the native SDK will deliver locations via its own listeners
 
@@ -56,10 +57,14 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   const [pace, setPace] = useState<string>('0:00');
   const [speed, setSpeed] = useState<number>(0);
   const [maxSpeed, setMaxSpeed] = useState<number>(0);
-
+  const [accuracy, setAccuracy] = useState<number | undefined>(undefined);
   const [followMode, setFollowMode] = useState<boolean>(!!initialTrail);
   const [userLocationFollow, setUserLocationFollow] = useState<Coordinate | null>(null);
   const followLocationRef = useRef<any>(null);
+  const stopStartTimeRef = useRef<number | null>(null);
+  const [sniffTime, setSniffTime] = useState<number>(0);
+  const sniffTimeRef = useRef<number>(0);
+  const lastLocationTimestamp = useRef<number>(Date.now());
 
   useKeepAwake();
 
@@ -79,8 +84,8 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
           distanceFilter: 8,
           stopOnTerminate: false,
           startOnBoot: false,
-          debug: false,
-          logLevel: (BackgroundGeolocation as any).LOG_LEVEL_OFF,
+          debug: true,
+          logLevel: (BackgroundGeolocation as any).LOG_LEVEL_VERBOSE,
           reset: false,
         };
 
@@ -89,29 +94,52 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
         if (!mounted) return;
         bgReady.current = true;
 
+        // --- 1. THE LOCATION LISTENER ---
         BackgroundGeolocation.onLocation(async (location: BGLocation) => {
-          const coord = { latitude: location.coords.latitude, longitude: location.coords.longitude };
-          setCurrentLocation(coord);
+          lastLocationTimestamp.current = Date.now();
 
-          // persist and append when recording (use ref so handler sees latest value)
+          const coord = { latitude: location.coords.latitude, longitude: location.coords.longitude };
+
+          setCurrentLocation(coord);
+          setAccuracy(location.coords.accuracy); // Update the bars in your overlay
+
           if (isRecordingRef.current) {
             setCoordinates(prev => {
               const newCoords = [...prev, coord];
-              AsyncStorage.setItem('recording_coordinates', JSON.stringify(newCoords)).catch(() => {});
+              AsyncStorage.setItem('recording_coordinates', JSON.stringify(newCoords)).catch(() => { });
               return newCoords;
             });
           }
         }, (err) => {
           console.warn('BG onLocation error', err);
+          setAccuracy(undefined);
         });
 
+        // --- 2. THE MOTION LISTENER (SNIFF TIME) ---
         BackgroundGeolocation.onMotionChange((event: MotionChangeEvent) => {
-          // can be used for activity detection
+          // Only track sniffing if we are currently recording a walk
+          if (!isRecordingRef.current) return;
+
+          if (!event.isMoving) {
+            // Dog stopped! Mark the timestamp
+            stopStartTimeRef.current = Date.now();
+            console.log("Activity: Stationary (Sniffing)");
+          } else {
+            // Dog started walking again! 
+            if (stopStartTimeRef.current) {
+              const elapsed = Math.floor((Date.now() - stopStartTimeRef.current) / 1000);
+              sniffTimeRef.current += elapsed;
+              setSniffTime(sniffTimeRef.current);
+
+              // Reset the marker
+              stopStartTimeRef.current = null;
+              console.log(`Activity: Moving. Added ${elapsed}s to Sniff Time.`);
+            }
+          }
         });
+
       } catch (err) {
-        // SDK not available or not configured — we'll fallback to Expo Location
         bgReady.current = false;
-        // don't log noisy errors
       }
     };
 
@@ -140,6 +168,46 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // --- THE SIGNAL WATCHDOG & AUTO-RESUME ---
+  useEffect(() => {
+    const watchdogInterval = setInterval(async () => {
+      const timeSinceUpdate = Date.now() - lastLocationTimestamp.current;
+
+      // 1. SIGNAL LOST: If no location received in over 10 seconds
+      if (timeSinceUpdate > 10000) {
+        setAccuracy(undefined);
+
+        // 2. AUTO-RESUME: Try to "poke" the SDK to see if location is back
+        if (bgReady.current) {
+          try {
+            // This forced check often wakes up the Simulator stream
+            const loc = await BackgroundGeolocation.getCurrentPosition({
+              timeout: 5,       // Don't wait long
+              maximumAge: 0,    // We want a FRESH one
+              samples: 1,
+              desiredAccuracy: 10
+            });
+
+            if (loc && loc.coords) {
+              // If we got a location, manually trigger the "Heartbeat"
+              lastLocationTimestamp.current = Date.now();
+              setAccuracy(loc.coords.accuracy);
+              setCurrentLocation({
+                latitude: loc.coords.latitude,
+                longitude: loc.coords.longitude
+              });
+            }
+          } catch (err) {
+            // If this fails (Code 0), ensure UI stays "No Signal"
+            setAccuracy(undefined);
+          }
+        }
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(watchdogInterval);
+  }, [isRecording]);
 
   useEffect(() => {
     if (!trailId && !incomingTrail && typeof params.trail !== 'string' && !isRecording) {
@@ -319,6 +387,12 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
             const startTime = parseInt(startTimeStr);
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             setDuration(elapsed);
+
+            // If the dog is currently stopped, update the UI live
+            if (stopStartTimeRef.current) {
+              const activeStopSeconds = Math.floor((Date.now() - stopStartTimeRef.current) / 1000);
+              setSniffTime(sniffTimeRef.current + activeStopSeconds);
+            }
           }
         } catch (error) {
           console.error('Error calculating duration:', error);
@@ -515,6 +589,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
       date: Date.now(),
       distance,
       duration: finalDuration,
+      sniffTime: sniffTime,
       coordinates: finalCoords,
       city: startLocation?.city,
       country: startLocation?.country,
@@ -534,12 +609,14 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   const cancelRecording = async () => {
     Alert.alert('Cancel recording?', 'Discard this recording and all collected data. This cannot be undone.', [
       { text: 'Keep Recording', style: 'cancel' },
-      { text: 'Discard', style: 'destructive', onPress: async () => {
-        try { if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); await BackgroundGeolocation.stop(); } catch (err) { console.warn('Error stopping background task on cancel:', err); }
-        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-        try { await AsyncStorage.removeItem('recording_start_time'); await AsyncStorage.removeItem('recording_coordinates'); await AsyncStorage.removeItem('recording_max_elevation'); await AsyncStorage.removeItem('recording_max_speed'); await AsyncStorage.removeItem('recording_last_update'); } catch (err) { console.warn('Error clearing recording storage on cancel:', err); }
-        setIsRecording(false); setCoordinates([]); setDuration(0); setMaxElevation(0); setMaxSpeed(0);
-      } }
+      {
+        text: 'Discard', style: 'destructive', onPress: async () => {
+          try { if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); await BackgroundGeolocation.stop(); } catch (err) { console.warn('Error stopping background task on cancel:', err); }
+          if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+          try { await AsyncStorage.removeItem('recording_start_time'); await AsyncStorage.removeItem('recording_coordinates'); await AsyncStorage.removeItem('recording_max_elevation'); await AsyncStorage.removeItem('recording_max_speed'); await AsyncStorage.removeItem('recording_last_update'); await AsyncStorage.removeItem('recording_sniff_time'); } catch (err) { console.warn('Error clearing recording storage on cancel:', err); }
+          setIsRecording(false); setCoordinates([]); setDuration(0); setMaxElevation(0); setMaxSpeed(0); setSniffTime(0); sniffTimeRef.current = 0; stopStartTimeRef.current = null;
+        }
+      }
     ]);
   };
 
@@ -579,6 +656,8 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
         />
       )}
 
+      <LocationWatchdog isRecording={isRecording} thresholdSeconds={12} />
+
       {(currentLocation || initialTrail) && (
         <TrailMap
           ref={mapRef}
@@ -594,7 +673,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
           userLocation={userLocationFollow ?? currentLocation}
           showsUserLocation
           followsUserLocation={followMode || isRecording}
-          routeColor={theme.accentPrimary}
+          routeColor={theme.backgroundPrimary}
           routeWidth={5}
           routeOpacity={1}
           showsMyLocationButton={false}
@@ -605,7 +684,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
         <Navigation size={24} color={theme.accentPrimary} />
       </TouchableOpacity>
 
-      <Animated.View style={[styles.bottomSheet, { height: Animated.add(bottomSheetAnim, navbarHeight), bottom: 0 }] }>
+      <Animated.View style={[styles.bottomSheet, { height: Animated.add(bottomSheetAnim, navbarHeight), bottom: 0 }]}>
         <View {...panResponder.panHandlers} style={styles.handleBar}>
           <TouchableOpacity style={styles.handleContainer} onPress={toggleBottomSheet} activeOpacity={0.7}><View style={styles.handle} /></TouchableOpacity>
         </View>
@@ -623,6 +702,8 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
             showProgress={showProgress}
             onStart={startRecording}
             startLabel="Start Trail"
+            accuracy={accuracy}
+            sniffDuration={sniffTime}
             onStop={stopRecording}
             onClose={() => { if (followLocationRef.current) { followLocationRef.current.remove(); followLocationRef.current = null; } setFollowMode(false); router.back(); }}
             onCancel={cancelRecording}

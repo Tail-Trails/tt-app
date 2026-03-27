@@ -12,6 +12,7 @@ export default function EndWalkSummary() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
+  const isFollowFlow = params.flow === 'follow';
   let draft: any = undefined;
   try {
     if (typeof params.draft === 'string') {
@@ -26,6 +27,16 @@ export default function EndWalkSummary() {
 
   const displayUserName = userProfile?.name || (draft && draft.userName) || 'Username!';
   const displayDogName = dogProfile?.name || (draft && draft.dogName) || 'DogName';
+
+  const handleRatingPress = (rating: number) => {
+    if (isFollowFlow) {
+      const enhanced = { ...(draft || {}), rating };
+      router.push(`/end-walk/info?draft=${encodeURIComponent(JSON.stringify(enhanced))}`);
+      return;
+    }
+
+    router.push(`/end-walk/review?draft=${encodeURIComponent(JSON.stringify(draft || {}))}&rating=${rating}`);
+  };
 
   return (
     <>
@@ -55,7 +66,7 @@ export default function EndWalkSummary() {
           <Text style={styles.bottomSubtitle}>Reviews help us make better suggestions</Text>
           <View style={styles.starRow}>
             {[1,2,3,4,5].map((s) => (
-              <TouchableOpacity key={s} style={styles.starButton} onPress={() => router.push(`/end-walk/review?draft=${encodeURIComponent(JSON.stringify(draft || {}))}&rating=${s}`)}>
+              <TouchableOpacity key={s} style={styles.starButton} onPress={() => handleRatingPress(s)}>
                 <Text style={styles.star}>★</Text>
               </TouchableOpacity>
             ))}

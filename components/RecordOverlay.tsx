@@ -9,16 +9,26 @@ type Props = {
   duration: number;
   distance: number;
   elevation: number;
+  sniffDuration: number;
   pace: string;
   speed: number;
   progress: number;
   showProgress: boolean;
   startLabel?: string;
+  accuracy?: number; // Add this prop to determine signal strength
   onStart?: () => void;
   onStop: () => void;
   onClose?: () => void;
   onCancel?: () => void;
   onCamera?: () => void;
+};
+
+// Helper to determine signal strength
+const getSignalData = (accuracy?: number) => {
+  if (accuracy === undefined || accuracy <= 0) return { label: 'SEARCHING', color: '#666', bars: 0 };
+  if (accuracy <= 10) return { label: 'EXCELLENT', color: '#4CAF50', bars: 3 }; // High Accuracy
+  if (accuracy <= 30) return { label: 'GOOD', color: '#FFC107', bars: 2 };      // Medium
+  return { label: 'POOR', color: '#F44336', bars: 1 };                         // Low
 };
 
 export default function RecordOverlay({
@@ -27,11 +37,13 @@ export default function RecordOverlay({
   duration,
   distance,
   elevation,
+  sniffDuration,
   pace,
   speed,
   progress,
   showProgress,
   startLabel = 'Start Trail',
+  accuracy,
   onStart,
   onStop,
   onClose,
@@ -40,10 +52,19 @@ export default function RecordOverlay({
 }: Props) {
   const formattedDistance = `${(distance / 1000).toFixed(2)}km`;
   const formattedElevation = `${Math.round(elevation)}m`;
+  const signal = getSignalData(accuracy);
 
   if (!isRecording) {
     return (
       <View style={styles.container}>
+        <View style={styles.signalWrapper}>
+          <RNText style={[styles.signalLabel, { color: signal.color }]}>{signal.label}</RNText>
+          <View style={styles.barsRow}>
+            <View style={[styles.bar, { height: 6, backgroundColor: signal.bars >= 1 ? signal.color : '#333' }]} />
+            <View style={[styles.bar, { height: 10, backgroundColor: signal.bars >= 2 ? signal.color : '#333' }]} />
+            <View style={[styles.bar, { height: 14, backgroundColor: signal.bars >= 3 ? signal.color : '#333' }]} />
+          </View>
+        </View>
         <TouchableOpacity style={styles.recordButton} onPress={onStart} activeOpacity={0.8}>
           <RNText style={styles.recordButtonText}>{startLabel}</RNText>
         </TouchableOpacity>
@@ -53,8 +74,17 @@ export default function RecordOverlay({
 
   return (
     <View style={styles.container}>
+      <View style={styles.signalWrapper}>
+        <RNText style={[styles.signalLabel, { color: signal.color }]}>{signal.label}</RNText>
+        <View style={styles.barsRow}>
+          <View style={[styles.bar, { height: 6, backgroundColor: signal.bars >= 1 ? signal.color : '#333' }]} />
+          <View style={[styles.bar, { height: 10, backgroundColor: signal.bars >= 2 ? signal.color : '#333' }]} />
+          <View style={[styles.bar, { height: 14, backgroundColor: signal.bars >= 3 ? signal.color : '#333' }]} />
+        </View>
+      </View>
       {isExpanded ? (
         <View style={styles.grid}>
+          
           <View style={styles.card}>
             <RNText style={styles.cardLabel}>TIME</RNText>
             <RNText style={styles.cardValue}>{Math.floor(duration / 60)}m</RNText>
@@ -65,7 +95,11 @@ export default function RecordOverlay({
           </View>
           <View style={styles.card}>
             <RNText style={styles.cardLabel}>SNIFF TIME</RNText>
-            <RNText style={styles.cardValue}>0s</RNText>
+            <RNText style={styles.cardValue}>
+              {sniffDuration > 60 
+                ? `${Math.floor(sniffDuration / 60)}m ${sniffDuration % 60}s` 
+                : `${sniffDuration}s`}
+            </RNText>
           </View>
           <View style={styles.card}>
             <RNText style={styles.cardLabel}>ELEVATION</RNText>
@@ -85,10 +119,9 @@ export default function RecordOverlay({
             </View>
           </View>
           <View style={styles.compactRight}>
-            <TouchableOpacity style={[styles.stopButton, styles.stopButtonLarge]} onPress={onStop} activeOpacity={0.85}>
+            <TouchableOpacity style={[styles.stopButton]} onPress={onStop} activeOpacity={0.85}>
               <View style={styles.stopInner}>
                 <Square size={18} color={theme.backgroundPrimary} fill={theme.backgroundPrimary} />
-                <RNText style={styles.stopText}>Stop</RNText>
               </View>
             </TouchableOpacity>
           </View>
@@ -121,6 +154,7 @@ export default function RecordOverlay({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    paddingTop: 4,
   },
   grid: {
     flexDirection: 'row',
@@ -253,4 +287,29 @@ const styles = StyleSheet.create({
   recordButtonText: {
     ...Typography.button(theme.backgroundPrimary),
   },
+  signalWrapper: {
+    alignSelf: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  signalLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginRight: 6,
+    letterSpacing: 0.5,
+  },
+  barsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  bar: {
+    width: 3,
+    borderRadius: 1,
+  }
 });

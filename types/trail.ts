@@ -19,6 +19,7 @@ export interface Trail {
   country?: string;
   description?: string;
   tags?: string[];
+  sniffTime?: number;
   elevation?: number;
   surfaceType?: string;
   difficulty?: string;
@@ -26,8 +27,8 @@ export interface Trail {
   pace?: string;
   speed?: number;
   maxElevation?: number;
-  user_id?: string;
-  rating: number;
+  userId?: string;
+  rating?: number;
   review?: string;
   environment_tags?: string[];
   // Review inputs from the mobile UI

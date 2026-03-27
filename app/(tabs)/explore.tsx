@@ -1,13 +1,15 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { View, ScrollView, TouchableOpacity, Animated, TextInput, Modal, FlatList } from 'react-native';
 import { Text } from '@/components';
 import LottieLoader from '@/components/LottieLoader';
+import TrailMap from '@/components/TrailMap';
+import TrailMapPopup from '@/components/TrailMapPopup';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { getBestAvailableLocation } from '@/utils/location';
 import * as Haptics from 'expo-haptics';
-import { MapPin, Umbrella, Star, X, Navigation, ChevronLeft, Trees, TrafficCone, Mountain } from 'lucide-react-native';
+import { MapPin, Umbrella, Star, X, Navigation, ChevronLeft, Trees, TrafficCone, Mountain, List, Map } from 'lucide-react-native';
 import theme from '@/constants/colors';
 import { useTrails } from '@/context/TrailsContext';
 import { Trail } from '@/types/trail';
@@ -40,6 +42,8 @@ export default function ExploreScreen() {
   const [activeImageIndex, setActiveImageIndex] = useState<Record<string, number>>({});
   const [isCardSwiping, setIsCardSwiping] = useState<Record<string, boolean>>({});
   const [cardWidths, setCardWidths] = useState<Record<string, number>>({});
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [selectedMapTrailId, setSelectedMapTrailId] = useState<string | null>(null);
   const mainScrollRef = React.useRef<ScrollView>(null);
 
   const loadUserLocationAndNearbyTrails = useCallback(async () => {
@@ -266,101 +270,204 @@ export default function ExploreScreen() {
 
   const filteredTrails = getFilteredTrails(nearbyTrails);
 
+  const mapMarkers = useMemo(() => {
+    return filteredTrails
+      .filter((trail) => Number.isFinite(trail.startLatitude) && Number.isFinite(trail.startLongitude))
+      .map((trail) => ({
+        id: trail.id,
+        latitude: trail.startLatitude as number,
+        longitude: trail.startLongitude as number,
+        label: Number.isFinite(trail.dogMatchScore) ? `${trail.dogMatchScore.toFixed(1)}%` : '-',
+      }));
+  }, [filteredTrails]);
+
+  const mapRegion = useMemo(() => {
+    if (mapMarkers.length === 0) {
+      return {
+        latitude: locationCoords?.latitude ?? 40.7128,
+        longitude: locationCoords?.longitude ?? -74.006,
+        latitudeDelta: 0.2,
+        longitudeDelta: 0.2,
+      };
+    }
+
+    const latitudes = mapMarkers.map((marker) => marker.latitude);
+    const longitudes = mapMarkers.map((marker) => marker.longitude);
+    const minLat = Math.min(...latitudes);
+    const maxLat = Math.max(...latitudes);
+    const minLon = Math.min(...longitudes);
+    const maxLon = Math.max(...longitudes);
+
+    return {
+      latitude: (minLat + maxLat) / 2,
+      longitude: (minLon + maxLon) / 2,
+      latitudeDelta: Math.max((maxLat - minLat) * 1.5, 0.03),
+      longitudeDelta: Math.max((maxLon - minLon) * 1.5, 0.03),
+    };
+  }, [mapMarkers, locationCoords]);
+
+  const handleViewToggle = () => {
+    if (true) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setViewMode((prev) => (prev === 'list' ? 'map' : 'list'));
+    setSelectedMapTrailId(null);
+  };
+
+  const selectedMapTrail = useMemo(
+    () => filteredTrails.find((t) => t.id === selectedMapTrailId) ?? null,
+    [filteredTrails, selectedMapTrailId]
+  );
+
+  const renderCategoryHeader = () => (
+    <View style={[styles.stickyHeader, { paddingTop: insets.top + 16 }]}>
+      {/* <View style={styles.stickySearchContainer}>
+        <TouchableOpacity
+          style={styles.searchBar}
+          onPress={handleSearchBarPress}
+          activeOpacity={0.7}
+        >
+          <Search size={22} color={theme.textMuted} />
+          <Text style={styles.searchPlaceholder}>Find Trails</Text>
+          <View style={styles.filterButton}>
+            <SlidersHorizontal size={18} color={theme.accentPrimary} />
+          </View>
+        </TouchableOpacity>
+      </View> */}
+
+      <View style={styles.categoriesSection}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoriesScroll}
+        >
+          {CATEGORIES.map((category) => {
+            const Icon = category.icon;
+            const isSelected = selectedCategory === category.id;
+
+            return (
+              <TouchableOpacity
+                key={category.id}
+                style={[
+                  styles.categoryButton,
+                  isSelected && styles.categoryButtonActive,
+                ]}
+                onPress={() => handleCategoryPress(category.id)}
+              >
+                <Icon
+                  size={20}
+                  color={isSelected ? theme.backgroundSecondary : theme.textMuted}
+                  strokeWidth={2}
+                />
+                <Text
+                  style={[
+                    styles.categoryText,
+                    isSelected && styles.categoryTextActive,
+                  ]}
+                >
+                  {category.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.safeContainer}>
-      <ScrollView
-        ref={mainScrollRef}
-        scrollEnabled={!Object.values(isCardSwiping).some(Boolean)}
-        style={styles.container}
-        showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={[0]}
-      >
-        <View style={[styles.stickyHeader, { paddingTop: insets.top + 16 }]}>
-          {/* <View style={styles.stickySearchContainer}>
-            <TouchableOpacity
-              style={styles.searchBar}
-              onPress={handleSearchBarPress}
-              activeOpacity={0.7}
-            >
-              <Search size={22} color={theme.textMuted} />
-              <Text style={styles.searchPlaceholder}>Find Trails</Text>
-              <View style={styles.filterButton}>
-                <SlidersHorizontal size={18} color={theme.accentPrimary} />
+      {viewMode === 'list' ? (
+        <ScrollView
+          ref={mainScrollRef}
+          scrollEnabled={!Object.values(isCardSwiping).some(Boolean)}
+          style={styles.container}
+          showsVerticalScrollIndicator={false}
+          stickyHeaderIndices={[0]}
+        >
+          {renderCategoryHeader()}
+          <View style={styles.categoryTrailsSection}>
+            {isLoadingNearby ? (
+              <View style={styles.loadingContainer}>
+                <LottieLoader size={120} />
+                <Text style={styles.loadingText}>Loading trails...</Text>
               </View>
-            </TouchableOpacity>
-            
-          </View> */}
-
-          <View style={styles.categoriesSection}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoriesScroll}
-            >
-              {CATEGORIES.map((category) => {
-                const Icon = category.icon;
-                const isSelected = selectedCategory === category.id;
-
+            ) : filteredTrails.length > 0 ? (
+              filteredTrails.map((trail) => {
+                const isSaved = isTrailSaved(trail.id);
                 return (
-                  <TouchableOpacity
-                    key={category.id}
-                    style={[
-                      styles.categoryButton,
-                      isSelected && styles.categoryButtonActive,
-                    ]}
-                    onPress={() => handleCategoryPress(category.id)}
-                  >
-                    <Icon
-                      size={20}
-                      color={isSelected ? theme.backgroundSecondary : theme.textMuted}
-                      strokeWidth={2}
-                    />
-                    <Text
-                      style={[
-                        styles.categoryText,
-                        isSelected && styles.categoryTextActive,
-                      ]}
-                    >
-                      {category.name}
-                    </Text>
-                  </TouchableOpacity>
+                  <TrailCard
+                    key={trail.id}
+                    trail={trail}
+                    onPress={(id) => handleNavigateToTrail(id)}
+                    onBookmarkPress={(id) => handleBookmarkPress(id, isValidUUID(id))}
+                    isSaved={isSaved}
+                    onSwipeStateChange={(id, swiping) => setIsCardSwiping(prev => ({ ...prev, [id]: swiping }))}
+                  />
                 );
-              })}
-            </ScrollView>
+              })
+            ) : (
+              <View style={styles.emptyContainer}>
+                <MapPin size={48} color={theme.textMuted} />
+                <Text style={styles.emptyText}>
+                  No trails found yet. Record a trail to share with others!
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.bottomPadding} />
+        </ScrollView>
+      ) : (
+        <View style={styles.container}>
+          {renderCategoryHeader()}
+          <View style={styles.mapViewContainer}>
+            <View style={styles.mapCard}>
+              <TrailMap
+                style={{ flex: 1 }}
+                initialRegion={mapRegion}
+                scrollEnabled
+                zoomEnabled
+                showStartMarker={false}
+                showsUserLocation={!!locationCoords}
+                userLocation={locationCoords ?? null}
+                pointMarkers={mapMarkers}
+                onPointMarkerPress={(id) => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setSelectedMapTrailId((prev) => (prev === id ? null : id));
+                }}
+              />
+              {mapMarkers.length === 0 && (
+                <View style={styles.mapEmptyOverlay}>
+                  <Text style={styles.mapEmptyText}>No trail start points available for this category.</Text>
+                </View>
+              )}
+
+              <TrailMapPopup
+                trail={selectedMapTrail}
+                onClose={() => setSelectedMapTrailId(null)}
+                onViewTrail={(id) => {
+                  setSelectedMapTrailId(null);
+                  handleNavigateToTrail(id);
+                }}
+              />
+            </View>
           </View>
         </View>
-        <View style={styles.categoryTrailsSection}>
-          {isLoadingNearby ? (
-            <View style={styles.loadingContainer}>
-              <LottieLoader size={120} />
-              <Text style={styles.loadingText}>Loading trails...</Text>
-            </View>
-          ) : filteredTrails.length > 0 ? (
-            filteredTrails.map((trail) => {
-              const isSaved = isTrailSaved(trail.id);
-              return (
-                <TrailCard
-                  key={trail.id}
-                  trail={trail}
-                  onPress={(id) => handleNavigateToTrail(id)}
-                  onBookmarkPress={(id) => handleBookmarkPress(id, isValidUUID(id))}
-                  isSaved={isSaved}
-                  onSwipeStateChange={(id, swiping) => setIsCardSwiping(prev => ({ ...prev, [id]: swiping }))}
-                />
-              );
-            })
-          ) : (
-            <View style={styles.emptyContainer}>
-              <MapPin size={48} color="#9ca3af" />
-              <Text style={styles.emptyText}>
-                No trails found yet. Record a trail to share with others!
-              </Text>
-            </View>
-          )}
-        </View>
+      )}
 
-        <View style={styles.bottomPadding} />
-      </ScrollView>
+      <TouchableOpacity
+        style={[styles.floatingToggleButton, { bottom: Math.max(insets.bottom + 12, 24) }]}
+        onPress={handleViewToggle}
+        activeOpacity={0.9}
+      >
+        {viewMode === 'list' ? (
+          <Map size={20} color={theme.backgroundPrimary} strokeWidth={2.2} />
+        ) : (
+          <List size={20} color={theme.backgroundPrimary} strokeWidth={2.2} />
+        )}
+        <Text style={styles.floatingToggleText}>{viewMode === 'list' ? 'Map view' : 'List view'}</Text>
+      </TouchableOpacity>
 
       <Modal
         visible={showSearchModal}

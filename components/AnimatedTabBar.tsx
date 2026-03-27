@@ -18,8 +18,8 @@ export function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarP
   useEffect(() => {
     // Debug: log current navigation state to detect unexpected extra tabs
     console.log('AnimatedTabBar state.index:', state.index);
-    console.log('AnimatedTabBar routes:', state.routes.map(r => ({ name: r.name, key: r.key })));
-    console.log('AnimatedTabBar descriptors keys:', Object.keys(descriptors));
+    // console.log('AnimatedTabBar routes:', state.routes.map(r => ({ name: r.name, key: r.key })));
+    // console.log('AnimatedTabBar descriptors keys:', Object.keys(descriptors));
 
     state.routes.forEach((route, index) => {
       Animated.timing(animatedValues[index], {

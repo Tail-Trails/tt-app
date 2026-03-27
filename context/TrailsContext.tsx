@@ -302,8 +302,8 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
   }, [session]);
 
   const getTrailById = useCallback(async (id: string): Promise<Trail | undefined> => {
-    const found = trails.find((t: Trail) => t.id === id);
-    if (found) return found;
+    // const found = trails.find((t: Trail) => t.id === id);
+    // if (found) return found;
 
     // If not in state, try fetching from API
     try {
@@ -321,7 +321,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
       console.error('Error fetching trail by id:', err);
       return undefined;
     }
-  }, [trails, session]);
+  }, [session]);
 
   const loadNearbyTrails = useCallback(async (latitude?: number, longitude?: number, distanceKm: number = 35) => {
     try {

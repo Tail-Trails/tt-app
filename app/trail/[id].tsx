@@ -11,21 +11,19 @@ import {
   ScrollView,
   Dimensions,
   PanResponder,
+  Image,
 } from 'react-native';
 import { Text } from '@/components';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Image } from 'expo-image';
 import TrailMapPreview from '@/components/TrailMapPreview';
 import * as Location from 'expo-location';
-import { MapPin, Calendar, Edit3, Check, X, Navigation, Camera, Star, ArrowLeft, Bookmark, MoreVertical, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { MapPin, Calendar, Edit3, Check, X, Navigation, Star, ArrowLeft, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
 import { Trail } from '@/types/trail';
-
 import { formatDistance, formatDuration } from '@/utils/distance';
-import theme from '@/constants/colors';
+import colors from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './[id].styles';
 import { Typography } from '@/constants/typography';
@@ -41,7 +39,7 @@ const DIFFICULTY_OPTIONS = ['Easy', 'Moderate', 'Hard'];
 export default function TrailDetailScreen() {
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
-  const { getTrailById, updateTrailName, updateTrailPhoto, updateTrailDetails, getTrailWithUser } = useTrails();
+  const { getTrailById, updateTrailName, updateTrailDetails, getTrailWithUser } = useTrails();
   const [trail, setTrail] = useState<Trail | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -52,9 +50,7 @@ export default function TrailDetailScreen() {
   const [editedTags, setEditedTags] = useState<string[]>([]);
   const [editedDifficulty, setEditedDifficulty] = useState<string>('');
   const [editedNameInDetails, setEditedNameInDetails] = useState('');
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [isGettingDirections, setIsGettingDirections] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
   const [heroActiveIndex, setHeroActiveIndex] = useState<number>(0);
@@ -90,7 +86,7 @@ export default function TrailDetailScreen() {
     const Icon = IconComponent;
     return <Icon size={size} color={color} />;
   };
-  const [isSaved, setIsSaved] = useState(false);
+
   useEffect(() => {
     loadTrail();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -317,114 +313,11 @@ export default function TrailDetailScreen() {
     );
   };
 
-  const pickImageWeb = () => {
-    if (false) {
-      fileInputRef.current?.click();
-    }
-  };
-
-  const handleWebFileChange = async (event: any) => {
-    const file = event.target.files?.[0];
-    if (!file || !trail) return;
-
-    if (!file.type.startsWith('image/')) {
-      Alert.alert('Error', 'Please select an image file');
-      return;
-    }
-
-    setIsUploadingPhoto(true);
-    try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64 = e.target?.result as string;
-        await updateTrailPhoto(trail.id, base64);
-        setTrail({ ...trail, photo: base64 });
-        Alert.alert('Success', 'Photo uploaded successfully!');
-        setIsUploadingPhoto(false);
-      };
-      reader.onerror = () => {
-        Alert.alert('Error', 'Failed to read image');
-        setIsUploadingPhoto(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error('Photo upload error:', error);
-      Alert.alert('Error', 'Failed to upload photo');
-      setIsUploadingPhoto(false);
-    }
-  };
-
-  const pickImageMobile = async () => {
-    if (!trail) return;
-
-    try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow access to your photo library');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect: [16, 9],
-        quality: 0.8,
-        base64: true,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setIsUploadingPhoto(true);
-        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-        await updateTrailPhoto(trail.id, base64Image);
-        setTrail({ ...trail, photo: base64Image });
-        Alert.alert('Success', 'Photo uploaded successfully!');
-        setIsUploadingPhoto(false);
-      }
-    } catch (error) {
-      console.error('Photo upload error:', error);
-      Alert.alert('Error', 'Failed to upload photo');
-      setIsUploadingPhoto(false);
-    }
-  };
-
-  const handlePickImage = () => {
-    if (true) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    if (false) {
-      pickImageWeb();
-    } else {
-      pickImageMobile();
-    }
-  };
-
   const handleBack = () => {
     if (true) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     router.back();
-  };
-
-  const handleShare = () => {
-    if (true) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    Alert.alert('Share', 'Share functionality coming soon!');
-  };
-
-  const handleSave = () => {
-    if (true) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setIsSaved(!isSaved);
-  };
-
-  const handleMore = () => {
-    if (true) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    Alert.alert('Options', 'Mark as completed option coming soon!');
   };
 
   const handleEdit = () => {
@@ -440,7 +333,7 @@ export default function TrailDetailScreen() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.backgroundPrimary} />
+        <ActivityIndicator size="large" color={colors.backgroundPrimary} />
         <Text style={styles.loadingText}>Loading trail...</Text>
       </View>
     );
@@ -457,13 +350,6 @@ export default function TrailDetailScreen() {
 
   const coords = trail.coordinates ?? [];
 
-  const region = coords.length > 0 ? {
-    latitude: coords[0].latitude,
-    longitude: coords[0].longitude,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
-  } : undefined;
-
   const canEdit = trail.userId === user?.id;
   console.log('Can edit: ', canEdit, trail.userId, '-', user?.id)
 
@@ -474,24 +360,14 @@ export default function TrailDetailScreen() {
       styles.container,
       { paddingBottom: Math.max(16, insets.bottom) },
     ]}>
-      {false && (
-        <input
-          ref={fileInputRef as any}
-          type="file"
-          accept="image/*"
-          style={{ display: 'none' }}
-          onChange={handleWebFileChange}
-        />
-      )}
-
       <View style={[styles.headerButtons, { top: insets.top + 12 }]}>
         <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
-          <ArrowLeft size={24} color={theme.accentPrimary} />
+          <ArrowLeft size={24} color={colors.accentPrimary} />
         </TouchableOpacity>
         <View style={[styles.headerRightButtons]}>
           {canEdit && (
             <TouchableOpacity style={styles.headerButton} onPress={handleEdit}>
-              <Edit3 size={22} color={theme.accentPrimary} />
+              <Edit3 size={22} color={colors.accentPrimary} />
             </TouchableOpacity>
           )}
         </View>
@@ -526,8 +402,7 @@ export default function TrailDetailScreen() {
                     key={img?.id || img?.url || idx}
                     source={{ uri: img?.url || '' }}
                     style={[styles.heroImage, { width: Dimensions.get('window').width }]}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
+                    resizeMode="cover"
                   />
                 ))}
                 <View style={[styles.heroImage, { width: Dimensions.get('window').width }]}> 
@@ -544,8 +419,7 @@ export default function TrailDetailScreen() {
               <Image
                 source={{ uri: trail.photo }}
                 style={styles.heroImage}
-                contentFit="cover"
-                cachePolicy="memory-disk"
+                resizeMode="cover"
               />
             ) : (
               <TrailMapPreview
@@ -558,11 +432,14 @@ export default function TrailDetailScreen() {
             )}
 
             {heroSlidesCount > 1 && (
-              <View style={styles.paginationDots} pointerEvents="box-none">
-                {new Array(heroSlidesCount).fill(0).map((_, i) => {
-                  const active = heroActiveIndex === i;
-                  return <View key={`hero-dot-${i}`} style={[styles.dot, active && styles.dotActive]} />;
-                })}
+              <View style={styles.heroCarouselOverlay} pointerEvents="none">
+                <Text style={styles.heroSlideCounter}>{`${heroActiveIndex + 1}/${heroSlidesCount}`}</Text>
+                <View style={styles.paginationDots}>
+                  {new Array(heroSlidesCount).fill(0).map((_, i) => {
+                    const active = heroActiveIndex === i;
+                    return <View key={`hero-dot-${i}`} style={[styles.dot, active && styles.dotActive]} />;
+                  })}
+                </View>
               </View>
             )}
           </Animated.View>
@@ -578,7 +455,7 @@ export default function TrailDetailScreen() {
           right: 0,
           bottom: 0,
           height: Animated.add(bottomSheetAnim, navbarHeight),
-          backgroundColor: theme.backgroundPrimary,
+          backgroundColor: colors.backgroundPrimary,
           borderTopLeftRadius: 16,
           borderTopRightRadius: 16,
           overflow: 'hidden',
@@ -605,7 +482,7 @@ export default function TrailDetailScreen() {
             <View style={styles.content}>
               <View style={styles.titleSection}>
                 <View style={styles.dateRow}>
-                  <IconOrEmoji IconComponent={Calendar} emoji="📅" size={16} color={theme.textMuted} />
+                  <IconOrEmoji IconComponent={Calendar} emoji="📅" size={16} color={colors.textMuted} />
                   <Text style={styles.dateText}>{new Date(trail.createdAt ?? trail.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
                 </View>
                 {canEdit && isEditingName ? (
@@ -629,7 +506,7 @@ export default function TrailDetailScreen() {
                         style={[styles.iconButton, styles.cancelIconButton]}
                         onPress={handleCancelEdit}
                       >
-                        <X size={18} color={theme.textPrimary} />
+                        <X size={18} color={colors.textPrimary} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -645,8 +522,7 @@ export default function TrailDetailScreen() {
                           <Image
                             source={user?.image ? { uri: user.image } : undefined}
                             style={{ width: '100%', height: '100%', borderRadius: 18 }}
-                            contentFit="cover"
-                            cachePolicy="memory-disk"
+                            resizeMode="cover"
                           />
                         </View>
                   ) : (
@@ -684,7 +560,7 @@ export default function TrailDetailScreen() {
 
               {trail.city && (
                 <View style={styles.locationRow}>
-                  <MapPin size={16} color={theme.textMuted} />
+                  <MapPin size={16} color={colors.textMuted} />
                   <Text style={styles.location}>{trail.city}, {trail.country || 'Unknown'}</Text>
                 </View>
               )}
@@ -790,7 +666,7 @@ export default function TrailDetailScreen() {
                       style={[styles.actionButton, styles.cancelActionButton]}
                       onPress={handleCancelDetailsEdit}
                     >
-                      <X size={20} color={theme.textPrimary} />
+                      <X size={20} color={colors.textPrimary} />
                       <Text style={styles.cancelActionText}>Cancel</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -812,9 +688,9 @@ export default function TrailDetailScreen() {
                     disabled={isGettingDirections}
                   >
                     {isGettingDirections ? (
-                      <ActivityIndicator size="small" color={theme.accentPrimary} />
+                      <ActivityIndicator size="small" color={colors.accentPrimary} />
                     ) : (
-                      <Navigation size={32} color={theme.accentPrimary} />
+                      <Navigation size={32} color={colors.accentPrimary} />
                     )}
                   </TouchableOpacity>
 
@@ -837,10 +713,10 @@ export default function TrailDetailScreen() {
                 <View style={styles.reviewsRow}>
                   <View style={styles.reviewStars}>
                     {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} size={24} color={s <= (trail.rating || 0) ? theme.accentPrimary : theme.backgroundSecondaryVarient} fill={s <= (trail.rating || 0) ? theme.accentPrimary : 'none'} />
+                      <Star key={s} size={24} color={s <= (trail.rating || 0) ? colors.accentPrimary : colors.backgroundSecondaryVarient} fill={s <= (trail.rating || 0) ? colors.accentPrimary : 'none'} />
                     ))}
                   </View>
-                  <IconOrEmoji IconComponent={ChevronRight} emoji=">" size={24} color={theme.textMuted} />
+                  <IconOrEmoji IconComponent={ChevronRight} emoji=">" size={24} color={colors.textMuted} />
                 </View>
               </TouchableOpacity>
 
