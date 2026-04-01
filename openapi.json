@@ -71,6 +71,34 @@
         }
       }
     },
+    "/account/collectibles": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Get My Collectibles",
+        "operationId": "get_my_collectibles_account_collectibles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Get My Collectibles Account Collectibles Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/firebase": {
       "post": {
         "tags": [
@@ -1931,7 +1959,8 @@
       "Body_create_follow_trail_upload_trail_me_follow_trail__trail_id__upload_post": {
         "properties": {
           "review": {
-            "$ref": "#/components/schemas/CreateReviewSchema"
+            "type": "string",
+            "title": "Review"
           },
           "trail": {
             "type": "string",

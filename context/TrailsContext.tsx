@@ -13,6 +13,17 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSavedLoading, setIsSavedLoading] = useState<boolean>(true);
 
+  const dedupeTrailsById = useCallback((items: Trail[]) => {
+    const seen = new Set<string>();
+    return items.filter((trail) => {
+      const id = String((trail as any)?.id ?? '');
+      if (!id) return true;
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, []);
+
   const loadTrails = useCallback(async () => {
     // Only load trails for the authenticated user using /trail/me.
     // Do not call the root `/trail` endpoint.
@@ -61,7 +72,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
         } catch (err) {
           console.error('TrailsContext.loadTrails: failed to parse JSON', err);
         }
-        setTrails(data || []);
+        setTrails(dedupeTrailsById(data || []));
       } else {
         console.error('Failed to load my trails:', resp.status);
         setTrails([]);
@@ -72,7 +83,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, session]);
+  }, [dedupeTrailsById, user, session]);
 
   const loadSavedTrails = useCallback(async () => {
     // The API currently exposes /trail/me for the current user's trails.
@@ -120,7 +131,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
         } catch (err) {
           console.error('TrailsContext.loadSavedTrails: failed to parse JSON', err);
         }
-        setSavedTrails(data || []);
+        setSavedTrails(dedupeTrailsById(data || []));
       } else {
         console.error('Failed to load my trails:', resp.status);
         setSavedTrails([]);
@@ -131,7 +142,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     } finally {
       setIsSavedLoading(false);
     }
-  }, [user, session]);
+  }, [dedupeTrailsById, user, session]);
 
   useEffect(() => {
     loadTrails();
@@ -271,14 +282,14 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
       }
 
       const data = await resp.json();
-      setTrails((prev: Trail[]) => [data, ...prev]);
+      setTrails((prev: Trail[]) => dedupeTrailsById([data, ...prev]));
 
       return data as Trail;
     } catch (error) {
       console.error('Failed to save trail:', error);
       throw error;
     }
-  }, [user, session]);
+  }, [dedupeTrailsById, user, session]);
 
   const saveFollowTrail = useCallback(async (
     sourceTrailId: string,
@@ -387,9 +398,9 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     }
 
     const data = await resp.json();
-    setTrails((prev: Trail[]) => [data, ...prev]);
+    setTrails((prev: Trail[]) => dedupeTrailsById([data, ...prev]));
     return data as Trail;
-  }, [session, user]);
+  }, [dedupeTrailsById, session, user]);
 
   const deleteTrail = useCallback(async (id: string) => {
     try {
@@ -424,7 +435,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
       const resp = await fetch(`${API_URL}/trail/${id}`, { headers });
       const data = await resp.json();
       if (data) {
-        setTrails((prev: Trail[]) => [data, ...prev.filter(t => t.id !== data.id)]);
+        setTrails((prev: Trail[]) => dedupeTrailsById([data, ...prev.filter(t => t.id !== data.id)]));
         return data as Trail;
       }
       return undefined;

@@ -7,13 +7,16 @@ import BackgroundGeolocation, { Location as BGLocation, MotionChangeEvent } from
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MapPin, Navigation } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
 import styles from './follow.styles';
 import theme from '@/constants/colors';
 import RecordOverlay from '@/components/RecordOverlay';
 import { useTrails } from '@/context/TrailsContext';
 import { Coordinate, Trail } from '@/types/trail';
 import { calculateTotalDistance } from '@/utils/distance';
+import { appendCoordinateToPath, getLocationAccuracyMeters, getLocationTimestampMs, shouldAcceptTrackedLocation, toCoordinate } from '@/utils/backgroundTracking';
+import { initBackgroundTracking } from '@/utils/backgroundGeolocationInit';
+import { clearRecordingSession, initializeRecordingSession, loadRecordingSnapshot, RECORDING_STORAGE_KEYS } from '@/utils/recordingSession';
+import { captureAndStoreRecordingPhoto, requestBgPermissionAndInitialLocation, resolveInitialRecordingCoordinate } from '@/utils/recordingFlow';
 import { useKeepAwake } from 'expo-keep-awake';
 
 export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail } = {}) {
@@ -55,6 +58,7 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
   const sniffTimeRef = useRef<number>(0);
   const stopStartTimeRef = useRef<number | null>(null);
   const lastLocationTimestamp = useRef<number>(Date.now());
+  const lastAcceptedGpsTimestamp = useRef<number>(0);
 
   const [followMode, setFollowMode] = useState<boolean>(!!initialTrail);
   const [userLocationFollow, setUserLocationFollow] = useState<Coordinate | null>(null);
@@ -74,85 +78,79 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
 
     const initBG = async () => {
       try {
-        const cfg: any = {
-          desiredAccuracy: BackgroundGeolocation.DesiredAccuracy.High,
-          distanceFilter: 8,
-          stopOnTerminate: false,
-          startOnBoot: false,
-          reset: false,
-        };
+        await initBackgroundTracking({
+          onProviderChange: (event) => {
+            if (
+              event.status !== BackgroundGeolocation.AuthorizationStatus.Always &&
+              event.status !== BackgroundGeolocation.AuthorizationStatus.WhenInUse
+            ) {
+              setAccuracy(undefined);
+            }
+          },
+          onLocation: (location: BGLocation) => {
+            const locationAccuracy = getLocationAccuracyMeters(location);
 
-        await BackgroundGeolocation.ready(cfg);
+            if (!shouldAcceptTrackedLocation(location, { minTimestampMs: lastAcceptedGpsTimestamp.current })) {
+              setAccuracy(locationAccuracy);
+              return;
+            }
+
+            const coord = toCoordinate(location);
+            if (!coord) return;
+
+            const gpsTs = getLocationTimestampMs(location);
+            if (gpsTs) lastAcceptedGpsTimestamp.current = gpsTs;
+            lastLocationTimestamp.current = Date.now();
+
+            setCurrentLocation(coord);
+            setUserLocationFollow(coord);
+            setAccuracy(locationAccuracy);
+
+            if (isRecordingRef.current) {
+              appendCoordinateToPath(setCoordinates, coord);
+
+              const altitude = location.coords.altitude;
+              if (typeof altitude === 'number') {
+                const currentElevation = Math.max(0, altitude);
+                setElevation(currentElevation);
+                if (currentElevation > maxElevationRef.current) {
+                  maxElevationRef.current = currentElevation;
+                  setMaxElevation(currentElevation);
+                  AsyncStorage.setItem('recording_max_elevation', currentElevation.toString()).catch(() => { });
+                }
+              }
+
+              const rawSpeed = location.coords.speed;
+              if (typeof rawSpeed === 'number' && rawSpeed > 0) {
+                const currentSpeed = rawSpeed * 3.6;
+                setSpeed(currentSpeed);
+                if (currentSpeed > maxSpeedRef.current) {
+                  maxSpeedRef.current = currentSpeed;
+                  setMaxSpeed(currentSpeed);
+                  AsyncStorage.setItem('recording_max_speed', currentSpeed.toString()).catch(() => { });
+                }
+              }
+            }
+          },
+          onLocationError: (err) => {
+            console.warn('BG onLocation error', err);
+            setAccuracy(undefined);
+          },
+          onMotionChange: (event: MotionChangeEvent) => {
+            if (!isRecordingRef.current) return;
+
+            if (!event.isMoving) {
+              stopStartTimeRef.current = Date.now();
+            } else if (stopStartTimeRef.current) {
+              const elapsed = Math.floor((Date.now() - stopStartTimeRef.current) / 1000);
+              sniffTimeRef.current += elapsed;
+              setSniffTime(sniffTimeRef.current);
+              stopStartTimeRef.current = null;
+            }
+          },
+        });
         if (!mounted) return;
         bgReady.current = true;
-
-        BackgroundGeolocation.onProviderChange((event) => {
-          if (
-            event.status !== BackgroundGeolocation.AuthorizationStatus.Always &&
-            event.status !== BackgroundGeolocation.AuthorizationStatus.WhenInUse
-          ) {
-            setAccuracy(undefined);
-          }
-        });
-
-        BackgroundGeolocation.onLocation((location: BGLocation) => {
-          lastLocationTimestamp.current = Date.now();
-
-          const coord = {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          };
-
-          setCurrentLocation(coord);
-          setUserLocationFollow(coord);
-          setAccuracy(location.coords.accuracy ?? undefined);
-
-          if (isRecordingRef.current) {
-            setCoordinates((prev) => {
-              const newCoords = [...prev, coord];
-              AsyncStorage.setItem('recording_coordinates', JSON.stringify(newCoords)).catch(() => { });
-              return newCoords;
-            });
-
-            const altitude = location.coords.altitude;
-            if (typeof altitude === 'number') {
-              const currentElevation = Math.max(0, altitude);
-              setElevation(currentElevation);
-              if (currentElevation > maxElevationRef.current) {
-                maxElevationRef.current = currentElevation;
-                setMaxElevation(currentElevation);
-                AsyncStorage.setItem('recording_max_elevation', currentElevation.toString()).catch(() => { });
-              }
-            }
-
-            const rawSpeed = location.coords.speed;
-            if (typeof rawSpeed === 'number' && rawSpeed > 0) {
-              const currentSpeed = rawSpeed * 3.6;
-              setSpeed(currentSpeed);
-              if (currentSpeed > maxSpeedRef.current) {
-                maxSpeedRef.current = currentSpeed;
-                setMaxSpeed(currentSpeed);
-                AsyncStorage.setItem('recording_max_speed', currentSpeed.toString()).catch(() => { });
-              }
-            }
-          }
-        }, (err) => {
-          console.warn('BG onLocation error', err);
-          setAccuracy(undefined);
-        });
-
-        BackgroundGeolocation.onMotionChange((event: MotionChangeEvent) => {
-          if (!isRecordingRef.current) return;
-
-          if (!event.isMoving) {
-            stopStartTimeRef.current = Date.now();
-          } else if (stopStartTimeRef.current) {
-            const elapsed = Math.floor((Date.now() - stopStartTimeRef.current) / 1000);
-            sniffTimeRef.current += elapsed;
-            setSniffTime(sniffTimeRef.current);
-            stopStartTimeRef.current = null;
-          }
-        });
       } catch {
         bgReady.current = false;
       }
@@ -234,31 +232,21 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
 
   const loadRecordingState = async () => {
     try {
-      const startTimeStr = await AsyncStorage.getItem('recording_start_time');
+      const snapshot = await loadRecordingSnapshot();
 
-      if (!startTimeStr) {
-        await AsyncStorage.removeItem('recording_coordinates');
+      if (!snapshot.hasSession) {
+        await AsyncStorage.removeItem(RECORDING_STORAGE_KEYS.COORDINATES);
         setCoordinates([]);
         setIsRecording(false);
         setDuration(0);
       } else {
         setIsRecording(true);
-        const coordsStr = await AsyncStorage.getItem('recording_coordinates');
-        if (coordsStr) {
-          const coords = JSON.parse(coordsStr);
-          setCoordinates(coords);
-        }
-
-        const startTime = parseInt(startTimeStr);
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        setDuration(elapsed);
+        setCoordinates(snapshot.coordinates);
+        setDuration(snapshot.duration);
       }
 
-      const maxElevationStr = await AsyncStorage.getItem('recording_max_elevation');
-      if (maxElevationStr) setMaxElevation(parseFloat(maxElevationStr));
-
-      const maxSpeedStr = await AsyncStorage.getItem('recording_max_speed');
-      if (maxSpeedStr) setMaxSpeed(parseFloat(maxSpeedStr));
+      setMaxElevation(snapshot.maxElevation);
+      setMaxSpeed(snapshot.maxSpeed);
     } catch (error) {
       console.error('Error loading recording state:', error);
     }
@@ -266,19 +254,13 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
 
   const requestPermissions = async () => {
     try {
-      await BackgroundGeolocation.requestPermission();
+      const initial = await requestBgPermissionAndInitialLocation(30);
       setHasPermission(true);
 
-      try {
-        const loc = await BackgroundGeolocation.getCurrentPosition({ timeout: 30 });
-        if (loc && loc.coords) {
-          const coord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-          setCurrentLocation(coord);
-          setUserLocationFollow(coord);
-          setAccuracy(loc.coords.accuracy ?? undefined);
-        }
-      } catch (locError: any) {
-        console.warn('Error getting initial location:', locError?.message || locError);
+      if (initial.coordinate) {
+        setCurrentLocation(initial.coordinate);
+        setUserLocationFollow(initial.coordinate);
+        setAccuracy(initial.accuracy);
       }
     } catch (error: any) {
       console.error('Permission error:', error);
@@ -314,35 +296,17 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
     try {
       const startTime = Date.now();
       lastLocationTimestamp.current = startTime;
-      await AsyncStorage.setItem('recording_start_time', startTime.toString());
-      await AsyncStorage.removeItem('recording_coordinates');
-      await AsyncStorage.removeItem('recording_max_elevation');
-      await AsyncStorage.removeItem('recording_max_speed');
-      await AsyncStorage.removeItem('recording_last_update');
+      await initializeRecordingSession(startTime);
 
       setStartLocation(null);
 
-      let initialCoord = currentLocation;
-      let initialAccuracy = accuracy;
-
-      if (!initialCoord) {
-        try {
-          const loc = await BackgroundGeolocation.getCurrentPosition({ timeout: 30 });
-          if (loc && loc.coords) {
-            initialCoord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-            initialAccuracy = loc.coords.accuracy ?? undefined;
-          }
-        } catch {
-          // No-op, onLocation listener will populate when available.
-        }
-      }
-
-      if (initialCoord) {
-        await AsyncStorage.setItem('recording_coordinates', JSON.stringify([initialCoord]));
-        setCoordinates([initialCoord]);
-        setCurrentLocation(initialCoord);
-        setUserLocationFollow(initialCoord);
-        setAccuracy(initialAccuracy ?? undefined);
+      const initial = await resolveInitialRecordingCoordinate(currentLocation, 30);
+      if (initial.coordinate) {
+        await AsyncStorage.setItem(RECORDING_STORAGE_KEYS.COORDINATES, JSON.stringify([initial.coordinate]));
+        setCoordinates([initial.coordinate]);
+        setCurrentLocation(initial.coordinate);
+        setUserLocationFollow(initial.coordinate);
+        setAccuracy(initial.accuracy ?? accuracy);
       }
 
       try {
@@ -423,31 +387,17 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
 
   const handleCamera = async () => {
     try {
-      if (Platform.OS === 'web') {
+      const result = await captureAndStoreRecordingPhoto();
+      if (result.status === 'not-supported') {
         Alert.alert('Not supported', 'Camera capture is not supported on web.');
         return;
       }
-
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
+      if (result.status === 'permission-denied') {
         Alert.alert('Permission required', 'Camera permission is required to take photos');
         return;
       }
-
-      const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.7, base64: false });
-
-      if (result.canceled || !result.assets || result.assets.length === 0) return;
-
-      const uri = result.assets[0].uri;
-      try {
-        const photosStr = await AsyncStorage.getItem('recording_photos');
-        const photos = photosStr ? JSON.parse(photosStr) : [];
-        photos.push({ uri, timestamp: Date.now() });
-        await AsyncStorage.setItem('recording_photos', JSON.stringify(photos));
+      if (result.status === 'saved') {
         Alert.alert('Photo saved', 'Captured photo saved to this recording.');
-      } catch (err) {
-        console.error('Error saving recording photo:', err);
-        Alert.alert('Error', 'Failed to save photo');
       }
     } catch (err) {
       console.error('Camera error', err);
@@ -489,17 +439,16 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
     try { await BackgroundGeolocation.stop(); } catch (error) { console.error('Error stopping background location:', error); }
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
 
-    const coordsStr = await AsyncStorage.getItem('recording_coordinates');
-    const finalCoords = coordsStr ? JSON.parse(coordsStr) : coordinates;
-
-    const maxElevationStr = await AsyncStorage.getItem('recording_max_elevation');
-    const finalMaxElevation = maxElevationStr ? parseFloat(maxElevationStr) : maxElevation;
-
-    const maxSpeedStr = await AsyncStorage.getItem('recording_max_speed');
-    const finalMaxSpeed = maxSpeedStr ? parseFloat(maxSpeedStr) : maxSpeed;
-
-    const startTimeStr = await AsyncStorage.getItem('recording_start_time');
-    const finalDuration = startTimeStr ? Math.floor((Date.now() - parseInt(startTimeStr)) / 1000) : duration;
+    const snapshot = await loadRecordingSnapshot({
+      fallbackCoordinates: coordinates,
+      fallbackMaxElevation: maxElevation,
+      fallbackMaxSpeed: maxSpeed,
+      fallbackDuration: duration,
+    });
+    const finalCoords = snapshot.coordinates;
+    const finalMaxElevation = snapshot.maxElevation;
+    const finalMaxSpeed = snapshot.maxSpeed;
+    const finalDuration = snapshot.duration;
     const finalSniffTime = stopStartTimeRef.current
       ? sniffTime + Math.floor((Date.now() - stopStartTimeRef.current) / 1000)
       : sniffTime;
@@ -509,11 +458,7 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
       setIsRecording(false);
       setCoordinates([]);
       setDuration(0);
-      await AsyncStorage.removeItem('recording_coordinates');
-      await AsyncStorage.removeItem('recording_max_elevation');
-      await AsyncStorage.removeItem('recording_max_speed');
-      await AsyncStorage.removeItem('recording_start_time');
-      await AsyncStorage.removeItem('recording_last_update');
+      await clearRecordingSession();
       return;
     }
 
@@ -560,7 +505,7 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
       { text: 'Discard', style: 'destructive', onPress: async () => {
         try { if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); await BackgroundGeolocation.stop(); } catch (err) { console.warn('Error stopping background task on cancel:', err); }
         if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-        try { await AsyncStorage.removeItem('recording_start_time'); await AsyncStorage.removeItem('recording_coordinates'); await AsyncStorage.removeItem('recording_max_elevation'); await AsyncStorage.removeItem('recording_max_speed'); await AsyncStorage.removeItem('recording_last_update'); } catch (err) { console.warn('Error clearing recording storage on cancel:', err); }
+        try { await clearRecordingSession(); } catch (err) { console.warn('Error clearing recording storage on cancel:', err); }
         setIsRecording(false); setCoordinates([]); setDuration(0); setMaxElevation(0); setMaxSpeed(0); setSniffTime(0); sniffTimeRef.current = 0; stopStartTimeRef.current = null;
       } }
     ]);

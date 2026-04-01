@@ -12,10 +12,51 @@ export interface UserProfile {
   updated_at: string;
 }
 
+export interface Collectible {
+  name: string;
+  description?: string;
+  image_url?: string;
+}
+
 export const [AccountContext, useAccount] = createContextHook(() => {
   const { user, session } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [collectibles, setCollectibles] = useState<Collectible[]>([]);
+  const [collectibleSvgs, setCollectibleSvgs] = useState<(string | null)[]>([]);
+
+  const fetchCollectibles = useCallback(async () => {
+    if (!session?.accessToken) return;
+    try {
+      const resp = await fetch(`${API_URL}/account/collectibles`, {
+        headers: { Authorization: `Bearer ${session.accessToken}` },
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const items: Collectible[] = Array.isArray(data) ? data : [];
+      setCollectibles(items);
+
+      const urls = items
+        .map((item) => item?.image_url)
+        .filter((url): url is string => typeof url === 'string');
+
+      const svgs: (string | null)[] = new Array(urls.length).fill(null);
+      await Promise.all(
+        urls.map(async (u, i) => {
+          try {
+            const r = await fetch(u);
+            if (!r.ok) return;
+            svgs[i] = await r.text();
+          } catch {
+            // ignore
+          }
+        })
+      );
+      setCollectibleSvgs(svgs);
+    } catch {
+      // ignore
+    }
+  }, [session?.accessToken]);
 
   const fetchAccount = useCallback(async () => {
     if (!session?.accessToken) return;
@@ -97,17 +138,23 @@ export const [AccountContext, useAccount] = createContextHook(() => {
   useEffect(() => {
     if (session?.accessToken) {
       fetchAccount();
+      fetchCollectibles();
     } else {
       setUserProfile(null);
+      setCollectibles([]);
+      setCollectibleSvgs([]);
       setIsLoading(false);
     }
-  }, [session?.accessToken, fetchAccount]);
+  }, [session?.accessToken, fetchAccount, fetchCollectibles]);
 
   return useMemo(() => ({
     userProfile,
     isLoading,
+    collectibles,
+    collectibleSvgs,
     refreshAccount: fetchAccount,
+    refreshCollectibles: fetchCollectibles,
     updateAccount,
     deleteAccount,
-  }), [userProfile, isLoading, fetchAccount, updateAccount, deleteAccount]);
+  }), [userProfile, isLoading, collectibles, collectibleSvgs, fetchAccount, fetchCollectibles, updateAccount, deleteAccount]);
 });

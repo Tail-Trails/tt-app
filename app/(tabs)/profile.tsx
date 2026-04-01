@@ -44,7 +44,7 @@ export default function ProfileScreen() {
     );
   }
   const { user, signOut, session } = auth;
-  const { userProfile, isLoading: isAccountLoading } = useAccount();
+  const { userProfile, isLoading: isAccountLoading, collectibleSvgs } = useAccount();
   const { dogProfile, isDogProfileLoading } = useDogs();
   const { trails, savedTrails, isLoading: isTrailsLoading, saveTrailBookmark, removeTrailBookmark, isTrailSaved } = useTrails();
   const [isCardSwiping, setIsCardSwiping] = React.useState<Record<string, boolean>>({});
@@ -103,32 +103,7 @@ export default function ProfileScreen() {
     return () => { mounted = false; };
   }, []);
 
-  // Collectibles
-  const collectibleUrls = [
-    `${API_URL}/uploads/proxy/collectibles/bone.svg`,
-    `${API_URL}/uploads/proxy/collectibles/bowl.svg`,
-    `${API_URL}/uploads/proxy/collectibles/sign.svg`,
-  ];
-  const [collectibleSvgs, setCollectibleSvgs] = React.useState<(string | null)[]>([null, null, null]);
-
-  React.useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const results: (string | null)[] = [null, null, null];
-      await Promise.all(collectibleUrls.map(async (u, i) => {
-        try {
-          const r = await fetch(u);
-          if (!r.ok) return;
-          const t = await r.text();
-          results[i] = t;
-        } catch (err) {
-          // ignore
-        }
-      }));
-      if (mounted) setCollectibleSvgs(results);
-    })();
-    return () => { mounted = false; };
-  }, []);
+  // Collectibles — provided by AccountContext
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -380,10 +355,9 @@ export default function ProfileScreen() {
                 <View style={styles.statsSvgContainer}>
                   <View style={styles.statsSvgRow}>
                     {collectibleSvgs.map((xml, i) => (
-                      <TouchableOpacity
+                      <View
                         key={i}
                         style={styles.collectibleItem}
-                        activeOpacity={0.8}
                       >
                         {xml ? (
                           <SvgXml xml={xml} width={64} height={64} />
@@ -391,7 +365,7 @@ export default function ProfileScreen() {
                           <View style={styles.collectiblePlaceholder} />
                         )}
                         <View style={[styles.collectibleOverlay, i === 0 ? { opacity: 0 } : { opacity: 0.55 }]} />
-                      </TouchableOpacity>
+                      </View>
                     ))}
                   </View>
                 </View>
