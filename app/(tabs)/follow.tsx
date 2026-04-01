@@ -540,6 +540,8 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
       pace: finalPace,
       speed: finalMaxSpeed,
       maxElevation: finalMaxElevation,
+      isOriginal: false,
+      originalTrailId: initialTrail?.id || trailId || null,
       rating: 0,
       dogMatchScore: 0,
     };

@@ -350,7 +350,7 @@
             "required": false,
             "schema": {
               "type": "number",
-              "default": 10,
+              "default": 35,
               "title": "Distance Km"
             }
           }
@@ -597,6 +597,114 @@
         }
       }
     },
+    "/trail/me/follow-trail/{trail_id}": {
+      "post": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Create Follow Trail",
+        "description": "Create a new follow relationship for the current authenticated user and a trail, with a review.",
+        "operationId": "create_follow_trail_trail_me_follow_trail__trail_id__post",
+        "parameters": [
+          {
+            "name": "trail_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Trail Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_follow_trail_trail_me_follow_trail__trail_id__post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trail/me/follow-trail/{trail_id}/upload": {
+      "post": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Create Follow Trail Upload",
+        "description": "Create a new follow relationship for the current authenticated user and a trail, with a review and direct file uploads. The `trail` form field must contain the JSON payload.",
+        "operationId": "create_follow_trail_upload_trail_me_follow_trail__trail_id__upload_post",
+        "parameters": [
+          {
+            "name": "trail_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Trail Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_follow_trail_upload_trail_me_follow_trail__trail_id__upload_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/trail/{trail_id}": {
       "get": {
         "tags": [
@@ -714,6 +822,243 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trail/{trail_id}/images": {
+      "put": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Update Trail Images",
+        "description": "Update the images for a trail by its ID. This will replace all existing images with the provided list.",
+        "operationId": "update_trail_images_trail__trail_id__images_put",
+        "parameters": [
+          {
+            "name": "trail_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Trail Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_trail_images_trail__trail_id__images_put"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trail/{trail_id}/images/{image_id}": {
+      "delete": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Delete Trail Image",
+        "description": "Delete an image for a trail",
+        "operationId": "delete_trail_image_trail__trail_id__images__image_id__delete",
+        "parameters": [
+          {
+            "name": "trail_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Trail Id"
+            }
+          },
+          {
+            "name": "image_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Image Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trail/{trail_id}/reviews": {
+      "get": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "List Trail Reviews",
+        "description": "List all reviews for a specific trail.",
+        "operationId": "list_trail_reviews_trail__trail_id__reviews_get",
+        "parameters": [
+          {
+            "name": "trail_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Trail Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewSchema"
+                  },
+                  "title": "Response List Trail Reviews Trail  Trail Id  Reviews Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Create Trail Review",
+        "description": "Create a review for a specific trail.",
+        "operationId": "create_trail_review_trail__trail_id__reviews_post",
+        "parameters": [
+          {
+            "name": "trail_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Trail Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trail/reviews/{review_id}": {
+      "delete": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Delete Review",
+        "description": "Delete a review by its ID.",
+        "operationId": "delete_review_trail_reviews__review_id__delete",
+        "parameters": [
+          {
+            "name": "review_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Review Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -1567,6 +1912,54 @@
   },
   "components": {
     "schemas": {
+      "Body_create_follow_trail_trail_me_follow_trail__trail_id__post": {
+        "properties": {
+          "review": {
+            "$ref": "#/components/schemas/CreateReviewSchema"
+          },
+          "trail_data": {
+            "$ref": "#/components/schemas/CreateTrailSchema"
+          }
+        },
+        "type": "object",
+        "required": [
+          "review",
+          "trail_data"
+        ],
+        "title": "Body_create_follow_trail_trail_me_follow_trail__trail_id__post"
+      },
+      "Body_create_follow_trail_upload_trail_me_follow_trail__trail_id__upload_post": {
+        "properties": {
+          "review": {
+            "$ref": "#/components/schemas/CreateReviewSchema"
+          },
+          "trail": {
+            "type": "string",
+            "title": "Trail"
+          },
+          "files": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "review",
+          "trail"
+        ],
+        "title": "Body_create_follow_trail_upload_trail_me_follow_trail__trail_id__upload_post"
+      },
       "Body_create_my_trail_upload_trail_me_upload_post": {
         "properties": {
           "trail": {
@@ -1594,6 +1987,27 @@
           "trail"
         ],
         "title": "Body_create_my_trail_upload_trail_me_upload_post"
+      },
+      "Body_update_trail_images_trail__trail_id__images_put": {
+        "properties": {
+          "files": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "format": "binary"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Files"
+          }
+        },
+        "type": "object",
+        "title": "Body_update_trail_images_trail__trail_id__images_put"
       },
       "Body_upload_file_uploads_post": {
         "properties": {
@@ -1783,6 +2197,60 @@
         "title": "CreateDogSchema",
         "description": "Schema for creating a dog."
       },
+      "CreateReviewSchema": {
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Rating"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Content"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TokenDataSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdByUserName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdbyusername"
+          },
+          "createdByUserImage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdbyuserimage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rating",
+          "content"
+        ],
+        "title": "CreateReviewSchema",
+        "description": "Schema for creating a review."
+      },
       "CreateTrailSchema": {
         "properties": {
           "name": {
@@ -1842,6 +2310,39 @@
             ],
             "title": "Path"
           },
+          "locationLevel1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locationlevel1"
+          },
+          "locationLevel2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locationlevel2"
+          },
+          "locationLevel3": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locationlevel3"
+          },
           "tags": {
             "items": {
               "type": "string"
@@ -1882,17 +2383,6 @@
               }
             ],
             "title": "Maxelevation"
-          },
-          "rating": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rating"
           },
           "dogTraffic": {
             "anyOf": [
@@ -1959,6 +2449,72 @@
               }
             ],
             "title": "Wildlife"
+          },
+          "isOriginal": {
+            "type": "boolean",
+            "title": "Isoriginal",
+            "default": true
+          },
+          "originalTrailId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originaltrailid"
+          },
+          "isPublic": {
+            "type": "boolean",
+            "title": "Ispublic",
+            "default": true
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "reviewCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewcount"
+          },
+          "startLatitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Startlatitude"
+          },
+          "startLongitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Startlongitude"
           },
           "urls": {
             "items": {
@@ -2347,6 +2903,78 @@
         ],
         "title": "PresignResponse"
       },
+      "ReviewSchema": {
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Rating"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Content"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TokenDataSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdByUserName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdbyusername"
+          },
+          "createdByUserImage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdbyuserimage"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rating",
+          "content",
+          "id",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "ReviewSchema",
+        "description": "Schema for review responses."
+      },
       "TokenDataSchema": {
         "properties": {
           "id": {
@@ -2484,6 +3112,39 @@
             ],
             "title": "Path"
           },
+          "locationLevel1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locationlevel1"
+          },
+          "locationLevel2": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locationlevel2"
+          },
+          "locationLevel3": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locationlevel3"
+          },
           "tags": {
             "items": {
               "type": "string"
@@ -2524,17 +3185,6 @@
               }
             ],
             "title": "Maxelevation"
-          },
-          "rating": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rating"
           },
           "dogTraffic": {
             "anyOf": [
@@ -2602,6 +3252,50 @@
             ],
             "title": "Wildlife"
           },
+          "isOriginal": {
+            "type": "boolean",
+            "title": "Isoriginal",
+            "default": true
+          },
+          "originalTrailId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originaltrailid"
+          },
+          "isPublic": {
+            "type": "boolean",
+            "title": "Ispublic",
+            "default": true
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "reviewCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewcount"
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -2644,6 +3338,28 @@
             ],
             "title": "Startlongitude"
           },
+          "endLatitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endlatitude"
+          },
+          "endLongitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endlongitude"
+          },
           "distanceFromUser": {
             "anyOf": [
               {
@@ -2654,6 +3370,27 @@
               }
             ],
             "title": "Distancefromuser"
+          },
+          "difficulty": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TokenDataSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "images": {
             "items": {
@@ -2673,6 +3410,28 @@
               }
             ],
             "title": "Dogmatchscore"
+          },
+          "createdByUserName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdbyusername"
+          },
+          "createdByUserImage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdbyuserimage"
           }
         },
         "type": "object",
@@ -2840,174 +3599,9 @@
               }
             ],
             "title": "Description"
-          },
-          "distance": {
-            "type": "number",
-            "title": "Distance"
-          },
-          "duration": {
-            "type": "number",
-            "title": "Duration"
-          },
-          "path": {
-            "anyOf": [
-              {
-                "items": {
-                  "prefixItems": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "number"
-                    }
-                  ],
-                  "type": "array",
-                  "maxItems": 2,
-                  "minItems": 2
-                },
-                "type": "array"
-              },
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Path"
-          },
-          "tags": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Tags",
-            "default": []
-          },
-          "pace": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Pace"
-          },
-          "speed": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Speed"
-          },
-          "maxElevation": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Maxelevation"
-          },
-          "rating": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rating"
-          },
-          "dogTraffic": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Dogtraffic"
-          },
-          "footTraffic": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Foottraffic"
-          },
-          "paths": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Paths"
-          },
-          "exposure": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Exposure"
-          },
-          "offLeash": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Offleash"
-          },
-          "wildlife": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Wildlife"
-          },
-          "urls": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Urls",
-            "default": []
           }
         },
         "type": "object",
-        "required": [
-          "distance",
-          "duration"
-        ],
         "title": "UpdateTrailSchema",
         "description": "Schema for updating a trail."
       },

@@ -138,6 +138,9 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         alignItems: 'center',
     },
+    thumbWrap: {
+        position: 'relative',
+    },
     thumb: {
         width: 84,
         height: 84,
@@ -146,6 +149,18 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: theme.backgroundSecondary,
         backgroundColor: theme.backgroundSecondary,
+    },
+    deleteImageButton: {
+        position: 'absolute',
+        top: -6,
+        right: -2,
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        backgroundColor: theme.accentPrimary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10,
     },
     footer: {
         position: 'absolute',

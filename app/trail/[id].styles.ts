@@ -593,6 +593,7 @@ const styles = StyleSheet.create({
     },
     reviewStars: {
         flexDirection: 'row',
+        alignItems: 'center',
         gap: 6,
     },
     /* Map modal / fullscreen map styles */

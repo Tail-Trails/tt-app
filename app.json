@@ -2,7 +2,7 @@
   "expo": {
     "name": "TailTrails",
     "slug": "dog-walk-tracker-x2nouww",
-    "version": "1.0.20",
+    "version": "1.0.22",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tail-trails",
@@ -36,7 +36,7 @@
           "com.transistorsoft.fetch",
           "com.transistorsoft.customtask"
         ],
-        "TSLocationManagerLicense": "<YOUR IOS LICENSE KEY>",
+        "TSLocationManagerLicense": "eyJhbGciOiJFZERTQSIsImtpZCI6ImVkMjU1MTktbWFpbi12MSJ9.eyJvcyI6ImlvcyIsImFwcF9pZCI6ImNvbS50YWlsdHJhaWxzLmFwcCIsIm9yZGVyX251bWJlciI6MTU4NzYsInJlbmV3YWxfdXJsIjoiaHR0cHM6Ly9zaG9wLnRyYW5zaXN0b3Jzb2Z0LmNvbS9jYXJ0LzE2NTA3ODYxNTA1OjE_bm90ZT0xMDU1OCIsImN1c3RvbWVyX2lkIjo5NjAyLCJwcm9kdWN0IjoicmVhY3QtbmF0aXZlLWJhY2tncm91bmQtZ2VvbG9jYXRpb24iLCJrZXlfdmVyc2lvbiI6MSwiYWxsb3dlZF9zdWZmaXhlcyI6WyIuZGV2IiwiLmRldmVsb3BtZW50IiwiLnN0YWdpbmciLCIuc3RhZ2UiLCIucWEiLCIudWF0IiwiLnRlc3QiLCIuZGVidWciXSwibWF4X2J1aWxkX3N0YW1wIjoyMDI3MDUwMSwiZ3JhY2VfYnVpbGRzIjowLCJlbnRpdGxlbWVudHMiOlsiY29yZSJdLCJpYXQiOjE3NzUwMzYwNTJ9.8r3wg1psE5puMMketwOJlLkDNW0CWJn3GwJ9PWvJXTi_wNpF2GRMNHLg-ADqIB8LsKehD6LazVBMe3OyLJQ1Dw",
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
         "CFBundleURLTypes": [
@@ -51,7 +51,7 @@
     },
     "android": {
       "package": "com.tailtrailsclub.app",
-      "versionCode": 21,
+      "versionCode": 23,
       "googleServicesFile": "./google-services.json",
       "newArchEnabled": false,
       "softwareKeyboardLayoutMode": "pan",
@@ -145,7 +145,7 @@
       [
         "react-native-background-geolocation",
         {
-          "license": "YOUR ANDROID LICENSE KEY"
+          "license": "eyJhbGciOiJFZERTQSIsImtpZCI6ImVkMjU1MTktbWFpbi12MSJ9.eyJvcyI6ImFuZHJvaWQiLCJhcHBfaWQiOiJjb20udGFpbHRyYWlsc2NsdWIuYXBwIiwib3JkZXJfbnVtYmVyIjoxNTg3NiwicmVuZXdhbF91cmwiOiJodHRwczovL3Nob3AudHJhbnNpc3RvcnNvZnQuY29tL2NhcnQvMTY1MDc4NjE1MDU6MT9ub3RlPTEwNTU4IiwiY3VzdG9tZXJfaWQiOjk2MDIsInByb2R1Y3QiOiJyZWFjdC1uYXRpdmUtYmFja2dyb3VuZC1nZW9sb2NhdGlvbiIsImtleV92ZXJzaW9uIjoxLCJhbGxvd2VkX3N1ZmZpeGVzIjpbIi5kZXYiLCIuZGV2ZWxvcG1lbnQiLCIuc3RhZ2luZyIsIi5zdGFnZSIsIi5xYSIsIi51YXQiLCIudGVzdCIsIi5kZWJ1ZyJdLCJtYXhfYnVpbGRfc3RhbXAiOjIwMjcwNTAxLCJncmFjZV9idWlsZHMiOjAsImVudGl0bGVtZW50cyI6WyJjb3JlIl0sImlhdCI6MTc3NTAzNjA1Mn0.JN0EKDd7W7AZuGVvjRUO3-DK0HcnUEBGaZfWAdunkzn1KSBRgNnT_1Fq-gDu7Lv7F3rV4TlHjCEqt7t8yPceAg"
         }
       ],
       [

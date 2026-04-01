@@ -97,8 +97,8 @@ export default function ExploreScreen() {
         } else if (selectedCategory === 'nearby') {
           const trails = await loadNearbyTrails(locationCoords?.latitude, locationCoords?.longitude);
           if (!cancelled) setNearbyTrails(trails);
-        } else if (selectedCategory === 'beaches' || selectedCategory === 'forest' || selectedCategory === 'road' || selectedCategory === 'cliff') {
-          const tagMap: Record<string, string> = { beaches: 'Beach', forest: 'Forest', road: 'Road', cliff: 'Cliff' };
+        } else if (selectedCategory === 'beach' || selectedCategory === 'forest' || selectedCategory === 'road' || selectedCategory === 'cliff') {
+          const tagMap: Record<string, string> = { beach: 'Beach', forest: 'Forest', road: 'Road', cliff: 'Cliff' };
           const tag = tagMap[selectedCategory] || selectedCategory;
           const trails = await loadTrailsByTag(tag, locationCoords?.latitude, locationCoords?.longitude);
           if (!cancelled) setNearbyTrails(trails);
@@ -258,7 +258,7 @@ export default function ExploreScreen() {
 
     if (selectedCategory === 'popular') {
       filtered = [...filtered].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    } else if (selectedCategory === 'beaches') {
+    } else if (selectedCategory === 'beach') {
       filtered = filtered.filter((trail) => {
         const tags = trail.environment_tags || [];
         return tags.some(tag => tag.toLowerCase().includes('beach'));
@@ -318,6 +318,22 @@ export default function ExploreScreen() {
     () => filteredTrails.find((t) => t.id === selectedMapTrailId) ?? null,
     [filteredTrails, selectedMapTrailId]
   );
+
+  const selectedMapTrailCoordinates = useMemo(() => {
+    if (!selectedMapTrail) return [];
+
+    if (Array.isArray(selectedMapTrail.coordinates) && selectedMapTrail.coordinates.length > 1) {
+      return selectedMapTrail.coordinates;
+    }
+
+    if (Array.isArray(selectedMapTrail.path) && selectedMapTrail.path.length > 1) {
+      return selectedMapTrail.path
+        .filter((point) => Array.isArray(point) && point.length >= 2)
+        .map((point) => ({ latitude: point[1], longitude: point[0] }));
+    }
+
+    return [];
+  }, [selectedMapTrail]);
 
   const renderCategoryHeader = () => (
     <View style={[styles.stickyHeader, { paddingTop: insets.top + 16 }]}>
@@ -426,12 +442,16 @@ export default function ExploreScreen() {
               <TrailMap
                 style={{ flex: 1 }}
                 initialRegion={mapRegion}
+                coordinates={selectedMapTrailCoordinates}
                 scrollEnabled
                 zoomEnabled
                 showStartMarker={false}
                 showsUserLocation={!!locationCoords}
                 userLocation={locationCoords ?? null}
                 pointMarkers={mapMarkers}
+                routeColor={theme.backgroundPrimary}
+                routeWidth={5}
+                routeOpacity={0.95}
                 onPointMarkerPress={(id) => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setSelectedMapTrailId((prev) => (prev === id ? null : id));

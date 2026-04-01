@@ -1,34 +1,41 @@
-import React, { useEffect, useState } from 'react';
-import { View, TextInput, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, Platform, Image as RNImage } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { View, TextInput, TouchableOpacity, ActivityIndicator, Alert, Platform, Image as RNImage } from 'react-native';
 import { Text } from '@/components';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
-import { Check, ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import theme from '@/constants/colors';
 import styles from './edit.styles';
 import * as ImagePicker from 'expo-image-picker';
 
-// TODO: Make this whole page editable for users' own trails, including name, photos, review, rating, difficulty, tags
-
 export default function EditTrailScreen() {
   const { id } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
-  const { getTrailById, updateTrailName, updateTrailDetails } = useTrails();
+  const { getTrailById, updateTrailDetails, updateTrailPhoto, deleteTrailImage } = useTrails();
   const { user } = useAuth();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [trail, setTrail] = useState<any>(null);
+  const initialTrailRef = useRef<{ name: string; description: string; photoKeys: string[] } | null>(null);
 
-  const [name, setName] = useState('');
-  const [photos, setPhotos] = useState<string[]>([]);
-  const [rating, setRating] = useState<number>(0);
-  const [review, setReview] = useState('');
-  const [difficulty, setDifficulty] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
+  const normalizePhotos = (value: any): { id?: string; uri: string; local?: boolean }[] => {
+    if (Array.isArray(value?.images)) {
+      return value.images
+        .map((image: any) => {
+          if (typeof image === 'string') return { uri: image };
+          if (image?.url) return { id: image.id, uri: image.url };
+          return null;
+        })
+        .filter((image: any) => !!image?.uri);
+    }
+    return (value?.photos || value?.urls || [])
+      .filter((url: any) => typeof url === 'string' && url.length > 0)
+      .map((uri: string) => ({ uri }));
+  };
 
   useEffect(() => {
     (async () => {
@@ -36,13 +43,16 @@ export default function EditTrailScreen() {
       setIsLoading(true);
       try {
         const t = await getTrailById(id);
-        setTrail(t);
-        setName(t?.name || '');
-          setPhotos((t as any)?.photos || (t as any)?.urls || []);
-        setRating(t?.rating || 0);
-        setReview(t?.review || '');
-        setDifficulty(t?.difficulty || '');
-        setTags(t?.environment_tags || []);
+        const normalizedPhotos = normalizePhotos(t);
+        initialTrailRef.current = {
+          name: String((t as any)?.name || ''),
+          description: String((t as any)?.description || ''),
+          photoKeys: normalizedPhotos.map((photo) => photo.id || photo.uri),
+        };
+        setTrail({
+          ...t,
+          photos: normalizedPhotos,
+        });
       } catch (e) {
         console.error(e);
         Alert.alert('Error', 'Failed to load trail');
@@ -50,7 +60,7 @@ export default function EditTrailScreen() {
         setIsLoading(false);
       }
     })();
-  }, [id]);
+  }, [getTrailById, id]);
 
   const handleCancel = () => {
     router.back();
@@ -66,21 +76,37 @@ export default function EditTrailScreen() {
     setIsSaving(true);
 
     try {
-      if (name.trim() && name.trim() !== trail.name) {
-        await updateTrailName(trail.id, name.trim());
+      const initial = initialTrailRef.current;
+      const currentName = String(trail.name || '');
+      const currentDescription = String(trail.description || '');
+      const currentPhotos = Array.isArray(trail.photos) ? trail.photos : [];
+      const currentPhotoKeys = currentPhotos.map((photo: any) => photo?.id || photo?.uri).filter(Boolean);
+      const localPhotosToUpload = currentPhotos.filter((photo: any) => !photo?.id && typeof photo?.uri === 'string').map((photo: any) => photo.uri);
+
+      const detailsChanged = !initial
+        || currentName !== initial.name
+        || currentDescription !== initial.description;
+
+      const photosChanged = !initial
+        || currentPhotoKeys.length !== initial.photoKeys.length
+        || currentPhotoKeys.some((photoKey: string, index: number) => photoKey !== initial.photoKeys[index]);
+
+      if (!detailsChanged && !photosChanged) {
+        router.back();
+        return;
       }
 
-      await updateTrailDetails(trail.id, {
-        rating: rating > 0 ? rating : undefined,
-        review: review.trim() || undefined,
-        environment_tags: tags.length > 0 ? tags : undefined,
-        difficulty: difficulty || undefined,
-      });
+      if (detailsChanged) {
+        await updateTrailDetails(trail.id, {
+          name: trail.name,
+          description: trail.description,
+        });
+      }
 
       // If user added photos, upload/update them on the trail
-      if (photos && photos.length > 0) {
+      if (photosChanged && localPhotosToUpload.length > 0) {
         try {
-          await updateTrailPhoto(trail.id, photos);
+          await updateTrailPhoto(trail.id, localPhotosToUpload);
         } catch (err) {
           console.warn('Failed to update photos:', err);
         }
@@ -119,12 +145,45 @@ export default function EditTrailScreen() {
           if (a.base64) return `data:image/jpeg;base64,${a.base64}`;
           return a.uri;
         });
-        setPhotos(prev => [...prev, ...uris]);
+        setTrail((prev: any) => ({
+          ...prev,
+          photos: [...(prev?.photos || []), ...uris.map((uri) => ({ uri, local: true }))],
+        }));
       }
     } catch (err) {
       console.error('Image pick error', err);
       Alert.alert('Error', 'Failed to pick images');
     }
+  };
+
+  const handleDeleteImage = (index: number) => {
+    const target = trail?.photos?.[index];
+    if (!target) return;
+
+    Alert.alert('Delete image?', 'This will remove the image from this trail.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            if (target.id) {
+              await deleteTrailImage(trail.id, target.id);
+            }
+            setTrail((prev: any) => ({
+              ...prev,
+              photos: (prev?.photos || []).filter((_: any, i: number) => i !== index),
+            }));
+            if (Platform.OS !== 'web') {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+          } catch (err: any) {
+            console.error('Delete image error', err);
+            Alert.alert('Error', err?.message || 'Failed to delete image');
+          }
+        },
+      },
+    ]);
   };
 
   if (isLoading) {
@@ -165,29 +224,29 @@ export default function EditTrailScreen() {
 
       <View style={styles.form}>
         <Text style={styles.label}>Name</Text>
-        <TextInput value={name} onChangeText={setName} placeholder="Trail name" style={styles.input} />
+        <TextInput value={trail.name || ''} onChangeText={(t) => setTrail((prev: any) => ({ ...prev, name: t }))} placeholder="Trail name" style={styles.input} />
 
-        <Text style={styles.label}>Rating</Text>
-        <TextInput value={String(rating || '')} onChangeText={(t) => setRating(Number(t) || 0)} placeholder="0-5" keyboardType={Platform.OS === 'web' ? 'numeric' : 'number-pad'} style={styles.input} />
+        <Text style={styles.label}>Description</Text>
+        <TextInput value={String(trail.description || '')} onChangeText={(t) => setTrail((prev: any) => ({ ...prev, description: t }))} placeholder="0-5" keyboardType={Platform.OS === 'web' ? 'numeric' : 'number-pad'} style={styles.input} />
 
-        <Text style={styles.label}>Review</Text>
-        <TextInput value={review} onChangeText={setReview} placeholder="Share your experience" style={[styles.input]} multiline numberOfLines={4} />
-
-        <Text style={styles.label}>Difficulty</Text>
-        <TextInput value={difficulty} onChangeText={setDifficulty} placeholder="Easy, Moderate, Hard" style={styles.input} />
         <View style={styles.moreCard}>
           <Text style={styles.cardTitle}>Add photos?</Text>
           <Text style={styles.cardSub}>Add highlights from this trail</Text>
 
+          <View style={styles.photoRow}>
+            {(trail.photos || []).map((p: any, i: number) => (
+              <View key={p?.id || p?.uri || i} style={styles.thumbWrap}>
+                <RNImage source={{ uri: p.uri }} style={[styles.thumb, { zIndex: i }]} />
+                <TouchableOpacity style={styles.deleteImageButton} onPress={() => handleDeleteImage(i)}>
+                  <X size={14} color={theme.backgroundPrimary} />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+
           <TouchableOpacity style={styles.addPhotoBox} onPress={pickImages}>
             <Text style={styles.plusSign}>+</Text>
           </TouchableOpacity>
-
-          <View style={styles.photoRow}>
-            {photos.map((p, i) => (
-              <RNImage key={i} source={{ uri: p }} style={[styles.thumb, { zIndex: i }]} />
-            ))}
-          </View>
         </View>
       </View>
       {/* Footer save button fixed to bottom */}

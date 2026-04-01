@@ -15,7 +15,6 @@ export default function InfoPage() {
   const insets = useSafeAreaInsets();
   const { saveTrail } = useTrails();
   const [draft, setDraft] = useState<any>(null);
-  const [name, setName] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [privacy, setPrivacy] = useState<'public' | 'private'>('public');
@@ -28,11 +27,10 @@ export default function InfoPage() {
     try {
       const parsed = JSON.parse(rawDraft);
       setDraft(parsed);
-      setName(parsed?.name || '');
       setDescription(parsed?.description || '');
       setPhotos(parsed?.photos || []);
       setPrivacy(parsed?.privacy || 'public');
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [rawDraft]);
@@ -57,9 +55,9 @@ export default function InfoPage() {
     if (!draft) return router.push('/');
     setSaving(true);
     try {
+      const { name: _unusedName, ...draftWithoutName } = draft || {};
       const toSave = {
-        ...draft,
-        name: name || draft.name || 'Untitled trail',
+        ...draftWithoutName,
         description: description || draft.description,
         photos,
         privacy,
@@ -71,7 +69,7 @@ export default function InfoPage() {
         if (hasTask) {
           await Location.stopLocationUpdatesAsync('background-location-task');
         }
-      } catch (err) {
+      } catch {
         // ignore
       }
       try {
@@ -80,7 +78,7 @@ export default function InfoPage() {
         await AsyncStorage.removeItem('recording_max_elevation');
         await AsyncStorage.removeItem('recording_max_speed');
         await AsyncStorage.removeItem('recording_last_update');
-      } catch (err) {
+      } catch {
         // ignore
       }
       router.replace('/');
@@ -96,17 +94,6 @@ export default function InfoPage() {
       <Stack.Screen options={{ headerShown: false }} />
       <View style={[styles.container, { paddingTop: insets.top + 20 || 20 }]}>
         <ScrollView contentContainerStyle={styles.infoScroll}>
-          <Text style={styles.infoHeader}>Name your trail</Text>
-          <Text style={styles.infoSub}>This name will help you find it later</Text>
-
-          <TextInput
-            placeholder="Trail name"
-            placeholderTextColor="rgba(255,255,255,0.25)"
-            value={name}
-            onChangeText={setName}
-            style={styles.nameInput}
-          />
-
           <View style={styles.moreCard}>
             <Text style={styles.cardTitle}>Add photos?</Text>
             <Text style={styles.cardSub}>Show highlights from your walk</Text>
@@ -124,7 +111,7 @@ export default function InfoPage() {
               })}
             </View>
 
-            <Text style={styles.cardTitle}>Anything you'd like to share?</Text>
+            <Text style={styles.cardTitle}>Anything you&apos;d like to share?</Text>
             <Text style={styles.cardSub}>Share helpful information regarding the trail</Text>
             <TextInput
               placeholder="Anything other dog walkers should know?"
@@ -153,9 +140,9 @@ export default function InfoPage() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.doneButton, (saving || !name.trim()) && styles.doneButtonDisabled]}
+              style={[styles.doneButton, saving && styles.doneButtonDisabled]}
               onPress={onDone}
-              disabled={saving || !name.trim()}
+              disabled={saving}
             >
               {saving ? <ActivityIndicator color="#000" /> : <Text style={styles.doneText}>Done</Text>}
             </TouchableOpacity>

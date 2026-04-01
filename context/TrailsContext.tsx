@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState, useMemo } from 'react';
+import { useEffect, useCallback, useState, useMemo } from 'react';
 import createContextHook from '@nkzw/create-context-hook';
 import { useAuth } from '@/context/AuthContext';
 import { Trail } from '@/types/trail';
@@ -280,6 +280,117 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     }
   }, [user, session]);
 
+  const saveFollowTrail = useCallback(async (
+    sourceTrailId: string,
+    trail: Trail,
+    review: { rating: number; content: string },
+    photos: string[] = []
+  ) => {
+    if (!user) {
+      console.error('No user logged in');
+      throw new Error('Must be logged in to save followed trails');
+    }
+    if (!session?.accessToken) {
+      console.error('No session/access token available');
+      throw new Error('Must be logged in to save followed trails');
+    }
+
+    const coordsToPath = (coords: { latitude: number; longitude: number }[] | undefined) => {
+      if (!coords || coords.length === 0) return [] as number[][];
+      return coords.map(c => [c.longitude, c.latitude]);
+    };
+
+    const trailData: any = {
+      name: trail.name,
+      description: trail.description,
+      distance: trail.distance,
+      duration: trail.duration,
+      path: trail.path || coordsToPath(trail.coordinates),
+      tags: trail.tags,
+      pace: trail.pace,
+      speed: trail.speed,
+      maxElevation: trail.maxElevation,
+      dogTraffic: trail.dogTraffic,
+      footTraffic: trail.footTraffic,
+      paths: trail.paths,
+      exposure: trail.exposure,
+      offLeash: trail.offLeash,
+      wildlife: trail.wildlife,
+      isOriginal: false,
+      originalTrailId: sourceTrailId,
+      isPublic: true,
+      rating: trail.rating,
+      reviewCount: trail.reviewCount,
+      startLatitude: trail.startLatitude ?? trail.coordinates?.[0]?.latitude,
+      startLongitude: trail.startLongitude ?? trail.coordinates?.[0]?.longitude,
+    };
+
+    const providedImages = Array.isArray(photos) ? photos : [];
+    const hostedUrls: string[] = [];
+    const localFiles: any[] = [];
+
+    for (const item of providedImages) {
+      if (!item) continue;
+      if (typeof item === 'string' && item.startsWith('http')) {
+        hostedUrls.push(item);
+      } else if (typeof item === 'string') {
+        const uri = item;
+        const uriParts = uri.split('/');
+        const fileName = uriParts[uriParts.length - 1] || `trail_${Date.now()}.jpg`;
+        const extMatch = fileName.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
+        const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
+        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+        // @ts-ignore
+        localFiles.push({ uri, name: fileName, type: mimeType });
+      }
+    }
+
+    let resp: Response;
+    if (localFiles.length > 0) {
+      const form = new FormData();
+      const trailPayload = { ...trailData, urls: hostedUrls };
+      form.append('trail', JSON.stringify(trailPayload));
+      form.append('review', JSON.stringify(review));
+      for (const file of localFiles) {
+        // @ts-ignore
+        form.append('files', file as any);
+      }
+
+      resp = await fetch(`${API_URL}/trail/me/follow-trail/${sourceTrailId}/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: form as any,
+      });
+    } else {
+      resp = await fetch(`${API_URL}/trail/me/follow-trail/${sourceTrailId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: JSON.stringify({
+          review,
+          trail_data: {
+            ...trailData,
+            urls: hostedUrls,
+          },
+        }),
+      });
+    }
+
+    if (!resp.ok) {
+      const err = await resp.text().catch(() => '');
+      console.error('Failed to save followed trail:', resp.status, err);
+      throw new Error(err || 'Failed to save followed trail');
+    }
+
+    const data = await resp.json();
+    setTrails((prev: Trail[]) => [data, ...prev]);
+    return data as Trail;
+  }, [session, user]);
+
   const deleteTrail = useCallback(async (id: string) => {
     try {
       console.log('Deleting trail via API:', id);
@@ -299,7 +410,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
       console.error('Failed to delete trail:', error);
       throw error;
     }
-  }, [session]);
+  }, [session?.accessToken]);
 
   const getTrailById = useCallback(async (id: string): Promise<Trail | undefined> => {
     // const found = trails.find((t: Trail) => t.id === id);
@@ -460,38 +571,81 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
 
   const updateTrailPhoto = useCallback(async (id: string, photoOrUrls: string | string[]) => {
     try {
-      console.log('Updating trail photo(s) via API:', id);
+      console.log('Updating trail image(s) via API:', id);
       if (!session?.accessToken) throw new Error('Not authenticated');
 
-      const payload: any = {};
-      if (Array.isArray(photoOrUrls)) {
-        payload.urls = photoOrUrls;
-      } else if (typeof photoOrUrls === 'string') {
-        payload.urls = [photoOrUrls];
+      const uris = Array.isArray(photoOrUrls) ? photoOrUrls : [photoOrUrls];
+
+      const form = new FormData();
+      for (const uri of uris) {
+        if (!uri) continue;
+        const uriParts = uri.split('/');
+        const fileName = uriParts[uriParts.length - 1] || `trail_${Date.now()}.jpg`;
+        const extMatch = fileName.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
+        const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
+        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+        // @ts-ignore — RN FormData accepts { uri, name, type }
+        form.append('files', { uri, name: fileName, type: mimeType } as any);
       }
 
-      const resp = await fetch(`${API_URL}/trail/${id}`, {
+      const resp = await fetch(`${API_URL}/trail/${id}/images`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.accessToken}` },
-        body: JSON.stringify(payload),
+        headers: {
+          // NOTE: Do NOT set Content-Type; fetch sets the multipart boundary automatically
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: form as any,
       });
+
       if (!resp.ok) {
         const txt = await resp.text();
-        throw new Error(txt || 'Failed to update photo(s)');
+        throw new Error(txt || 'Failed to update image(s)');
       }
       const updated = await resp.json();
       setTrails((prev: Trail[]) => prev.map((t: Trail) => (t.id === id ? updated : t)));
     } catch (error) {
-      console.error('Failed to update trail photo(s):', error);
+      console.error('Failed to update trail image(s):', error);
+      throw error;
+    }
+  }, [session]);
+
+  const deleteTrailImage = useCallback(async (trailId: string, imageId: string) => {
+    try {
+      console.log('Deleting trail image via API:', trailId, imageId);
+      if (!session?.accessToken) throw new Error('Not authenticated');
+
+      const resp = await fetch(`${API_URL}/trail/${trailId}/images/${imageId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+      });
+
+      if (resp.status !== 204) {
+        const txt = await resp.text().catch(() => '');
+        throw new Error(txt || 'Failed to delete image');
+      }
+
+      setTrails((prev: Trail[]) => prev.map((trail: any) => {
+        if (trail.id !== trailId) return trail;
+        const nextImages = Array.isArray(trail.images)
+          ? trail.images.filter((image: any) => {
+            if (!image) return false;
+            if (typeof image === 'string') return true;
+            return image.id !== imageId;
+          })
+          : trail.images;
+        return { ...trail, images: nextImages };
+      }));
+    } catch (error) {
+      console.error('Failed to delete trail image:', error);
       throw error;
     }
   }, [session]);
 
   const updateTrailDetails = useCallback(async (id: string, updates: {
-    rating?: number;
-    review?: string;
-    environment_tags?: string[];
-    difficulty?: string;
+    name?: string;
+    description?: string;
   }) => {
     try {
       console.log('Updating trail details via API:', id, updates);
@@ -511,12 +665,19 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
       console.error('Failed to update trail details:', error);
       throw error;
     }
-  }, []);
+  }, [session?.accessToken]);
 
   const getTrailWithUser = useCallback(async (id: string) => {
     try {
       console.log('Loading trail with user data via API:', id);
-      const resp = await fetch(`${API_URL}/trail/${id}`);
+      const headers: Record<string, string> = {};
+      if (session?.accessToken) {
+        headers.Authorization = `Bearer ${session.accessToken}`;
+      }
+
+      const resp = await fetch(`${API_URL}/trail/${id}`, {
+        headers,
+      });
       if (!resp.ok) {
         console.error('Failed to fetch trail:', resp.status);
         return undefined;
@@ -527,7 +688,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
       console.error('Failed to load trail with user:', error);
       return undefined;
     }
-  }, []);
+  }, [session]);
 
   const saveTrailBookmark = useCallback(async (trailId: string) => {
     if (!user) {
@@ -575,10 +736,12 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     isLoading,
     isSavedLoading,
     saveTrail,
+    saveFollowTrail,
     deleteTrail,
     getTrailById,
     updateTrailName,
     updateTrailPhoto,
+    deleteTrailImage,
     updateTrailDetails,
     loadNearbyTrails,
     loadForYouTrails,
@@ -587,7 +750,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     removeTrailBookmark,
     isTrailSaved,
     getTrailWithUser,
-  }), [trails, savedTrails, isLoading, isSavedLoading, saveTrail, deleteTrail, getTrailById, updateTrailName, updateTrailPhoto, updateTrailDetails, loadNearbyTrails, loadForYouTrails, loadTrailsByTag, saveTrailBookmark, removeTrailBookmark, isTrailSaved, getTrailWithUser]);
+  }), [trails, savedTrails, isLoading, isSavedLoading, saveTrail, saveFollowTrail, deleteTrail, getTrailById, updateTrailName, updateTrailPhoto, deleteTrailImage, updateTrailDetails, loadNearbyTrails, loadForYouTrails, loadTrailsByTag, saveTrailBookmark, removeTrailBookmark, isTrailSaved, getTrailWithUser]);
   // include new loaders in dependency list
 });
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   View,
   ActivityIndicator,
@@ -14,7 +14,7 @@ import {
   Image,
 } from 'react-native';
 import { Text } from '@/components';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import TrailMapPreview from '@/components/TrailMapPreview';
 import * as Location from 'expo-location';
 import { MapPin, Calendar, Edit3, Check, X, Navigation, Star, ArrowLeft, ChevronRight } from 'lucide-react-native';
@@ -35,6 +35,26 @@ const ENVIRONMENT_TAG_OPTIONS = [
 ];
 
 const DIFFICULTY_OPTIONS = ['Easy', 'Moderate', 'Hard'];
+
+function PartialStar({ size, rating, color, emptyColor }: {
+  size: number;
+  rating: number; // 0 to 1 fill fraction
+  color: string;
+  emptyColor: string;
+}) {
+  const clampedFill = Math.min(1, Math.max(0, rating));
+  return (
+    <View style={{ width: size, height: size }}>
+      <Star size={size} color={emptyColor} fill={emptyColor} strokeWidth={0} />
+      <View style={{ position: 'absolute', left: 0, top: 0, width: size * clampedFill, overflow: 'hidden' }}>
+        <Star size={size} color={color} fill={color} strokeWidth={0} />
+      </View>
+      <View style={{ position: 'absolute', left: 0, top: 0 }}>
+        <Star size={size} color={emptyColor} fill="none" strokeWidth={0} />
+      </View>
+    </View>
+  );
+}
 
 export default function TrailDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -86,11 +106,6 @@ export default function TrailDetailScreen() {
     const Icon = IconComponent;
     return <Icon size={size} color={color} />;
   };
-
-  useEffect(() => {
-    loadTrail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
 
   const initialHeight = useRef<number>(0);
 
@@ -150,7 +165,7 @@ export default function TrailDetailScreen() {
     if (isExpanded) collapseBottomSheet(); else expandBottomSheet();
   };
 
-  const loadTrail = async () => {
+  const loadTrail = useCallback(async () => {
     if (typeof id !== 'string') {
       setIsLoading(false);
       return;
@@ -184,7 +199,13 @@ export default function TrailDetailScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getTrailById, getTrailWithUser, id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadTrail();
+    }, [loadTrail])
+  );
 
   const handleSaveName = async () => {
     if (!trail || !editedName.trim()) {
@@ -349,11 +370,16 @@ export default function TrailDetailScreen() {
   }
 
   const coords = trail.coordinates ?? [];
+  const heroImages = Array.isArray((trail as any).images)
+    ? (trail as any).images
+      .map((img: any) => (typeof img === 'string' ? img : img?.url))
+      .filter((url: any) => typeof url === 'string' && url.length > 0)
+    : [];
 
   const canEdit = trail.userId === user?.id;
   console.log('Can edit: ', canEdit, trail.userId, '-', user?.id)
 
-  const heroSlidesCount = ((trail as any).images?.length || 0) + (((trail as any).images?.length || 0) > 0 ? 1 : (trail.photo ? 1 : 0));
+  const heroSlidesCount = heroImages.length + (heroImages.length > 0 ? 1 : (trail.photo ? 1 : 0));
 
   return (
     <View style={[
@@ -384,7 +410,7 @@ export default function TrailDetailScreen() {
       >
         <View style={styles.heroSection}>
           <Animated.View style={[styles.heroImageContainer, { height: heroHeight as any }]}> 
-            {Array.isArray((trail as any).images) && (trail as any).images.length > 0 ? (
+            {heroImages.length > 0 ? (
               <ScrollView
                 horizontal
                 pagingEnabled
@@ -397,10 +423,10 @@ export default function TrailDetailScreen() {
                 }}
                 scrollEventThrottle={16}
               >
-                {(trail as any).images.map((img: any, idx: number) => (
+                {heroImages.map((imgUrl: string, idx: number) => (
                   <Image
-                    key={img?.id || img?.url || idx}
-                    source={{ uri: img?.url || '' }}
+                    key={`${imgUrl}-${idx}`}
+                    source={{ uri: imgUrl }}
                     style={[styles.heroImage, { width: Dimensions.get('window').width }]}
                     resizeMode="cover"
                   />
@@ -517,10 +543,10 @@ export default function TrailDetailScreen() {
                 )}
 
                 <View style={styles.authorRow}>
-                  {user?.name ? (
+                  {trail.createdByUserName ? (
                         <View style={styles.avatar}>
                           <Image
-                            source={user?.image ? { uri: user.image } : undefined}
+                            source={trail.createdByUserImage ? { uri: trail.createdByUserImage } : undefined}
                             style={{ width: '100%', height: '100%', borderRadius: 18 }}
                             resizeMode="cover"
                           />
@@ -528,7 +554,7 @@ export default function TrailDetailScreen() {
                   ) : (
                     <View style={styles.avatar} />
                   )}
-                  <Text style={styles.authorName}>{user?.name || 'John Snow'}</Text>
+                  <Text style={styles.authorName}>{trail.createdByUserName || 'Unknown Author'}</Text>
                 </View>
               </View>
 
@@ -544,7 +570,7 @@ export default function TrailDetailScreen() {
 
                 <View style={styles.statCard}>
                   <Text style={styles.statLabel}>ELEVATION</Text>
-                  <Text style={styles.statValue}>{trail.elevation ? `${Math.round(trail.elevation)}m` : '0m'}</Text>
+                  <Text style={styles.statValue}>{trail.maxElevation ? `${Math.round(trail.maxElevation)}m` : '0m'}</Text>
                 </View>
                 <View style={styles.statCard}>
                   <Text style={styles.statLabel}>MATCH</Text>
@@ -708,13 +734,31 @@ export default function TrailDetailScreen() {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.reviewsSection} onPress={() => {}}>
-                <Text style={styles.reviewsTitle}>REVIEWS (1)</Text>
+              <TouchableOpacity
+                style={styles.reviewsSection}
+                onPress={() => {
+                  if (true) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                  router.push(`/trail/${trail.id}/reviews`);
+                }}
+              >
+                <Text style={styles.reviewsTitle}>{`REVIEWS${Number.isFinite(trail.reviewCount) && trail.reviewCount! > 0 ? ` (${trail.reviewCount})` : ''}`}</Text>
                 <View style={styles.reviewsRow}>
                   <View style={styles.reviewStars}>
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} size={24} color={s <= (trail.rating || 0) ? colors.accentPrimary : colors.backgroundSecondaryVarient} fill={s <= (trail.rating || 0) ? colors.accentPrimary : 'none'} />
-                    ))}
+                    {[1, 2, 3, 4, 5].map((s) => {
+                      const r = trail.rating || 0;
+                      const fill = Math.min(1, Math.max(0, r - (s - 1)));
+                      return (
+                        <PartialStar
+                          key={s}
+                          size={24}
+                          rating={fill}
+                          color={colors.accentPrimary}
+                          emptyColor={colors.backgroundSecondaryVarient}
+                        />
+                      );
+                    })}
                   </View>
                   <IconOrEmoji IconComponent={ChevronRight} emoji=">" size={24} color={colors.textMuted} />
                 </View>

@@ -31,7 +31,7 @@ export default function EndWalkSummary() {
   const handleRatingPress = (rating: number) => {
     if (isFollowFlow) {
       const enhanced = { ...(draft || {}), rating };
-      router.push(`/end-walk/info?draft=${encodeURIComponent(JSON.stringify(enhanced))}`);
+      router.push(`/end-walk/follow-wrapup?draft=${encodeURIComponent(JSON.stringify(enhanced))}`);
       return;
     }
 
