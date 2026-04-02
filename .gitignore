@@ -32,3 +32,4 @@ secrets/
 GoogleService-Info.plist
 google-services.json
 credentials.json
+scratch*

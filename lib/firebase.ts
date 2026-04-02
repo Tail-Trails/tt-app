@@ -92,15 +92,32 @@ async function setupNative() {
       return u.updateProfile(profile);
     },
     // Sign in to Firebase using Google token (accessToken or idToken)
-    signInWithGoogle: async (_authParam: any, accessToken?: string, idToken?: string) => {
-      // auth module exposes GoogleAuthProvider on the native auth object
-      const provider = authModule.GoogleAuthProvider || (nativeAuth as any).GoogleAuthProvider;
-      const credential = provider.credential(idToken || null, accessToken || null);
-      await nativeAuth.signInWithCredential(credential);
-      const user = nativeAuth.currentUser;
-      if (!user) throw new Error('Failed to sign in with Google');
-      const token = await user.getIdToken();
-      return { idToken: token, user };
+    // Replace your existing signInWithGoogle inside setupNative with this:
+    signInWithGoogle: async (_authParam: any, idToken?: string, accessToken?: string) => {
+      // 1. Get the provider from the auth module
+      // Note: Most modern versions of RN Firebase use authModule.GoogleAuthProvider
+      const GoogleAuthProvider = authModule.GoogleAuthProvider;
+
+      if (!idToken) throw new Error('ID Token is required for Google Sign-In');
+
+      // 2. Create the credential using ONLY the idToken
+      // This avoids the "malformed" error caused by empty accessTokens
+      const credential = GoogleAuthProvider.credential(idToken);
+
+      // 3. Sign in
+      try {
+        const userCredential = await nativeAuth.signInWithCredential(credential);
+        const user = userCredential.user;
+
+        if (!user) throw new Error('Failed to sign in with Google');
+
+        // 4. Get the Firebase JWT to return to your backend logic
+        const firebaseToken = await user.getIdToken();
+        return { idToken: firebaseToken, user };
+      } catch (error: any) {
+        console.error('Native Firebase Auth Error:', error);
+        throw error;
+      }
     },
   };
 }
@@ -156,7 +173,7 @@ export function getFirebaseAuth() {
   if (!firebaseAuth) {
     // Kick off initialization but do not await here so callers don't block.
     // This may be undefined for a short time; wrappers handle undefined by using internal auth.
-    ensureInit().catch(() => {});
+    ensureInit().catch(() => { });
   }
   return firebaseAuth;
 }

@@ -5,7 +5,10 @@
     "version": "1.0.24",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "tail-trails",
+    "scheme": [
+      "tail-trails",
+      "com.googleusercontent.apps.447944956309-t3me1erabpnf99e12gsc8ogf9mt84dtj"
+    ],
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash-icon.png",
@@ -38,15 +41,7 @@
         ],
         "TSLocationManagerLicense": "eyJhbGciOiJFZERTQSIsImtpZCI6ImVkMjU1MTktbWFpbi12MSJ9.eyJvcyI6ImlvcyIsImFwcF9pZCI6ImNvbS50YWlsdHJhaWxzLmFwcCIsIm9yZGVyX251bWJlciI6MTU4NzYsInJlbmV3YWxfdXJsIjoiaHR0cHM6Ly9zaG9wLnRyYW5zaXN0b3Jzb2Z0LmNvbS9jYXJ0LzE2NTA3ODYxNTA1OjE_bm90ZT0xMDU1OCIsImN1c3RvbWVyX2lkIjo5NjAyLCJwcm9kdWN0IjoicmVhY3QtbmF0aXZlLWJhY2tncm91bmQtZ2VvbG9jYXRpb24iLCJrZXlfdmVyc2lvbiI6MSwiYWxsb3dlZF9zdWZmaXhlcyI6WyIuZGV2IiwiLmRldmVsb3BtZW50IiwiLnN0YWdpbmciLCIuc3RhZ2UiLCIucWEiLCIudWF0IiwiLnRlc3QiLCIuZGVidWciXSwibWF4X2J1aWxkX3N0YW1wIjoyMDI3MDUwMSwiZ3JhY2VfYnVpbGRzIjowLCJlbnRpdGxlbWVudHMiOlsiY29yZSJdLCJpYXQiOjE3NzUwMzYwNTJ9.8r3wg1psE5puMMketwOJlLkDNW0CWJn3GwJ9PWvJXTi_wNpF2GRMNHLg-ADqIB8LsKehD6LazVBMe3OyLJQ1Dw",
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
-        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
-        "CFBundleURLTypes": [
-          {
-            "CFBundleURLSchemes": [
-              "tail-trails",
-              "com.googleusercontent.apps.447944956309-t3me1erabpnf99e12gsc8ogf9mt84dtj"
-            ]
-          }
-        ]
+        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera"
       }
     },
     "android": {

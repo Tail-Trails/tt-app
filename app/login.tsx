@@ -46,20 +46,23 @@ export default function LoginScreen() {
   const [password, setPassword] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
+  // HARDCODED: No logic, just the exact strings from your Google Cloud Console
+  const GOOGLE_IOS_CLIENT_ID = "447944956309-t3me1erabpnf99e12gsc8ogf9mt84dtj.apps.googleusercontent.com";
+  const REVERSED_CLIENT_ID = "com.googleusercontent.apps.447944956309-t3me1erabpnf99e12gsc8ogf9mt84dtj";
+
   const redirectUri = AuthSession.makeRedirectUri({
-    scheme: 'tail-trails',
-    preferLocalhost: true,
+    scheme: REVERSED_CLIENT_ID,
+    // Try without the /oauth2redirect/google path first, as it's often the culprit
   });
 
-  console.log("My Redirect URI is:", redirectUri);
-  
+  console.log("FINAL TEST REDIRECT:", redirectUri);
+
   const [request, response, promptAsync] = Google.useAuthRequest({
+    iosClientId: GOOGLE_IOS_CLIENT_ID,
     webClientId: "447944956309-t92ug0tqs40adop6mnvifqbmfsi7dtj6.apps.googleusercontent.com",
-    iosClientId: "603763351756-ekakr88vbtlkqv620q7h8j2h3amq0fem.apps.googleusercontent.com",
     androidClientId: "447944956309-8emn1c0n3qljs8o595g088ddd2q2ibtj.apps.googleusercontent.com",
-    clientId: "447944956309-t92ug0tqs40adop6mnvifqbmfsi7dtj6.apps.googleusercontent.com",
-    scopes: ['profile', 'email'],
-    responseType: 'token',
+    scopes: ['openid', 'profile', 'email'],
+    responseType: 'code',
     redirectUri: redirectUri,
   });
 
@@ -68,21 +71,29 @@ export default function LoginScreen() {
       if (response?.type === 'success') {
         try {
           setIsLoading(true);
-          // normalize potential ArrayBuffer/bytes to string
-          const rawToken = response.authentication?.accessToken || response.authentication?.idToken;
-          const tokenStr = normalizeToken(rawToken);
-          if (!tokenStr) throw new Error('No access token from Google');
-          // Sign into Firebase with the Google token to obtain a Firebase ID token (JWT)
-          const fb = await signInWithGoogle(getFirebaseAuth(), tokenStr);
+
+          // LOG THIS to see what you're actually getting
+          console.log('Full Response:', JSON.stringify(response, null, 2));
+
+          // Priority 1: idToken from the authentication object
+          // Priority 2: id_token from the params
+          const idToken = response.authentication?.idToken || response.params?.id_token;
+
+          if (!idToken) {
+            throw new Error('Google did not return an ID Token. Check your scopes.');
+          }
+
+          // Pass ONLY the idToken to your firebase function
+          const fb = await signInWithGoogle(getFirebaseAuth(), idToken);
+
           const session = await firebaseAuthExchange(fb.idToken);
           await signInWithToken(session);
-          if (true) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          }
+
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           router.replace('/');
         } catch (err: any) {
           console.error('Google sign-in error', err);
-          Alert.alert('Google Sign-In Error', err?.message || String(err));
+          Alert.alert('Login Error', err?.message);
         } finally {
           setIsLoading(false);
         }
@@ -135,7 +146,8 @@ export default function LoginScreen() {
       return;
     }
     try {
-      // Trigger the Expo AuthSession flow
+      // THE FIX: Explicitly tell the prompt NOT to use the proxy
+      // This bypasses the "Must use http/https" internal validator
       await promptAsync();
     } catch (err: any) {
       console.error('Google prompt error', err);
