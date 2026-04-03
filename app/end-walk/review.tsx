@@ -11,9 +11,6 @@ import theme from '@/constants/colors';
 const DESCRIPTIONS = ['Beach', 'Forest', 'Road', 'Cliff'];
 const ICONS = [Waves, TreePine, TrafficCone, Mountain];
 
-// TODO: Add review free text on B flow (ignore C flow for now)
-// TODO: rig up average rating on explore + trail
-// TODO: make backend for review and add new screen to click through to reviews from rating on trail card
 
 export default function EndWalkReview() {
   const router = useRouter();

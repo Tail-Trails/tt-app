@@ -227,7 +227,7 @@ export default function EditTrailScreen() {
         <TextInput value={trail.name || ''} onChangeText={(t) => setTrail((prev: any) => ({ ...prev, name: t }))} placeholder="Trail name" style={styles.input} />
 
         <Text style={styles.label}>Description</Text>
-        <TextInput value={String(trail.description || '')} onChangeText={(t) => setTrail((prev: any) => ({ ...prev, description: t }))} placeholder="0-5" keyboardType={Platform.OS === 'web' ? 'numeric' : 'number-pad'} style={styles.input} />
+        <TextInput value={String(trail.description || '')} onChangeText={(t) => setTrail((prev: any) => ({ ...prev, description: t }))} placeholder="Trail Description" style={styles.input} />
 
         <View style={styles.moreCard}>
           <Text style={styles.cardTitle}>Add photos?</Text>

@@ -2,12 +2,13 @@
   "expo": {
     "name": "TailTrails",
     "slug": "dog-walk-tracker-x2nouww",
-    "version": "1.0.24",
+    "version": "1.0.26",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": [
       "tail-trails",
-      "com.googleusercontent.apps.447944956309-t3me1erabpnf99e12gsc8ogf9mt84dtj"
+      "com.googleusercontent.apps.447944956309-t3me1erabpnf99e12gsc8ogf9mt84dtj",
+      "com.tailtrailsclub.app"
     ],
     "userInterfaceStyle": "automatic",
     "splash": {
@@ -46,7 +47,7 @@
     },
     "android": {
       "package": "com.tailtrailsclub.app",
-      "versionCode": 25,
+      "versionCode": 27,
       "googleServicesFile": "./google-services.json",
       "newArchEnabled": false,
       "softwareKeyboardLayoutMode": "pan",

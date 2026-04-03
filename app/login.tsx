@@ -49,18 +49,23 @@ export default function LoginScreen() {
   // HARDCODED: No logic, just the exact strings from your Google Cloud Console
   const GOOGLE_IOS_CLIENT_ID = "447944956309-t3me1erabpnf99e12gsc8ogf9mt84dtj.apps.googleusercontent.com";
   const REVERSED_CLIENT_ID = "com.googleusercontent.apps.447944956309-t3me1erabpnf99e12gsc8ogf9mt84dtj";
-
+  const GOOGLE_ANDROID_CLIENT_ID = "447944956309-2nbcukm9lvh5gi6hjaikpjb7khvl12vb.apps.googleusercontent.com";
+  
   const redirectUri = AuthSession.makeRedirectUri({
-    scheme: REVERSED_CLIENT_ID,
-    // Try without the /oauth2redirect/google path first, as it's often the culprit
+    // This 'scheme' property tells Expo: "Ignore the other 3 schemes, use THIS one."
+    scheme: Platform.OS === 'ios' 
+      ? REVERSED_CLIENT_ID 
+      : 'com.tailtrailsclub.app',
+    path: '', 
   });
 
-  console.log("FINAL TEST REDIRECT:", redirectUri);
+  console.log("REDIRECT CHECK:", redirectUri);
+  // Should look like: com.tailtrailsclub.app://oauth2redirect/google
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: GOOGLE_IOS_CLIENT_ID,
     webClientId: "447944956309-t92ug0tqs40adop6mnvifqbmfsi7dtj6.apps.googleusercontent.com",
-    androidClientId: "447944956309-8emn1c0n3qljs8o595g088ddd2q2ibtj.apps.googleusercontent.com",
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
     scopes: ['openid', 'profile', 'email'],
     responseType: 'code',
     redirectUri: redirectUri,
