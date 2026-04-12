@@ -133,9 +133,9 @@ export default function AccountSettingsScreen() {
                 <Text style={accountStyles.initialAvatarText}>{(editedName || userProfile?.name || user?.email || 'A').charAt(0).toUpperCase()}</Text>
               </View>
             )}
-            <View style={accountStyles.cameraOverlay}>
+            {/* <View style={accountStyles.cameraOverlay}>
               <Camera size={20} color={theme.accentPrimary} />
-            </View>
+            </View> */}
           </TouchableOpacity>
           <Text style={accountStyles.photoHint}>Tap to change photo</Text>
         </View>

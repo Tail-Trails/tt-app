@@ -17,7 +17,7 @@ import { Text } from '@/components';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import TrailMapPreview from '@/components/TrailMapPreview';
 import * as Location from 'expo-location';
-import { MapPin, Calendar, Edit3, Check, X, Navigation, Star, ArrowLeft, ChevronRight } from 'lucide-react-native';
+import { MapPin, Calendar, Edit3, Check, X, Navigation, Star, ArrowLeft, ChevronRight, Bookmark } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
@@ -59,7 +59,8 @@ function PartialStar({ size, rating, color, emptyColor }: {
 export default function TrailDetailScreen() {
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
-  const { getTrailById, updateTrailName, updateTrailDetails, getTrailWithUser } = useTrails();
+  const { getTrailById, updateTrailName, updateTrailDetails, getTrailWithUser, saveTrailBookmark, removeTrailBookmark, isTrailSaved } = useTrails();
+  const [isSavingBookmark, setIsSavingBookmark] = useState<boolean>(false);
   const [trail, setTrail] = useState<Trail | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -351,6 +352,33 @@ export default function TrailDetailScreen() {
     }
   };
 
+  const handleToggleSave = async () => {
+    if (!trail) return;
+    if (!user) {
+      Alert.alert('Sign in required', 'Please sign in to save trails', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign In', onPress: () => router.push('/login') },
+      ]);
+      return;
+    }
+
+    try {
+      if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setIsSavingBookmark(true);
+      const saved = isTrailSaved(trail.id);
+      if (saved) {
+        await removeTrailBookmark(trail.id);
+      } else {
+        await saveTrailBookmark(trail.id);
+      }
+    } catch (err) {
+      console.error('Failed to toggle save:', err);
+      Alert.alert('Error', 'Failed to update saved trail.');
+    } finally {
+      setIsSavingBookmark(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -390,13 +418,21 @@ export default function TrailDetailScreen() {
         <TouchableOpacity style={styles.headerButton} onPress={handleBack}>
           <ArrowLeft size={24} color={colors.accentPrimary} />
         </TouchableOpacity>
-        <View style={[styles.headerRightButtons]}>
-          {canEdit && (
-            <TouchableOpacity style={styles.headerButton} onPress={handleEdit}>
-              <Edit3 size={22} color={colors.accentPrimary} />
-            </TouchableOpacity>
-          )}
-        </View>
+          <View style={[styles.headerRightButtons]}>
+            {canEdit ? (
+              <TouchableOpacity style={styles.headerButton} onPress={handleEdit}>
+                <Edit3 size={22} color={colors.accentPrimary} />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.headerButton} onPress={handleToggleSave} disabled={isSavingBookmark}>
+                {isSavingBookmark ? (
+                  <ActivityIndicator size="small" color={colors.accentPrimary} />
+                ) : (
+                  <Bookmark size={22} color={trail && isTrailSaved(trail.id) ? colors.accentPrimary : colors.textMuted} />
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
       </View>
 
       <Animated.ScrollView

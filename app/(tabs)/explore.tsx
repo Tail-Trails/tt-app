@@ -30,7 +30,7 @@ export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
   const { loadNearbyTrails, loadForYouTrails, loadTrailsByTag, saveTrailBookmark, removeTrailBookmark, isTrailSaved } = useTrails();
   const [selectedCategory, setSelectedCategory] = useState<string>('for-you');
-  const [nearbyTrails, setNearbyTrails] = useState<Trail[]>([]);
+  const [trails, setTrails] = useState<Trail[]>([]);
   const [isLoadingNearby, setIsLoadingNearby] = useState<boolean>(true);
   const [locationCoords, setLocationCoords] = useState<{ latitude: number; longitude: number } | undefined>(undefined);
   const [, setUserCity] = useState<string | undefined>(undefined);
@@ -92,22 +92,22 @@ export default function ExploreScreen() {
       setIsLoadingNearby(true);
       try {
         if (selectedCategory === 'for-you') {
-          const trails = await loadForYouTrails(locationCoords?.latitude, locationCoords?.longitude);
-          if (!cancelled) setNearbyTrails(trails);
+          const loaded = await loadForYouTrails(locationCoords?.latitude, locationCoords?.longitude);
+          if (!cancelled) setTrails(loaded);
         } else if (selectedCategory === 'nearby') {
-          const trails = await loadNearbyTrails(locationCoords?.latitude, locationCoords?.longitude);
-          if (!cancelled) setNearbyTrails(trails);
+          const loaded = await loadNearbyTrails(locationCoords?.latitude, locationCoords?.longitude);
+          if (!cancelled) setTrails(loaded);
         } else if (selectedCategory === 'beach' || selectedCategory === 'forest' || selectedCategory === 'road' || selectedCategory === 'cliff') {
           const tagMap: Record<string, string> = { beach: 'Beach', forest: 'Forest', road: 'Road', cliff: 'Cliff' };
           const tag = tagMap[selectedCategory] || selectedCategory;
-          const trails = await loadTrailsByTag(tag, locationCoords?.latitude, locationCoords?.longitude);
-          if (!cancelled) setNearbyTrails(trails);
+          const loaded = await loadTrailsByTag(tag, locationCoords?.latitude, locationCoords?.longitude);
+          if (!cancelled) setTrails(loaded);
         } else {
-          if (!cancelled) setNearbyTrails([]);
+          if (!cancelled) setTrails([]);
         }
       } catch (err) {
         console.error('Failed to load category trails:', err);
-        if (!cancelled) setNearbyTrails([]);
+        if (!cancelled) setTrails([]);
       } finally {
         if (!cancelled) setIsLoadingNearby(false);
       }
@@ -120,7 +120,7 @@ export default function ExploreScreen() {
   const loadSearchSuggestions = useCallback(() => {
     const query = searchQuery.toLowerCase();
 
-    const suggestions = nearbyTrails
+    const suggestions = trails
       .filter(trail => {
         const name = trail.name?.toLowerCase() || '';
         const city = trail.city?.toLowerCase() || '';
@@ -136,7 +136,7 @@ export default function ExploreScreen() {
       .slice(0, 6);
 
     setSearchSuggestions(suggestions);
-  }, [searchQuery, nearbyTrails]);
+  }, [searchQuery, trails]);
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -253,25 +253,8 @@ export default function ExploreScreen() {
     setSelectedCategory(categoryId);
   };
 
-  const getFilteredTrails = useCallback((trails: Trail[]) => {
-    let filtered = trails;
-
-    if (selectedCategory === 'popular') {
-      filtered = [...filtered].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    } else if (selectedCategory === 'beach') {
-      filtered = filtered.filter((trail) => {
-        const tags = trail.environment_tags || [];
-        return tags.some(tag => tag.toLowerCase().includes('beach'));
-      });
-    }
-
-    return filtered;
-  }, [selectedCategory]);
-
-  const filteredTrails = getFilteredTrails(nearbyTrails);
-
   const mapMarkers = useMemo(() => {
-    return filteredTrails
+    return trails
       .filter((trail) => Number.isFinite(trail.startLatitude) && Number.isFinite(trail.startLongitude))
       .map((trail) => ({
         id: trail.id,
@@ -279,7 +262,7 @@ export default function ExploreScreen() {
         longitude: trail.startLongitude as number,
         label: Number.isFinite(trail.dogMatchScore) ? `${trail.dogMatchScore.toFixed(1)}%` : '-',
       }));
-  }, [filteredTrails]);
+  }, [trails]);
 
   const mapRegion = useMemo(() => {
     if (mapMarkers.length === 0) {
@@ -315,8 +298,8 @@ export default function ExploreScreen() {
   };
 
   const selectedMapTrail = useMemo(
-    () => filteredTrails.find((t) => t.id === selectedMapTrailId) ?? null,
-    [filteredTrails, selectedMapTrailId]
+    () => trails.find((t) => t.id === selectedMapTrailId) ?? null,
+    [trails, selectedMapTrailId]
   );
 
   const selectedMapTrailCoordinates = useMemo(() => {
@@ -408,8 +391,8 @@ export default function ExploreScreen() {
                 <LottieLoader size={120} />
                 <Text style={styles.loadingText}>Loading trails...</Text>
               </View>
-            ) : filteredTrails.length > 0 ? (
-              filteredTrails.map((trail) => {
+            ) : trails.length > 0 ? (
+              trails.map((trail) => {
                 const isSaved = isTrailSaved(trail.id);
                 return (
                   <TrailCard

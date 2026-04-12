@@ -24,13 +24,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './profile.styles';
 import { useRouter } from 'expo-router';
 import { formatDistance } from '@/utils/distance';
+import * as Location from 'expo-location';
+import { getBestAvailableLocation } from '@/utils/location';
 import { LinearGradient } from 'expo-linear-gradient';
 import TrailMapPreview from '@/components/TrailMapPreview';
 import TrailCard from '@/components/TrailCard';
+import LottieLoader from '@/components/LottieLoader';
 // Use bundler require for local asset so Metro/Expo can resolve it reliably
 const Icon = require('../../assets/images/icon.png');
 
-type ProfileTab = 'created' | 'saved' | 'reviews';
+type ProfileTab = 'created' | 'saved' | 'history';
 
 export default function ProfileScreen() {
   const auth = useAuth();
@@ -51,6 +54,8 @@ export default function ProfileScreen() {
   const mainScrollRef = React.useRef<ScrollView | null>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [selectedTab, setSelectedTab] = React.useState<ProfileTab>('created');
+  const [history, setHistory] = React.useState<any[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = React.useState<boolean>(false);
   const [bookmarkAnimations, setBookmarkAnimations] = React.useState<Record<string, Animated.Value>>({});
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -119,6 +124,59 @@ export default function ProfileScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setSelectedTab(tab);
+    if (tab === 'history') {
+      fetchHistory();
+    }
+  };
+
+  const fetchHistory = async () => {
+    try {
+      if (!session) return;
+      setIsHistoryLoading(true);
+
+      // Request foreground location permission and get the best available location
+      let latitude = 0;
+      let longitude = 0;
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const loc = await getBestAvailableLocation({ accuracy: Location.Accuracy.Balanced });
+          if (loc && loc.coords) {
+            latitude = loc.coords.latitude;
+            longitude = loc.coords.longitude;
+          }
+        } else {
+          console.warn('Location permission not granted for history fetch');
+        }
+      } catch (err) {
+        console.warn('Error getting location for history fetch', err);
+      }
+
+      const res = await fetch(`${API_URL}/trail/me/history?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}`, {
+        headers: {
+          Authorization: `${session.tokenType || 'bearer'} ${session.accessToken}`,
+        },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.warn('Failed to fetch history', err);
+        setHistory([]);
+        return;
+      }
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setHistory(data);
+      } else if (data && Array.isArray((data as any).items)) {
+        setHistory((data as any).items);
+      } else {
+        setHistory([]);
+      }
+    } catch (err) {
+      console.error('Error fetching history', err);
+      setHistory([]);
+    } finally {
+      setIsHistoryLoading(false);
+    }
   };
 
   const handleNavigateToTrail = (trailId: string) => {
@@ -216,7 +274,7 @@ export default function ProfileScreen() {
   const getDisplayedTrails = () => {
     if (selectedTab === 'created') return trails;
     if (selectedTab === 'saved') return savedTrails;
-    return [];
+    return history;
   };
 
   const displayedTrails = getDisplayedTrails();
@@ -387,17 +445,17 @@ export default function ProfileScreen() {
             <Text style={[styles.tabText, selectedTab === 'saved' && styles.tabTextActive]}>Saved</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, selectedTab === 'reviews' && styles.tabActive]}
-            onPress={() => handleTabPress('reviews')}
+            style={[styles.tab, selectedTab === 'history' && styles.tabActive]}
+            onPress={() => handleTabPress('history')}
           >
-            <Text style={[styles.tabText, selectedTab === 'reviews' && styles.tabTextActive]}>Reviews</Text>
+            <Text style={[styles.tabText, selectedTab === 'history' && styles.tabTextActive]}>History</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.trailsSection}>
-          {isTrailsLoading ? (
+          {(selectedTab === 'history' ? isHistoryLoading : isTrailsLoading) ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={theme.backgroundPrimary} />
+              <LottieLoader size={160} />
             </View>
           ) : displayedTrails.length > 0 ? (
             <View style={styles.verticalTrailsContainer}>
@@ -421,9 +479,9 @@ export default function ProfileScreen() {
               <Text style={styles.emptyText}>
                 {selectedTab === 'created'
                   ? 'No trails created yet'
-                  : selectedTab === 'saved'
+                    : selectedTab === 'saved'
                     ? 'Trail saving, coming soon!'
-                    : 'No reviews yet'}
+                    : 'No history yet'}
               </Text>
             </View>
           )}

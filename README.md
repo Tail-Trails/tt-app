@@ -312,4 +312,3 @@ For mobile apps, you'll configure your app's deep linking scheme in `app.json`.
 ## TODOs:
 - standardize back buttons across all the frontend screens (currently some use text, some use icons, some use both)
 - update edit screen
-- create reviews screen

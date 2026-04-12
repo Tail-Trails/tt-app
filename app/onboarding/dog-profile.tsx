@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, TextInput, Image, Alert, ScrollView, Platform, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, TextInput, Image, Alert, ScrollView, Platform, ActivityIndicator, Modal, TouchableWithoutFeedback } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Text } from '@/components';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { useDogs } from '@/context/DogsContext';
+import { useAuth } from '@/context/AuthContext';
+import { API_URL } from '@/lib/api';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { ChevronDown, Camera, Upload, ArrowLeft } from 'lucide-react-native';
@@ -16,7 +18,8 @@ import { DogSize, DOG_SIZES } from '@/types/dog-profile';
 export default function DogProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { dogProfile, updateDogProfile } = useDogs();
+  const { dogProfile, updateDogProfile, refreshDogProfile } = useDogs();
+  const { session } = useAuth();
   const params = useLocalSearchParams<{ from?: string }>();
   const openedFromTab = params.from === 'profile' || params.from === 'settings';
   const openedFromSettings = params.from === 'settings';
@@ -26,6 +29,7 @@ export default function DogProfileScreen() {
   const [nickname, setNickname] = useState<string>('');
   const [age, setAge] = useState<string>('');
   const [dobDate, setDobDate] = useState<Date | null>(null);
+  const [tempDobDate, setTempDobDate] = useState<Date | null>(null);
   const [size, setSize] = useState<DogSize | null>(null);
   const [showDOBPicker, setShowDOBPicker] = useState<boolean>(false);
   const [photo, setPhoto] = useState<string | null>(null);
@@ -39,10 +43,7 @@ export default function DogProfileScreen() {
       if (dogProfile.dob) {
         const d = new Date(dogProfile.dob);
         if (!isNaN(d.getTime())) {
-          const mm = String(d.getMonth() + 1).padStart(2, '0');
-          const dd = String(d.getDate()).padStart(2, '0');
-          const yyyy = d.getFullYear();
-          setAge(`${mm}/${dd}/${yyyy}`);
+          setAge(formatDateToDisplay(d));
           setDobDate(d);
         } else {
           setAge(dogProfile.age?.toString() || '');
@@ -55,13 +56,55 @@ export default function DogProfileScreen() {
     }
   }, [dogProfile]);
 
-  const dobInputRef = useRef<TextInput | null>(null);
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!openedFromSettings || !dogProfile?.id || !session) return;
+      try {
+        const resp = await fetch(`${API_URL}/dog/${dogProfile.id}/dog-profile`, {
+          headers: { 'Authorization': `Bearer ${session.accessToken}` }
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (data) {
+          setName(data.name || '');
+          setNickname(data.nickname || '');
+          if (data.dob) {
+            const d = new Date(data.dob);
+            if (!isNaN(d.getTime())) {
+              setAge(formatDateToDisplay(d));
+              setDobDate(d);
+            } else {
+              setAge(data.age?.toString() || '');
+            }
+          } else {
+            setAge(data.age?.toString() || '');
+          }
+          setSize(data.size || null);
+          setPhoto(data.image || null);
+        }
+      } catch (err) {
+        console.error('Failed to load dog profile from /dog/{id}/dog-profile', err);
+      }
+    };
+    loadProfile();
+  }, [openedFromSettings, dogProfile?.id, session]);
+
+  // dobInputRef removed — using direct picker trigger instead of text input
+
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   const formatDateToMMDDYYYY = (d: Date) => {
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     const yyyy = d.getFullYear();
     return `${mm}/${dd}/${yyyy}`;
+  };
+
+  const formatDateToDisplay = (d: Date) => {
+    const dd = String(d.getDate());
+    const month = MONTH_NAMES[d.getMonth()];
+    const yyyy = d.getFullYear();
+    return `${dd} ${month} ${yyyy}`;
   };
 
   // Use community datetimepicker instead of react-native-date-picker to avoid native module incompatibilities
@@ -143,6 +186,7 @@ export default function DogProfileScreen() {
     const dobInput = (age || '').trim();
     const mmddyyyy = /^\d{2}\/\d{2}\/\d{4}$/;
     const yyyymmdd = /^\d{4}-\d{2}-\d{2}$/;
+    const ddMonthyyyy = /^\d{1,2}\s+[A-Za-z]+\s+\d{4}$/;
 
     if (mmddyyyy.test(dobInput)) {
       const parts = dobInput.split('/').map((p) => parseInt(p, 10));
@@ -176,10 +220,31 @@ export default function DogProfileScreen() {
       const dd = String(dt.getDate()).padStart(2, '0');
       const yyyy = dt.getFullYear();
       dobValue = `${mm}/${dd}/${yyyy}`;
+    } else if (ddMonthyyyy.test(dobInput)) {
+      const parts = dobInput.split(/\s+/);
+      const day = parseInt(parts[0], 10);
+      const monthToken = parts[1];
+      const year = parseInt(parts[2], 10);
+      const monthIndex = MONTH_NAMES.findIndex(m => m.toLowerCase().startsWith(monthToken.toLowerCase().slice(0,3)));
+      if (monthIndex === -1) {
+        Alert.alert('Invalid Date', 'Please enter a valid date like "10 August 2021"');
+        return;
+      }
+      const dt = new Date(year, monthIndex, day);
+      if (isNaN(dt.getTime())) {
+        Alert.alert('Invalid Date', 'Please enter a valid date like "10 August 2021"');
+        return;
+      }
+      const today = new Date();
+      let years = today.getFullYear() - dt.getFullYear();
+      const m = today.getMonth() - dt.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dt.getDate())) years--;
+      parsedAge = years;
+      dobValue = formatDateToMMDDYYYY(dt);
     } else {
       const num = parseInt(dobInput, 10);
       if (!dobInput || isNaN(num) || num < 0 || num > 30) {
-        Alert.alert('Invalid Age/Date', 'Please enter a valid date (MM/DD/YYYY) or age (0-30 years)');
+        Alert.alert('Invalid Age/Date', 'Please enter a valid date (MM/DD/YYYY), date (DD Month YYYY) or age (0-30 years)');
         return;
       }
       parsedAge = num;
@@ -187,8 +252,87 @@ export default function DogProfileScreen() {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    // If opened from profile/settings and editing, save and return to profile tab
+    // If opened from profile tab (not settings) and editing, use context update
     if (openedFromTab && dogProfile) {
+      // If opened from Settings, use the specific /dog/{id}/dog-profile endpoint
+      if (openedFromSettings) {
+        setIsSaving(true);
+        try {
+          const updated: any = {
+            name: name.trim(),
+            nickname: nickname.trim() || undefined,
+            size,
+          };
+          if (parsedAge !== null) updated.age = parsedAge;
+          if (dobValue) updated.dob = dobValue;
+
+          // Handle image upload if local URI
+          if (typeof photo === 'string' && photo && !photo.startsWith('http')) {
+            const uri = photo as string;
+            const uriParts = uri.split('/');
+            const fileName = uriParts[uriParts.length - 1] || `dog_${Date.now()}.jpg`;
+            const extMatch = fileName.match(/\.([a-zA-Z0-9]+)(?:\?.*)?$/);
+            const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
+            const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+
+            const form = new FormData();
+            // @ts-ignore
+            form.append('file', { uri, name: fileName, type: mimeType });
+            form.append('filename', fileName);
+            form.append('dog_id', dogProfile.id);
+            form.append('trail_id', '');
+            form.append('user_id', '');
+
+            const uploadResp = await fetch(`${API_URL}/uploads`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session?.accessToken}`,
+                'accept': 'application/json',
+              },
+              body: form as any,
+            });
+
+            if (!uploadResp.ok) {
+              const errText = await uploadResp.text();
+              throw new Error(`Upload failed: ${uploadResp.status} ${errText}`);
+            }
+
+            const uploadData = await uploadResp.json();
+            const publicUrl = uploadData.public_url || uploadData.publicUrl || uploadData.url;
+            if (!publicUrl) throw new Error('Upload did not return a public URL');
+            updated.image = publicUrl;
+          } else if (photo) {
+            updated.image = photo;
+          }
+
+          const resp = await fetch(`${API_URL}/dog/${dogProfile.id}/dog-profile`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.accessToken}`,
+            },
+            body: JSON.stringify(updated),
+          });
+
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail?.[0]?.msg || 'Failed to update dog profile');
+          }
+
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          // refresh context data
+          try { await refreshDogProfile(); } catch (e) { /* ignore */ }
+          router.replace('/(tabs)/profile');
+        } catch (err: any) {
+          console.error('Failed to update dog profile from settings endpoint:', err);
+          Alert.alert('Error', err.message || 'Failed to save changes. Please try again.');
+        } finally {
+          setIsSaving(false);
+        }
+        return;
+      }
+
+      // fallback: maintain existing context update for profile tab
       setIsSaving(true);
       try {
         const updated: any = {
@@ -263,11 +407,11 @@ export default function DogProfileScreen() {
               <Text style={styles.photoPlaceholderText}>Add Photo</Text>
             </View>
           )}
-          {photo && !isLoadingImage && (
+          {/* {photo && !isLoadingImage && (
             <View style={styles.photoOverlay}>
               <Upload size={24} color="#1a1f0a" />
             </View>
-          )}
+          )} */}
         </TouchableOpacity>
 
         <View style={styles.formSection}>
@@ -333,42 +477,83 @@ export default function DogProfileScreen() {
 
         <View style={styles.formSection}>
           <Text style={styles.label}>Date of birth *</Text>
-          <TextInput
-            ref={dobInputRef}
-            style={styles.input}
-            value={age}
-            onChangeText={(text) => {
-              const digits = text.replace(/\D/g, '').slice(0, 8);
-              let formatted = digits;
-              if (digits.length > 4) {
-                formatted = `${digits.slice(0,2)}/${digits.slice(2,4)}/${digits.slice(4,8)}`;
-              } else if (digits.length > 2) {
-                formatted = `${digits.slice(0,2)}/${digits.slice(2,4)}`;
-              }
-              setAge(formatted);
-            }}
-            onFocus={() => {
-              dobInputRef.current?.blur();
+          <TouchableOpacity
+            style={[styles.input, styles.dateInput]}
+            onPress={() => {
+              setTempDobDate(dobDate || new Date());
               setShowDOBPicker(true);
             }}
-            placeholder="MM/DD/YYYY"
-            placeholderTextColor="#5a6040"
-            keyboardType="default"
             testID="dog-dob-input"
-          />
+          >
+            <Text style={age ? { color: theme.accentPrimary } : { color: '#5a6040' }}>
+              {age || '10 August 2021'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {Platform.OS !== 'web' && showDOBPicker ? (
+        {Platform.OS === 'ios' && showDOBPicker ? (
+          <Modal
+            transparent
+            animationType="slide"
+            visible={showDOBPicker}
+            onRequestClose={() => setShowDOBPicker(false)}
+          >
+            <TouchableWithoutFeedback onPress={() => setShowDOBPicker(false)}>
+              <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }} />
+            </TouchableWithoutFeedback>
+            <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}>
+              <View style={{ backgroundColor: '#12130f', padding: 12, borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
+                <DateTimePicker
+                  value={tempDobDate || dobDate || new Date()}
+                  mode="date"
+                  display="spinner"
+                  textColor={theme.accentPrimary}
+                  maximumDate={new Date()}
+                  onChange={(_event, selectedDate) => {
+                    if (selectedDate) {
+                      setTempDobDate(selectedDate);
+                    }
+                  }}
+                />
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 8 }}>
+                  <TouchableOpacity
+                    style={{ paddingHorizontal: 12, paddingVertical: 20 }}
+                    onPress={() => {
+                      setTempDobDate(null);
+                      setShowDOBPicker(false);
+                    }}
+                  >
+                    <Text style={{ color: '#9aa08a' }}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ paddingHorizontal: 12, paddingVertical: 20 }}
+                    onPress={() => {
+                      if (tempDobDate) {
+                        setDobDate(tempDobDate);
+                        setAge(formatDateToDisplay(tempDobDate));
+                      }
+                      setTempDobDate(null);
+                      setShowDOBPicker(false);
+                    }}
+                  >
+                    <Text style={{ color: theme.accentPrimary }}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        ) : Platform.OS !== 'web' && showDOBPicker ? (
           <DateTimePicker
             value={dobDate || new Date()}
             mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            display={Platform.OS === 'ios' ? 'compact' : 'default'}
+            textColor={Platform.OS === 'ios' ? theme.accentPrimary : undefined}
             maximumDate={new Date()}
             onChange={(_event, selectedDate) => {
               setShowDOBPicker(false);
               if (selectedDate) {
                 setDobDate(selectedDate);
-                setAge(formatDateToMMDDYYYY(selectedDate));
+                setAge(formatDateToDisplay(selectedDate));
               }
             }}
           />
@@ -383,7 +568,7 @@ export default function DogProfileScreen() {
           {isSaving ? (
             <ActivityIndicator color="#1a1f0a" />
           ) : (
-            <Text style={styles.nextButtonText}>{openedFromSettings && dogProfile ? 'Save' : 'Next'}</Text>
+            <Text style={styles.nextButtonText}>{openedFromSettings ? 'Save' : 'Next'}</Text>
           )}
         </TouchableOpacity>
       </ScrollView>

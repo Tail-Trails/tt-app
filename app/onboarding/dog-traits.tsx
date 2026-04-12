@@ -9,6 +9,7 @@ import styles from './dog-traits.styles';
 import theme from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useDogs } from '@/context/DogsContext';
+import { API_URL } from '@/lib/api';
 import Slider from '@react-native-community/slider';
 
 export default function DogTraitsScreen() {
@@ -27,6 +28,7 @@ export default function DogTraitsScreen() {
   const openedFromTab = params.from === 'profile' || params.from === 'settings';
   const { user } = useAuth();
   const { dogProfile, refreshDogProfile, createDogProfile, updateDogProfile } = useDogs();
+  const { session } = useAuth();
   const insets = useSafeAreaInsets();
   // recall_reliability removed — using explicit trait fields only
   // New trait states (1-100 sliders or boolean toggles)
@@ -57,6 +59,31 @@ export default function DogTraitsScreen() {
       setSensitiveToHeat(!!dogProfile.sensitive_to_heat);
     }
   }, [dogProfile, isEditing]);
+
+  useEffect(() => {
+    const loadTraits = async () => {
+      if (!openedFromSettings || !isEditing || !dogProfile?.id || !session) return;
+      try {
+        const resp = await fetch(`${API_URL}/dog/${dogProfile.id}/dog-traits`, {
+          headers: { 'Authorization': `Bearer ${session.accessToken}` }
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (data) {
+          setDogTolerance(data.dogTolerance ?? 50);
+          setNervousAroundPeople(!!data.nervousAroundPeople);
+          setOffleashReliability(data.offleashReliability ?? 50);
+          setStimulationTolerance(data.stimulationTolerance ?? 50);
+          setHighPreyDrive(!!data.highPreyDrive);
+          setWalkingNeed(data.walkingNeed ?? 50);
+          setSensitiveToHeat(!!data.sensitiveToHeat);
+        }
+      } catch (err) {
+        console.error('Failed to load dog traits from /dog/{id}/dog-traits', err);
+      }
+    };
+    loadTraits();
+  }, [openedFromSettings, isEditing, dogProfile?.id, session]);
 
   const handleFinish = async () => {
     if (!user) {
@@ -95,7 +122,38 @@ export default function DogTraitsScreen() {
       console.log('Dog profile data:', profileData);
 
       if (isEditing && dogProfile?.id) {
-        await updateDogProfile({ ...profileData, id: dogProfile.id });
+        if (openedFromSettings && session) {
+          // Use specific dog-traits PUT endpoint
+          const payload: any = {
+            dogTolerance,
+            nervousAroundPeople,
+            offleashReliability,
+            stimulationTolerance,
+            highPreyDrive,
+            walkingNeed,
+            sensitiveToHeat,
+          };
+          try {
+            const resp = await fetch(`${API_URL}/dog/${dogProfile.id}/dog-traits`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.accessToken}`,
+              },
+              body: JSON.stringify(payload),
+            });
+            if (!resp.ok) {
+              const err = await resp.json().catch(() => ({}));
+              throw new Error(err.detail?.[0]?.msg || 'Failed to update dog traits');
+            }
+            await refreshDogProfile();
+          } catch (err) {
+            console.error('Failed to update dog traits via /dog/{id}/dog-traits', err);
+            throw err;
+          }
+        } else {
+          await updateDogProfile({ ...profileData, id: dogProfile.id });
+        }
       } else {
         await createDogProfile(profileData);
       }

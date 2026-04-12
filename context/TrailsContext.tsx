@@ -104,7 +104,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
         return;
       }
 
-      let url = `${API_URL}/trail/me`;
+      let url = `${API_URL}/trail/me/saved-trails`;
       try {
         const loc = await getBestAvailableLocation();
         if (loc && loc.coords) {
@@ -435,7 +435,19 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
       const resp = await fetch(`${API_URL}/trail/${id}`, { headers });
       const data = await resp.json();
       if (data) {
-        setTrails((prev: Trail[]) => dedupeTrailsById([data, ...prev.filter(t => t.id !== data.id)]));
+        // Only add the fetched trail to the "my trails" list when it was created by
+        // the current user. Viewing an arbitrary trail should not add it to the
+        // created list.
+        try {
+          const creatorId = (data as any).userId || (data as any).user_id || (data as any).created_by;
+          if (creatorId && user && String(creatorId) === String(user.id)) {
+            setTrails((prev: Trail[]) => dedupeTrailsById([data, ...prev.filter(t => t.id !== data.id)]));
+          }
+        } catch (e) {
+          // If anything goes wrong deciding creator identity, avoid mutating state
+          console.warn('Could not determine trail creator; not adding to my trails');
+        }
+
         return data as Trail;
       }
       return undefined;
@@ -443,7 +455,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
       console.error('Error fetching trail by id:', err);
       return undefined;
     }
-  }, [session]);
+  }, [session, dedupeTrailsById, user]);
 
   const loadNearbyTrails = useCallback(async (latitude?: number, longitude?: number, distanceKm: number = 35) => {
     try {
@@ -709,16 +721,25 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
 
     try {
       console.log('Saving trail bookmark:', trailId);
-      // TODO: Implement bookmark with your backend
-      const trail = trails.find((t: Trail) => t.id === trailId);
-      if (trail) {
-        setSavedTrails((prev: Trail[]) => [trail, ...prev]);
+      if (!session?.accessToken) throw new Error('Not authenticated');
+      const resp = await fetch(`${API_URL}/trail/me/saved-trails/${encodeURIComponent(trailId)}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.accessToken}` },
+      });
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        console.error('Failed to save trail bookmark via API:', resp.status, txt);
+        throw new Error('Failed to save trail');
+      }
+      const saved = await resp.json();
+      if (saved && (saved as any).id) {
+        setSavedTrails((prev: Trail[]) => dedupeTrailsById([saved, ...prev]));
       }
     } catch (error) {
       console.error('Failed to save trail bookmark:', error);
       throw error;
     }
-  }, [user, trails]);
+  }, [user, trails, session, dedupeTrailsById]);
 
   const removeTrailBookmark = useCallback(async (trailId: string) => {
     if (!user) {
@@ -728,13 +749,23 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
 
     try {
       console.log('Removing trail bookmark:', trailId);
-      // TODO: Implement remove bookmark with your backend
+      if (!session?.accessToken) throw new Error('Not authenticated');
+      const resp = await fetch(`${API_URL}/trail/me/saved-trails/${encodeURIComponent(trailId)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${session.accessToken}` },
+      });
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        console.error('Failed to remove saved trail via API:', resp.status, txt);
+        throw new Error('Failed to remove saved trail');
+      }
+      // Backend may return the removed trail or confirmation; remove locally regardless
       setSavedTrails((prev: Trail[]) => prev.filter((t: Trail) => t.id !== trailId));
     } catch (error) {
       console.error('Failed to remove trail bookmark:', error);
       throw error;
     }
-  }, [user]);
+  }, [user, session]);
 
   const isTrailSaved = useCallback((trailId: string): boolean => {
     return savedTrails.some((t: Trail) => t.id === trailId);

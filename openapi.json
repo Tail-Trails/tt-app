@@ -279,6 +279,194 @@
         }
       }
     },
+    "/dog/{dog_id}/dog-profile": {
+      "get": {
+        "tags": [
+          "dog"
+        ],
+        "summary": "Get Dog Profile",
+        "operationId": "get_dog_profile_dog__dog_id__dog_profile_get",
+        "parameters": [
+          {
+            "name": "dog_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dog Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DogProfileSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "dog"
+        ],
+        "summary": "Update Dog Profile",
+        "operationId": "update_dog_profile_dog__dog_id__dog_profile_put",
+        "parameters": [
+          {
+            "name": "dog_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dog Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDogProfileSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DogSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dog/{dog_id}/dog-traits": {
+      "get": {
+        "tags": [
+          "dog"
+        ],
+        "summary": "Get Dog Traits",
+        "operationId": "get_dog_traits_dog__dog_id__dog_traits_get",
+        "parameters": [
+          {
+            "name": "dog_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dog Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DogTraitsSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "dog"
+        ],
+        "summary": "Update Dog Traits",
+        "operationId": "update_dog_traits_dog__dog_id__dog_traits_put",
+        "parameters": [
+          {
+            "name": "dog_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dog Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDogTraitsSchema"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DogSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/trail/nearby": {
       "get": {
         "tags": [
@@ -493,7 +681,7 @@
           "trails"
         ],
         "summary": "Get My Trails",
-        "description": "Get all trails created by the current authenticated user.",
+        "description": "Get all original trails created by the current authenticated user.",
         "operationId": "get_my_trails_trail_me_get",
         "parameters": [
           {
@@ -561,6 +749,204 @@
         },
         "responses": {
           "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trail/me/history": {
+      "get": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Get My Trails History",
+        "description": "Get all trails created by the current authenticated user. \n\nIncludes both original trails and follow trails (i.e., history of all trails the user has recorded, including follows).",
+        "operationId": "get_my_trails_history_trail_me_history_get",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Latitude"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Longitude"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrailSchema"
+                  },
+                  "title": "Response Get My Trails History Trail Me History Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trail/me/saved-trails": {
+      "get": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Get My Saved Trails",
+        "description": "Get all trails saved by the current authenticated user.",
+        "operationId": "get_my_saved_trails_trail_me_saved_trails_get",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Latitude"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Longitude"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrailSchema"
+                  },
+                  "title": "Response Get My Saved Trails Trail Me Saved Trails Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trail/me/saved-trails/{trail_id}": {
+      "post": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Save Trail",
+        "description": "Save a trail for the current authenticated user.",
+        "operationId": "save_trail_trail_me_saved_trails__trail_id__post",
+        "parameters": [
+          {
+            "name": "trail_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Trail Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "trails"
+        ],
+        "summary": "Unsave Trail",
+        "description": "Unsave a trail for the current authenticated user.",
+        "operationId": "unsave_trail_trail_me_saved_trails__trail_id__delete",
+        "parameters": [
+          {
+            "name": "trail_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Trail Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -2562,6 +2948,58 @@
         "title": "CreateTrailSchema",
         "description": "Schema for creating a trail."
       },
+      "DogProfileSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "nickname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nickname"
+          },
+          "size": {
+            "type": "string",
+            "title": "Size"
+          },
+          "dob": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dob"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "size"
+        ],
+        "title": "DogProfileSchema"
+      },
       "DogSchema": {
         "properties": {
           "name": {
@@ -2715,6 +3153,89 @@
         ],
         "title": "DogSchema",
         "description": "Schema for dog data with ID and timestamps."
+      },
+      "DogTraitsSchema": {
+        "properties": {
+          "dogTolerance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dogtolerance"
+          },
+          "nervousAroundPeople": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nervousaroundpeople"
+          },
+          "offleashReliability": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offleashreliability"
+          },
+          "stimulationTolerance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulationtolerance"
+          },
+          "highPreyDrive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Highpreydrive"
+          },
+          "walkingNeed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Walkingneed"
+          },
+          "sensitiveToHeat": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sensitivetoheat"
+          }
+        },
+        "type": "object",
+        "title": "DogTraitsSchema"
       },
       "FeedbackSchema": {
         "properties": {
@@ -3411,7 +3932,7 @@
             ],
             "title": "Difficulty"
           },
-          "user": {
+          "creator": {
             "anyOf": [
               {
                 "$ref": "#/components/schemas/TokenDataSchema"
@@ -3474,6 +3995,58 @@
         ],
         "title": "TrailSchema",
         "description": "Schema for trail data with ID and timestamps."
+      },
+      "UpdateDogProfileSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "nickname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nickname"
+          },
+          "size": {
+            "type": "string",
+            "title": "Size"
+          },
+          "dob": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dob"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "size"
+        ],
+        "title": "UpdateDogProfileSchema"
       },
       "UpdateDogSchema": {
         "properties": {
@@ -3604,6 +4177,89 @@
         ],
         "title": "UpdateDogSchema",
         "description": "Schema for updating a dog."
+      },
+      "UpdateDogTraitsSchema": {
+        "properties": {
+          "dogTolerance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dogtolerance"
+          },
+          "nervousAroundPeople": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nervousaroundpeople"
+          },
+          "offleashReliability": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offleashreliability"
+          },
+          "stimulationTolerance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulationtolerance"
+          },
+          "highPreyDrive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Highpreydrive"
+          },
+          "walkingNeed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Walkingneed"
+          },
+          "sensitiveToHeat": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sensitivetoheat"
+          }
+        },
+        "type": "object",
+        "title": "UpdateDogTraitsSchema"
       },
       "UpdateTrailSchema": {
         "properties": {
