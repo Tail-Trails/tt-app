@@ -669,6 +669,12 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
   const updateTrailDetails = useCallback(async (id: string, updates: {
     name?: string;
     description?: string;
+    dogTraffic?: number;
+    footTraffic?: number;
+    paths?: number;
+    exposure?: number;
+    offLeash?: boolean;
+    wildlife?: boolean;
   }) => {
     try {
       console.log('Updating trail details via API:', id, updates);

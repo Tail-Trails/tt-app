@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, TextInput, TouchableOpacity, ActivityIndicator, Alert, Platform, Image as RNImage } from 'react-native';
+import { View, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Alert, Platform, Image as RNImage } from 'react-native';
 import { Text } from '@/components';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTrails } from '@/context/TrailsContext';
+import TrailTraits from '@/components/TrailTraits';
 import { useAuth } from '@/context/AuthContext';
 import { ArrowLeft, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -20,7 +21,7 @@ export default function EditTrailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [trail, setTrail] = useState<any>(null);
-  const initialTrailRef = useRef<{ name: string; description: string; photoKeys: string[] } | null>(null);
+  const initialTrailRef = useRef<{ name: string; description: string; photoKeys: string[]; dogTraffic?: number; footTraffic?: number; paths?: number; exposure?: number; offLeash?: boolean; wildlife?: boolean } | null>(null);
 
   const normalizePhotos = (value: any): { id?: string; uri: string; local?: boolean }[] => {
     if (Array.isArray(value?.images)) {
@@ -48,6 +49,12 @@ export default function EditTrailScreen() {
           name: String((t as any)?.name || ''),
           description: String((t as any)?.description || ''),
           photoKeys: normalizedPhotos.map((photo) => photo.id || photo.uri),
+          dogTraffic: (t as any)?.dogTraffic ?? 50,
+          footTraffic: (t as any)?.footTraffic ?? 50,
+          paths: (t as any)?.paths ?? 50,
+          exposure: (t as any)?.exposure ?? 50,
+          offLeash: !!(t as any)?.offLeash,
+          wildlife: !!(t as any)?.wildlife,
         };
         setTrail({
           ...t,
@@ -85,7 +92,13 @@ export default function EditTrailScreen() {
 
       const detailsChanged = !initial
         || currentName !== initial.name
-        || currentDescription !== initial.description;
+        || currentDescription !== initial.description
+        || (Number(trail.dogTraffic || 0) !== Number(initial.dogTraffic || 0))
+        || (Number(trail.footTraffic || 0) !== Number(initial.footTraffic || 0))
+        || (Number(trail.paths || 0) !== Number(initial.paths || 0))
+        || (Number(trail.exposure || 0) !== Number(initial.exposure || 0))
+        || (!!trail.offLeash !== !!initial.offLeash)
+        || (!!trail.wildlife !== !!initial.wildlife);
 
       const photosChanged = !initial
         || currentPhotoKeys.length !== initial.photoKeys.length
@@ -100,6 +113,12 @@ export default function EditTrailScreen() {
         await updateTrailDetails(trail.id, {
           name: trail.name,
           description: trail.description,
+          dogTraffic: trail.dogTraffic,
+          footTraffic: trail.footTraffic,
+          paths: trail.paths,
+          exposure: trail.exposure,
+          offLeash: trail.offLeash,
+          wildlife: trail.wildlife,
         });
       }
 
@@ -213,7 +232,7 @@ export default function EditTrailScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 16 }]}> 
+    <View style={[styles.container, { paddingTop: insets.top + 16 }]}>
       <View style={styles.sectionHeader}>
         <TouchableOpacity onPress={handleCancel} style={styles.iconButton}>
           <ArrowLeft size={20} color={theme.accentPrimary} />
@@ -222,33 +241,47 @@ export default function EditTrailScreen() {
         <View style={{ width: 44 }} />
       </View>
 
-      <View style={styles.form}>
-        <Text style={styles.label}>Name</Text>
-        <TextInput value={trail.name || ''} onChangeText={(t) => setTrail((prev: any) => ({ ...prev, name: t }))} placeholder="Trail name" style={styles.input} />
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(120, insets.bottom + 80) },
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.form}>
+          <Text style={styles.label}>Name</Text>
+          <TextInput value={trail.name || ''} onChangeText={(t) => setTrail((prev: any) => ({ ...prev, name: t }))} placeholder="Trail name" style={styles.input} />
 
-        <Text style={styles.label}>Description</Text>
-        <TextInput value={String(trail.description || '')} onChangeText={(t) => setTrail((prev: any) => ({ ...prev, description: t }))} placeholder="Trail Description" style={styles.input} />
+          <Text style={styles.label}>Description</Text>
+          <TextInput value={String(trail.description || '')} onChangeText={(t) => setTrail((prev: any) => ({ ...prev, description: t }))} placeholder="Trail Description" style={styles.input} />
 
-        <View style={styles.moreCard}>
-          <Text style={styles.cardTitle}>Add photos?</Text>
-          <Text style={styles.cardSub}>Add highlights from this trail</Text>
+          <View style={styles.moreCard}>
+            <Text style={styles.cardTitle}>Add photos?</Text>
+            <Text style={styles.cardSub}>Add highlights from this trail</Text>
 
-          <View style={styles.photoRow}>
-            {(trail.photos || []).map((p: any, i: number) => (
-              <View key={p?.id || p?.uri || i} style={styles.thumbWrap}>
-                <RNImage source={{ uri: p.uri }} style={[styles.thumb, { zIndex: i }]} />
-                <TouchableOpacity style={styles.deleteImageButton} onPress={() => handleDeleteImage(i)}>
-                  <X size={14} color={theme.backgroundPrimary} />
-                </TouchableOpacity>
-              </View>
-            ))}
+            <View style={styles.photoRow}>
+              {(trail.photos || []).map((p: any, i: number) => (
+                <View key={p?.id || p?.uri || i} style={styles.thumbWrap}>
+                  <RNImage source={{ uri: p.uri }} style={[styles.thumb, { zIndex: i }]} />
+                  <TouchableOpacity style={styles.deleteImageButton} onPress={() => handleDeleteImage(i)}>
+                    <X size={14} color={theme.backgroundPrimary} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+
+            <TouchableOpacity style={styles.addPhotoBox} onPress={pickImages}>
+              <Text style={styles.plusSign}>+</Text>
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity style={styles.addPhotoBox} onPress={pickImages}>
-            <Text style={styles.plusSign}>+</Text>
-          </TouchableOpacity>
+          <View style={styles.traitsCard}>
+            <TrailTraits trail={trail} setTrail={setTrail} />
+          </View>
         </View>
-      </View>
+      </ScrollView>
+
+
       {/* Footer save button fixed to bottom */}
       <View style={[styles.footer, { paddingBottom: Math.max(16, insets.bottom + 20) }]}>
         <TouchableOpacity onPress={handleSave} style={[styles.footerSaveButton, isSaving && styles.finishButtonDisabled]} disabled={isSaving}>

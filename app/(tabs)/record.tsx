@@ -444,7 +444,10 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
         return;
       }
       if (result.status === 'saved') {
-        Alert.alert('Photo saved', 'Captured photo saved to this recording.');
+        const message = result.savedToGallery
+          ? 'Captured photo saved to your device gallery and added to this recording.'
+          : 'Captured photo saved to this recording (not saved to device gallery).';
+        Alert.alert('Photo saved', message);
       }
     } catch (err) {
       console.error('Camera error', err);

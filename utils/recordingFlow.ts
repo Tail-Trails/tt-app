@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 import BackgroundGeolocation from 'react-native-background-geolocation';
 import { Coordinate } from '@/types/trail';
 
@@ -58,10 +59,26 @@ export async function captureAndStoreRecordingPhoto() {
   }
 
   const uri = result.assets[0].uri;
+  let savedToGallery = false;
+  try {
+    const { status: mediaStatus } = await MediaLibrary.requestPermissionsAsync();
+    if (mediaStatus === 'granted') {
+      try {
+        await MediaLibrary.saveToLibraryAsync(uri);
+        savedToGallery = true;
+      } catch (err) {
+        console.warn('Failed to save photo to gallery', err);
+      }
+    } else {
+      console.warn('Media library permission not granted, photo not saved to gallery');
+    }
+  } catch (err) {
+    console.warn('Media library error', err);
+  }
   const photosStr = await AsyncStorage.getItem('recording_photos');
   const photos = photosStr ? JSON.parse(photosStr) : [];
   photos.push({ uri, timestamp: Date.now() });
   await AsyncStorage.setItem('recording_photos', JSON.stringify(photos));
 
-  return { status: 'saved' as const };
+  return { status: 'saved' as const, savedToGallery };
 }

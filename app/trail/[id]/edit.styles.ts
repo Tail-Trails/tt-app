@@ -102,7 +102,15 @@ const styles = StyleSheet.create({
     },
     moreCard: {
         marginTop: 16,
-        marginBottom: 24,
+        marginBottom: 16,
+        padding: 18,
+        borderRadius: 16,
+        borderWidth: 1.5,
+        borderColor: theme.borderSubtle,
+        backgroundColor: theme.backgroundSecondary,
+    },
+    traitsCard: {
+        marginBottom: 30,
         padding: 18,
         borderRadius: 16,
         borderWidth: 1.5,
