@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, ScrollView } from 'react-native';
+import { View, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, ScrollView, AppState, AppStateStatus } from 'react-native';
 import { Text } from '@/components';
 import TrailMap from '@/components/TrailMap';
 // Using react-native-background-geolocation for all tracking (no Expo TaskManager/Location)
@@ -17,7 +17,7 @@ import { Coordinate, Trail } from '@/types/trail';
 import { calculateTotalDistance } from '@/utils/distance';
 import { appendCoordinateToPath, getLocationAccuracyMeters, getLocationTimestampMs, shouldAcceptTrackedLocation, toCoordinate } from '@/utils/backgroundTracking';
 import { initBackgroundTracking } from '@/utils/backgroundGeolocationInit';
-import { clearRecordingSession, initializeRecordingSession, loadRecordingSnapshot, RECORDING_STORAGE_KEYS } from '@/utils/recordingSession';
+import { clearRecordingSession, initializeRecordingSession, loadRecordingSnapshot, RECORDING_STORAGE_KEYS, saveBackup } from '@/utils/recordingSession';
 import { captureAndStoreRecordingPhoto, requestBgPermissionAndInitialLocation, resolveInitialRecordingCoordinate } from '@/utils/recordingFlow';
 import { useKeepAwake } from 'expo-keep-awake';
 import { LocationWatchdog } from '@/components/LocationWatchdog';
@@ -43,6 +43,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   const mapRef = useRef<any>(null);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [coordinates, setCoordinates] = useState<Coordinate[]>([]);
+  const coordinatesRef = useRef<Coordinate[]>([]);
   const [currentLocation, setCurrentLocation] = useState<Coordinate | null>(null);
   const [duration, setDuration] = useState<number>(0);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -65,73 +66,104 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   const [userLocationFollow, setUserLocationFollow] = useState<Coordinate | null>(null);
   const followLocationRef = useRef<any>(null);
   const stopStartTimeRef = useRef<number | null>(null);
-  const [sniffTime, setSniffTime] = useState<number>(0);
-  const sniffTimeRef = useRef<number>(0);
   const lastLocationTimestamp = useRef<number>(Date.now());
   const lastAcceptedGpsTimestamp = useRef<number>(0);
 
-  useKeepAwake();
-
   const bgReady = useRef<boolean>(false);
   const isRecordingRef = useRef<boolean>(isRecording);
+  const recordingStartRef = useRef<number | null>(null);
 
+  // Backup throttling: save every N points or every interval, and on app state changes
+  const POINT_THRESHOLD = 20; // save after this many new points
+  const BACKUP_INTERVAL_MS = 30000; // 30s interval
+  const lastBackupPointsRef = useRef<number>(0);
+  const lastBackupTimeRef = useRef<number>(Date.now());
+
+  // Keep refs synchronized with state so background handlers read fresh values
   useEffect(() => { isRecordingRef.current = isRecording; }, [isRecording]);
+  useEffect(() => { coordinatesRef.current = coordinates; }, [coordinates]);
 
   useEffect(() => {
     // initialize background-geolocation SDK if available
     let mounted = true;
 
+    const handleBGLocation = async (location: BGLocation) => {
+      const locationAccuracy = getLocationAccuracyMeters(location);
+      const accept = shouldAcceptTrackedLocation(location, { minTimestampMs: lastAcceptedGpsTimestamp.current });
+
+      const coord = toCoordinate(location);
+      if (!coord) return;
+
+      const gpsTs = getLocationTimestampMs(location);
+      if (gpsTs && accept) lastAcceptedGpsTimestamp.current = gpsTs;
+      lastLocationTimestamp.current = Date.now();
+
+      setCurrentLocation(coord);
+      setAccuracy(locationAccuracy);
+
+      if (isRecordingRef.current && accept) {
+        try {
+          const IGNORE_WINDOW_MS = 2 * 60 * 1000; // ignore first 2 minutes of points
+          let startMs = recordingStartRef.current;
+          if (!startMs) {
+            const s = await AsyncStorage.getItem(RECORDING_STORAGE_KEYS.START_TIME);
+            startMs = s ? parseInt(s, 10) : null;
+            if (startMs) recordingStartRef.current = startMs;
+          }
+
+          const now = Date.now();
+          if (startMs && (now - startMs) < IGNORE_WINDOW_MS) {
+            console.log('Skipping append: within initial ignore window, elapsed_s=', Math.floor((now - startMs) / 1000));
+          } else {
+            appendCoordinateToPath(setCoordinates, coord, coordinatesRef.current);
+          }
+        } catch (e) {
+          // fallback: if anything goes wrong, still append to avoid losing data
+          console.warn('Error checking ignore window, appending point by fallback', e);
+          appendCoordinateToPath(setCoordinates, coord);
+        }
+      }
+    };
+
+    const handleBGLocationError = (err: any) => {
+      console.warn('BG onLocation error', err);
+      setAccuracy(undefined);
+    };
+
+    const handleBGMotionChange = (event: MotionChangeEvent) => {
+      if (!isRecordingRef.current) return;
+
+      if (!event.isMoving) {
+        stopStartTimeRef.current = Date.now();
+        const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' , second: '2-digit' });
+        console.log(`Activity: Stationary (Sniffing) at ${currentTime}`);
+        try {
+          if (coordinatesRef.current.length > 0) {
+            saveBackup(coordinatesRef.current);
+            lastBackupTimeRef.current = Date.now();
+            lastBackupPointsRef.current = coordinatesRef.current.length;
+          }
+        } catch (e) { /* swallow */ }
+      } else {
+        if (stopStartTimeRef.current) {
+          // Sniff time accumulation removed temporarily to avoid blocking location updates.
+          // TODO: restore sniff time accumulation in a non-blocking way.
+          stopStartTimeRef.current = null;
+          console.log('Activity: Moving (sniff time calc removed)');
+        }
+      }
+    };
+
     const initBG = async () => {
       try {
         await initBackgroundTracking({
-          onLocation: async (location: BGLocation) => {
-            const locationAccuracy = getLocationAccuracyMeters(location);
-
-            if (!shouldAcceptTrackedLocation(location, { minTimestampMs: lastAcceptedGpsTimestamp.current })) {
-              setAccuracy(locationAccuracy);
-              return;
-            }
-
-            const coord = toCoordinate(location);
-            if (!coord) return;
-
-            const gpsTs = getLocationTimestampMs(location);
-            if (gpsTs) lastAcceptedGpsTimestamp.current = gpsTs;
-            lastLocationTimestamp.current = Date.now();
-
-            setCurrentLocation(coord);
-            setAccuracy(locationAccuracy);
-
-            if (isRecordingRef.current) {
-              appendCoordinateToPath(setCoordinates, coord);
-            }
-          },
-          onLocationError: (err) => {
-            console.warn('BG onLocation error', err);
-            setAccuracy(undefined);
-          },
-          onMotionChange: (event: MotionChangeEvent) => {
-            if (!isRecordingRef.current) return;
-
-            if (!event.isMoving) {
-              stopStartTimeRef.current = Date.now();
-              console.log("Activity: Stationary (Sniffing)");
-            } else {
-              if (stopStartTimeRef.current) {
-                const elapsed = Math.floor((Date.now() - stopStartTimeRef.current) / 1000);
-                sniffTimeRef.current += elapsed;
-                setSniffTime(sniffTimeRef.current);
-
-                stopStartTimeRef.current = null;
-                console.log(`Activity: Moving. Added ${elapsed}s to Sniff Time.`);
-              }
-            }
-          },
+          onLocation: handleBGLocation,
+          onLocationError: handleBGLocationError,
+          onMotionChange: handleBGMotionChange,
         });
 
         if (!mounted) return;
         bgReady.current = true;
-
       } catch (err) {
         bgReady.current = false;
       }
@@ -143,16 +175,60 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Throttled backups: save when enough new points accumulated
   useEffect(() => {
-    requestPermissions();
+    if (!isRecordingRef.current) return;
+    const len = coordinates.length;
+    if (len === 0) return;
+
+    if ((len - lastBackupPointsRef.current) >= POINT_THRESHOLD) {
+      saveBackup(coordinates);
+      lastBackupPointsRef.current = len;
+      lastBackupTimeRef.current = Date.now();
+    }
+    // only depend on coordinates so we evaluate when points added
+  }, [coordinates]);
+
+  // Periodic interval backup (safety insurance)
+  useEffect(() => {
+    if (!isRecording) return;
+    const id = setInterval(() => {
+      if (isRecordingRef.current && coordinatesRef.current.length > 0) {
+        const now = Date.now();
+        if (now - lastBackupTimeRef.current >= BACKUP_INTERVAL_MS) {
+          saveBackup(coordinatesRef.current);
+          lastBackupTimeRef.current = now;
+          lastBackupPointsRef.current = coordinatesRef.current.length;
+        }
+      }
+    }, BACKUP_INTERVAL_MS);
+
+    return () => clearInterval(id);
+  }, [isRecording]);
+
+  // Save when app moves to background/inactive
+  useEffect(() => {
+    const handleAppState = (nextState: AppStateStatus) => {
+      if ((nextState === 'background' || nextState === 'inactive') && isRecordingRef.current && coordinatesRef.current.length > 0) {
+        saveBackup(coordinatesRef.current);
+        lastBackupTimeRef.current = Date.now();
+        lastBackupPointsRef.current = coordinatesRef.current.length;
+      }
+    };
+
+    const sub = AppState.addEventListener ? AppState.addEventListener('change', handleAppState) : AppState.addListener('change', handleAppState as any);
+    return () => { try { sub.remove(); } catch (e) { /* ignore */ } };
+  }, []);
+
+  useEffect(() => {
+    // Only check current permission state on mount — don't auto-prompt every time.
+    checkPermissionStatus();
+    // Load any existing recording snapshot once on mount. Avoid polling
+    // AsyncStorage repeatedly — `setCoordinates` is the single source of
+    // truth for the UI while recording.
     loadRecordingState();
 
-    const interval = setInterval(() => {
-      loadRecordingState();
-    }, 1000);
-
     return () => {
-      clearInterval(interval);
       if (locationSubscription.current) {
         locationSubscription.current.remove();
       }
@@ -292,12 +368,6 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
       }
 
       try {
-        await requestBgPermissionAndInitialLocation(30);
-      } catch {
-        // Non-fatal — continue to try to get position
-      }
-
-      try {
         const initial = await requestBgPermissionAndInitialLocation(30);
         if (initial.coordinate) {
           setCurrentLocation(initial.coordinate);
@@ -305,11 +375,49 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
         setHasPermission(true);
       } catch (err) {
         console.warn('BG getCurrentPosition failed', err);
-        // still consider permission granted if SDK is available
         setHasPermission(true);
       }
     } catch (error) {
       console.error('Permission error:', error);
+      setHasPermission(false);
+    } finally {
+      setIsLoadingPermission(false);
+    }
+  };
+
+  const checkPermissionStatus = async () => {
+    try {
+      if (!bgReady.current) {
+        setHasPermission(false);
+        setIsLoadingPermission(false);
+        return;
+      }
+
+      try {
+        // Try to query native provider state first to avoid triggering permission UI
+        // @ts-ignore
+        const state = await BackgroundGeolocation.getProviderState?.() ?? await BackgroundGeolocation.getState?.();
+        if (state) {
+          const s: any = state; // provider return shapes vary across platforms/SDK versions
+          const enabled = s.enabled === true;
+          const authVal = s.authorization ?? s.authorizationStatus ?? s.status ?? null;
+          const authStr = typeof authVal === 'string' ? authVal.toLowerCase() : null;
+          const authorized = enabled || (authStr && (
+            authStr.includes('always') || authStr.includes('when_in_use') || authStr.includes('authorized') || authStr.includes('granted') || authStr === 'authorized'
+          ));
+          if (authorized) {
+            setHasPermission(true);
+            setIsLoadingPermission(false);
+            return;
+          }
+        }
+      } catch (err) {
+        // ignore and fallback to conservative behaviour
+      }
+
+      setHasPermission(false);
+    } catch (error) {
+      console.error('Permission check error:', error);
       setHasPermission(false);
     } finally {
       setIsLoadingPermission(false);
@@ -342,6 +450,15 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
 
       try {
         // Start native SDK to deliver location updates
+        // Ensure BG SDK was initialized and listeners registered to avoid missing early locations
+        if (!bgReady.current) {
+          const startWait = Date.now();
+          while (!bgReady.current && Date.now() - startWait < 5000) {
+            // wait up to 5s for initBackgroundTracking to complete
+            await new Promise((res) => setTimeout(res, 100));
+          }
+        }
+
         await BackgroundGeolocation.start();
       } catch (bgErr) {
         console.warn('BackgroundGeolocation.start() failed', bgErr);
@@ -359,7 +476,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
             // If the dog is currently stopped, update the UI live
             if (stopStartTimeRef.current) {
               const activeStopSeconds = Math.floor((Date.now() - stopStartTimeRef.current) / 1000);
-              setSniffTime(sniffTimeRef.current + activeStopSeconds);
+              // sniffTime UI temporarily disabled — TODO: restore non-blocking live sniff duration update
             }
           }
         } catch (error) {
@@ -530,7 +647,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
       date: Date.now(),
       distance,
       duration: finalDuration,
-      sniffTime: sniffTime,
+      sniffTime: 0, // TODO: restore sniffTime calculation (temporarily removed to avoid blocking location updates)
       coordinates: finalCoords,
       city: startLocation?.city,
       country: startLocation?.country,
@@ -554,8 +671,9 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
         text: 'Discard', style: 'destructive', onPress: async () => {
           try { if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); await BackgroundGeolocation.stop(); } catch (err) { console.warn('Error stopping background task on cancel:', err); }
           if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-          try { await clearRecordingSession(true); } catch (err) { console.warn('Error clearing recording storage on cancel:', err); }
-          setIsRecording(false); setCoordinates([]); setDuration(0); setMaxElevation(0); setMaxSpeed(0); setSniffTime(0); sniffTimeRef.current = 0; stopStartTimeRef.current = null;
+          try { await clearRecordingSession(); } catch (err) { console.warn('Error clearing recording storage on cancel:', err); }
+          // Note: sniff time tracking temporarily removed — resets are skipped here
+          setIsRecording(false); setCoordinates([]); setDuration(0); setMaxElevation(0); setMaxSpeed(0); stopStartTimeRef.current = null;
         }
       }
     ]);
@@ -644,7 +762,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
             onStart={startRecording}
             startLabel="Start Trail"
             accuracy={accuracy}
-            sniffDuration={sniffTime}
+            sniffDuration={0} // TODO: restore sniffDuration prop once non-blocking sniffTime is implemented
             onStop={stopRecording}
             onClose={() => { if (followLocationRef.current) { followLocationRef.current.remove(); followLocationRef.current = null; } setFollowMode(false); router.back(); }}
             onCancel={cancelRecording}

@@ -15,14 +15,8 @@ type InitBackgroundTrackingOptions = {
 };
 
 export async function initBackgroundTracking(options: InitBackgroundTrackingOptions) {
-  await BackgroundGeolocation.ready({
-    desiredAccuracy: (BackgroundGeolocation as any).DESIRED_ACCURACY_HIGH,
-    distanceFilter: BG_DISTANCE_FILTER_METERS,
-    stopOnTerminate: false,
-    startOnBoot: false,
-    reset: false,
-  } as any);
-
+  // Register JS listeners immediately so native events won't be sent with
+  // "no listeners registered" if the native side emits before `ready()` completes.
   BackgroundGeolocation.onLocation(options.onLocation, options.onLocationError);
 
   if (options.onMotionChange) {
@@ -36,4 +30,14 @@ export async function initBackgroundTracking(options: InitBackgroundTrackingOpti
   if (options.onAuthorization) {
     BackgroundGeolocation.onAuthorization(options.onAuthorization);
   }
+
+  // Then configure the plugin. `ready()` is async and may take time; listeners
+  // are already attached above to avoid race conditions.
+  await BackgroundGeolocation.ready({
+    desiredAccuracy: (BackgroundGeolocation as any).DESIRED_ACCURACY_HIGH,
+    distanceFilter: BG_DISTANCE_FILTER_METERS,
+    stopOnTerminate: false,
+    startOnBoot: false,
+    reset: false,
+  } as any);
 }

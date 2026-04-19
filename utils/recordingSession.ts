@@ -67,3 +67,12 @@ export async function loadRecordingSnapshot(options: LoadRecordingSnapshotOption
     duration,
   };
 }
+
+export async function saveBackup(coordinates: Coordinate[]) {
+  try {
+    await AsyncStorage.setItem(RECORDING_STORAGE_KEYS.COORDINATES, JSON.stringify(coordinates));
+    await AsyncStorage.setItem(RECORDING_STORAGE_KEYS.LAST_UPDATE, Date.now().toString());
+  } catch (err) {
+    console.warn('Failed to save recording backup', err);
+  }
+}

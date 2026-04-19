@@ -15,7 +15,7 @@ import { Coordinate, Trail } from '@/types/trail';
 import { calculateTotalDistance } from '@/utils/distance';
 import { appendCoordinateToPath, getLocationAccuracyMeters, getLocationTimestampMs, shouldAcceptTrackedLocation, toCoordinate } from '@/utils/backgroundTracking';
 import { initBackgroundTracking } from '@/utils/backgroundGeolocationInit';
-import { clearRecordingSession, initializeRecordingSession, loadRecordingSnapshot, RECORDING_STORAGE_KEYS } from '@/utils/recordingSession';
+import { clearRecordingSession, initializeRecordingSession, loadRecordingSnapshot, RECORDING_STORAGE_KEYS, saveBackup } from '@/utils/recordingSession';
 import { captureAndStoreRecordingPhoto, requestBgPermissionAndInitialLocation, resolveInitialRecordingCoordinate } from '@/utils/recordingFlow';
 import { useKeepAwake } from 'expo-keep-awake';
 
@@ -37,6 +37,7 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
   const mapRef = useRef<any>(null);
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [coordinates, setCoordinates] = useState<Coordinate[]>([]);
+  const coordinatesRef = useRef<Coordinate[]>([]);
   const [currentLocation, setCurrentLocation] = useState<Coordinate | null>(null);
   const [accuracy, setAccuracy] = useState<number | undefined>(undefined);
   const [duration, setDuration] = useState<number>(0);
@@ -59,6 +60,13 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
   const stopStartTimeRef = useRef<number | null>(null);
   const lastLocationTimestamp = useRef<number>(Date.now());
   const lastAcceptedGpsTimestamp = useRef<number>(0);
+  const recordingStartRef = useRef<number | null>(null);
+
+  // Backup throttling (basic): save every N points or interval
+  const POINT_THRESHOLD = 20;
+  const BACKUP_INTERVAL_MS = 30000;
+  const lastBackupPointsRef = useRef<number>(0);
+  const lastBackupTimeRef = useRef<number>(Date.now());
 
   const [followMode, setFollowMode] = useState<boolean>(!!initialTrail);
   const [userLocationFollow, setUserLocationFollow] = useState<Coordinate | null>(null);
@@ -70,6 +78,7 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
   useKeepAwake();
 
   useEffect(() => { isRecordingRef.current = isRecording; }, [isRecording]);
+  useEffect(() => { coordinatesRef.current = coordinates; }, [coordinates]);
   useEffect(() => { maxElevationRef.current = maxElevation; }, [maxElevation]);
   useEffect(() => { maxSpeedRef.current = maxSpeed; }, [maxSpeed]);
 
@@ -90,10 +99,9 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
           onLocation: (location: BGLocation) => {
             const locationAccuracy = getLocationAccuracyMeters(location);
 
-            if (!shouldAcceptTrackedLocation(location, { minTimestampMs: lastAcceptedGpsTimestamp.current })) {
-              setAccuracy(locationAccuracy);
-              return;
-            }
+            const accept = shouldAcceptTrackedLocation(location, { minTimestampMs: lastAcceptedGpsTimestamp.current });
+            setAccuracy(locationAccuracy);
+            if (!accept) return;
 
             const coord = toCoordinate(location);
             if (!coord) return;
@@ -107,7 +115,27 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
             setAccuracy(locationAccuracy);
 
             if (isRecordingRef.current) {
-              appendCoordinateToPath(setCoordinates, coord);
+              (async () => {
+                try {
+                  const IGNORE_WINDOW_MS = 2 * 60 * 1000; // ignore first 2 minutes of points
+                  let startMs = recordingStartRef.current;
+                  if (!startMs) {
+                    const s = await AsyncStorage.getItem(RECORDING_STORAGE_KEYS.START_TIME);
+                    startMs = s ? parseInt(s, 10) : null;
+                    if (startMs) recordingStartRef.current = startMs;
+                  }
+
+                  const now = Date.now();
+                  if (startMs && (now - startMs) < IGNORE_WINDOW_MS) {
+                    console.log('Skipping append: within initial ignore window, elapsed_s=', Math.floor((now - startMs) / 1000));
+                  } else {
+                    appendCoordinateToPath(setCoordinates, coord, coordinatesRef.current);
+                  }
+                } catch (e) {
+                  console.warn('Error checking ignore window, appending point by fallback', e);
+                  appendCoordinateToPath(setCoordinates, coord, coordinatesRef.current);
+                }
+              })();
 
               const altitude = location.coords.altitude;
               if (typeof altitude === 'number') {
@@ -141,6 +169,13 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
 
             if (!event.isMoving) {
               stopStartTimeRef.current = Date.now();
+              try {
+                if (coordinatesRef.current.length > 0) {
+                  saveBackup(coordinatesRef.current);
+                  lastBackupTimeRef.current = Date.now();
+                  lastBackupPointsRef.current = coordinatesRef.current.length;
+                }
+              } catch (e) { /* swallow */ }
             } else if (stopStartTimeRef.current) {
               const elapsed = Math.floor((Date.now() - stopStartTimeRef.current) / 1000);
               sniffTimeRef.current += elapsed;
@@ -164,15 +199,25 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
   }, []);
 
   useEffect(() => {
+    const saveCoordinates = async () => {
+      if (isRecording && coordinates.length > 0) {
+        try {
+          await AsyncStorage.setItem(RECORDING_STORAGE_KEYS.COORDINATES, JSON.stringify(coordinates));
+        } catch (err) {
+          console.error('Failed to persist coordinates:', err);
+        }
+      }
+    };
+
+    saveCoordinates();
+  }, [coordinates, isRecording]); // This fires every time coordinates change
+
+  useEffect(() => {
     requestPermissions();
     loadRecordingState();
 
-    const interval = setInterval(() => {
-      loadRecordingState();
-    }, 1000);
-
+    // Load recording snapshot once; avoid polling and overwriting live state.
     return () => {
-      clearInterval(interval);
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }

@@ -40,7 +40,8 @@ export const LocationWatchdog = ({
     
     if (isRecording) {
       watchdogTimer.current = setTimeout(() => {
-        triggerAlert();
+        // For now outcomment as it was very over the top
+        // triggerAlert();
       }, thresholdSeconds * 1000);
     }
   };
