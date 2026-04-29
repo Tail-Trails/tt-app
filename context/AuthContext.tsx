@@ -40,80 +40,6 @@ export const [AuthContext, useAuth] = createContextHook(() => {
     loadSession();
   }, []);
 
-  const requestOtp = useCallback(async (email: string) => {
-    console.log('Requesting OTP for:', email);
-    const response = await fetch(`${API_URL}/otp/request`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail?.[0]?.msg || 'Failed to request OTP');
-    }
-
-    return true;
-  }, []);
-
-  const verifyOtp = useCallback(async (email: string, otpCode: string) => {
-    console.log('Verifying OTP for:', email);
-    const response = await fetch(`${API_URL}/otp/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, otpCode }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail?.[0]?.msg || 'Invalid OTP code');
-    }
-
-    const data: Session = await response.json();
-    setSession(data);
-    setUser(data.user);
-    await AsyncStorage.setItem('session', JSON.stringify(data));
-    
-    return data;
-  }, []);
-
-  const requestRegistration = useCallback(async (email: string, name: string) => {
-    console.log('Requesting registration for:', email);
-    const response = await fetch(`${API_URL}/otp/register-request`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail?.[0]?.msg || 'Failed to request registration');
-    }
-
-    return true;
-  }, []);
-
-  const verifyRegistration = useCallback(async (email: string, otpCode: string) => {
-    console.log('Verifying registration for:', email);
-    const response = await fetch(`${API_URL}/otp/register-verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, otpCode }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail?.[0]?.msg || 'Invalid OTP code');
-    }
-
-    const data: Session = await response.json();
-    setSession(data);
-    setUser(data.user);
-    await AsyncStorage.setItem('session', JSON.stringify(data));
-    
-    return data;
-  }, []);
-
   const signInWithToken = useCallback(async (tokenResponse: { accessToken: string; tokenType?: string; user?: User }) => {
     // Accept token response from webauthn auth verify endpoint and persist session
     const sessionObj: Session = {
@@ -138,13 +64,9 @@ export const [AuthContext, useAuth] = createContextHook(() => {
     session,
     user,
     isLoading,
-    requestOtp,
-    verifyOtp,
-    requestRegistration,
-    verifyRegistration,
     signInWithToken,
     signOut,
     isAuthenticated: !!session,
-  }), [session, user, isLoading, requestOtp, verifyOtp, requestRegistration, verifyRegistration, signOut]);
+  }), [session, user, isLoading, signInWithToken, signOut]);
 });
 

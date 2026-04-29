@@ -17,7 +17,10 @@ import { appendCoordinateToPath, getLocationAccuracyMeters, getLocationTimestamp
 import { initBackgroundTracking } from '@/utils/backgroundGeolocationInit';
 import { clearRecordingSession, initializeRecordingSession, loadRecordingSnapshot, RECORDING_STORAGE_KEYS, saveBackup } from '@/utils/recordingSession';
 import { captureAndStoreRecordingPhoto, requestBgPermissionAndInitialLocation, resolveInitialRecordingCoordinate } from '@/utils/recordingFlow';
-import { useKeepAwake } from 'expo-keep-awake';
+import { makeMotionHandler, processBGLocation } from '@/utils/bgHandlers';
+import { loadRecordingState as loadRecordingStateHelper, requestPermissions as requestPermissionsHelper, startRecordingShared, stopRecordingShared } from '@/utils/recordingHelpers';
+import { useBottomSheet, computePace, makeRecenterMapFactory, usePersistCoordinates } from '@/utils/recordingCommon';
+
 
 export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail } = {}) {
   const { getTrailWithUser } = useTrails();
@@ -45,11 +48,7 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
   const [isLoadingPermission, setIsLoadingPermission] = useState<boolean>(true);
   const [startLocation, setStartLocation] = useState<{ city?: string; country?: string } | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const bottomSheetHeight = Dimensions.get('window').height * 0.5;
-  const collapsedHeight = 40;
-  const navbarHeight = Platform.OS === 'ios' ? 100 : 92;
-  const bottomSheetAnim = useRef(new Animated.Value(collapsedHeight)).current;
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const { bottomSheetAnim, isExpanded, expandBottomSheet, collapseBottomSheet, toggleBottomSheet, panResponder, bottomSheetHeight, collapsedHeight, navbarHeight } = useBottomSheet();
   const [elevation, setElevation] = useState<number>(0);
   const [maxElevation, setMaxElevation] = useState<number>(0);
   const [pace, setPace] = useState<string>('0:00');
@@ -75,8 +74,6 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
   const maxElevationRef = useRef<number>(0);
   const maxSpeedRef = useRef<number>(0);
 
-  useKeepAwake();
-
   useEffect(() => { isRecordingRef.current = isRecording; }, [isRecording]);
   useEffect(() => { coordinatesRef.current = coordinates; }, [coordinates]);
   useEffect(() => { maxElevationRef.current = maxElevation; }, [maxElevation]);
@@ -96,93 +93,52 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
               setAccuracy(undefined);
             }
           },
-          onLocation: (location: BGLocation) => {
-            const locationAccuracy = getLocationAccuracyMeters(location);
-
-            const accept = shouldAcceptTrackedLocation(location, { minTimestampMs: lastAcceptedGpsTimestamp.current });
-            setAccuracy(locationAccuracy);
-            if (!accept) return;
-
-            const coord = toCoordinate(location);
-            if (!coord) return;
-
-            const gpsTs = getLocationTimestampMs(location);
-            if (gpsTs) lastAcceptedGpsTimestamp.current = gpsTs;
-            lastLocationTimestamp.current = Date.now();
-
-            setCurrentLocation(coord);
-            setUserLocationFollow(coord);
-            setAccuracy(locationAccuracy);
-
-            if (isRecordingRef.current) {
-              (async () => {
-                try {
-                  const IGNORE_WINDOW_MS = 2 * 60 * 1000; // ignore first 2 minutes of points
-                  let startMs = recordingStartRef.current;
-                  if (!startMs) {
-                    const s = await AsyncStorage.getItem(RECORDING_STORAGE_KEYS.START_TIME);
-                    startMs = s ? parseInt(s, 10) : null;
-                    if (startMs) recordingStartRef.current = startMs;
-                  }
-
-                  const now = Date.now();
-                  if (startMs && (now - startMs) < IGNORE_WINDOW_MS) {
-                    console.log('Skipping append: within initial ignore window, elapsed_s=', Math.floor((now - startMs) / 1000));
-                  } else {
-                    appendCoordinateToPath(setCoordinates, coord, coordinatesRef.current);
-                  }
-                } catch (e) {
-                  console.warn('Error checking ignore window, appending point by fallback', e);
-                  appendCoordinateToPath(setCoordinates, coord, coordinatesRef.current);
-                }
-              })();
-
-              const altitude = location.coords.altitude;
-              if (typeof altitude === 'number') {
-                const currentElevation = Math.max(0, altitude);
-                setElevation(currentElevation);
-                if (currentElevation > maxElevationRef.current) {
-                  maxElevationRef.current = currentElevation;
-                  setMaxElevation(currentElevation);
-                  AsyncStorage.setItem('recording_max_elevation', currentElevation.toString()).catch(() => { });
-                }
-              }
-
-              const rawSpeed = location.coords.speed;
-              if (typeof rawSpeed === 'number' && rawSpeed > 0) {
-                const currentSpeed = rawSpeed * 3.6;
-                setSpeed(currentSpeed);
-                if (currentSpeed > maxSpeedRef.current) {
-                  maxSpeedRef.current = currentSpeed;
-                  setMaxSpeed(currentSpeed);
-                  AsyncStorage.setItem('recording_max_speed', currentSpeed.toString()).catch(() => { });
-                }
-              }
-            }
-          },
+          onLocation: (location: BGLocation) => processBGLocation(location, {
+            isRecordingRef,
+            setCurrentLocation: (c) => { setCurrentLocation(c); setUserLocationFollow(c); },
+            setAccuracy,
+            setCoordinates,
+            coordinatesRef,
+            lastAcceptedGpsTimestamp,
+            lastLocationTimestamp,
+            setElevation,
+            maxElevationRef,
+            setMaxElevation,
+            setSpeed,
+            maxSpeedRef,
+            setMaxSpeed,
+            saveBackup,
+            lastBackupPointsRef,
+            lastBackupTimeRef,
+            stopStartTimeRef,
+            sniffTimeRef,
+            setSniffTime,
+          }),
           onLocationError: (err) => {
             console.warn('BG onLocation error', err);
             setAccuracy(undefined);
           },
-          onMotionChange: (event: MotionChangeEvent) => {
-            if (!isRecordingRef.current) return;
-
-            if (!event.isMoving) {
-              stopStartTimeRef.current = Date.now();
-              try {
-                if (coordinatesRef.current.length > 0) {
-                  saveBackup(coordinatesRef.current);
-                  lastBackupTimeRef.current = Date.now();
-                  lastBackupPointsRef.current = coordinatesRef.current.length;
-                }
-              } catch (e) { /* swallow */ }
-            } else if (stopStartTimeRef.current) {
-              const elapsed = Math.floor((Date.now() - stopStartTimeRef.current) / 1000);
-              sniffTimeRef.current += elapsed;
-              setSniffTime(sniffTimeRef.current);
-              stopStartTimeRef.current = null;
-            }
-          },
+          onMotionChange: makeMotionHandler({
+            isRecordingRef,
+            setCurrentLocation: (c) => { setCurrentLocation(c); setUserLocationFollow(c); },
+            setAccuracy,
+            setCoordinates,
+            coordinatesRef,
+            lastAcceptedGpsTimestamp,
+            lastLocationTimestamp,
+            setElevation,
+            maxElevationRef,
+            setMaxElevation,
+            setSpeed,
+            maxSpeedRef,
+            setMaxSpeed,
+            saveBackup,
+            lastBackupPointsRef,
+            lastBackupTimeRef,
+            stopStartTimeRef,
+            sniffTimeRef,
+            setSniffTime,
+          }),
         });
         if (!mounted) return;
         bgReady.current = true;
@@ -198,19 +154,7 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
     };
   }, []);
 
-  useEffect(() => {
-    const saveCoordinates = async () => {
-      if (isRecording && coordinates.length > 0) {
-        try {
-          await AsyncStorage.setItem(RECORDING_STORAGE_KEYS.COORDINATES, JSON.stringify(coordinates));
-        } catch (err) {
-          console.error('Failed to persist coordinates:', err);
-        }
-      }
-    };
-
-    saveCoordinates();
-  }, [coordinates, isRecording]); // This fires every time coordinates change
+  usePersistCoordinates(isRecording, coordinates);
 
   useEffect(() => {
     requestPermissions();
@@ -276,90 +220,25 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
   }, [followMode]);
 
   const loadRecordingState = async () => {
-    try {
-      const snapshot = await loadRecordingSnapshot();
-
-      if (!snapshot.hasSession) {
-        await AsyncStorage.removeItem(RECORDING_STORAGE_KEYS.COORDINATES);
-        setCoordinates([]);
-        setIsRecording(false);
-        setDuration(0);
-      } else {
-        setIsRecording(true);
-        setCoordinates(snapshot.coordinates);
-        setDuration(snapshot.duration);
-      }
-
-      setMaxElevation(snapshot.maxElevation);
-      setMaxSpeed(snapshot.maxSpeed);
-    } catch (error) {
-      console.error('Error loading recording state:', error);
-    }
+    // delegate to shared helper
+    await loadRecordingStateHelper({ setCoordinates, setIsRecording, setDuration, setMaxElevation, setMaxSpeed });
   };
 
   const requestPermissions = async () => {
     try {
-      const initial = await requestBgPermissionAndInitialLocation(30);
-      setHasPermission(true);
-
-      if (initial.coordinate) {
-        setCurrentLocation(initial.coordinate);
-        setUserLocationFollow(initial.coordinate);
-        setAccuracy(initial.accuracy);
-      }
-    } catch (error: any) {
-      console.error('Permission error:', error);
-      const errorMessage = error.message || 'Failed to get location permission';
-
-      if (errorMessage.includes('NSLocation') || errorMessage.includes('Info.plist')) {
-        Alert.alert(
-          'Configuration Error',
-          'This app needs to be built with a custom development build to use location tracking. Expo Go doesn\'t support background location tracking.\n\nPlease contact support or build a custom development client.',
-          [{ text: 'OK' }]
-        );
-      } else {
-        Alert.alert('Error', errorMessage);
-      }
-
-      setHasPermission(false);
-    } finally {
-      setIsLoadingPermission(false);
+      await requestPermissionsHelper({ bgReadyRef: bgReady, setHasPermission, setIsLoadingPermission, setCurrentLocation: (c) => { setCurrentLocation(c); setUserLocationFollow(c); }, requestBgPermissionAndInitialLocation });
+    } catch (err) {
+      // helper logs errors
     }
   };
 
   const startRecording = async () => {
-    if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    setIsRecording(true);
-    setCoordinates([]);
-    setDuration(0);
-    setMaxElevation(0);
-    setMaxSpeed(0);
-    sniffTimeRef.current = 0;
-    setSniffTime(0);
-    stopStartTimeRef.current = null;
-
     try {
-      const startTime = Date.now();
-      lastLocationTimestamp.current = startTime;
-      await initializeRecordingSession(startTime);
-
-      setStartLocation(null);
-
-      const initial = await resolveInitialRecordingCoordinate(currentLocation, 30);
-      if (initial.coordinate) {
-        await AsyncStorage.setItem(RECORDING_STORAGE_KEYS.COORDINATES, JSON.stringify([initial.coordinate]));
-        setCoordinates([initial.coordinate]);
-        setCurrentLocation(initial.coordinate);
-        setUserLocationFollow(initial.coordinate);
-        setAccuracy(initial.accuracy ?? accuracy);
-      }
-
-      try {
-        await BackgroundGeolocation.start();
-      } catch (bgErr) {
-        console.warn('BackgroundGeolocation.start() failed', bgErr);
-      }
-
+      await startRecordingShared({ setIsRecording, setCoordinates, setDuration, setMaxElevation, setMaxSpeed, setCurrentLocation: (c) => { setCurrentLocation(c); setUserLocationFollow(c); }, bgReadyRef: bgReady, resolveInitialRecordingCoordinate, timerRef, setStartLocation });
+      sniffTimeRef.current = 0;
+      setSniffTime(0);
+      stopStartTimeRef.current = null;
+      // local timer for sniffTime/duration
       timerRef.current = setInterval(() => {
         setDuration((prev) => prev + 1);
         if (stopStartTimeRef.current) {
@@ -367,25 +246,15 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
           setSniffTime(sniffTimeRef.current + activeStopSeconds);
         }
       }, 1000);
-    } catch (error: any) {
-      console.error('Recording error:', error);
-      Alert.alert('Error', 'Failed to start recording. Please try again.');
+    } catch (err) {
+      console.error('Recording error (follow):', err);
       setIsRecording(false);
     }
   };
 
   useEffect(() => {
     if (duration > 0) {
-      const distance = calculateTotalDistance(coordinates);
-      const distanceKm = distance / 1000;
-      const durationMin = duration / 60;
-
-      if (distanceKm > 0) {
-        const paceMinPerKm = durationMin / distanceKm;
-        const minutes = Math.floor(paceMinPerKm);
-        const seconds = Math.round((paceMinPerKm - minutes) * 60);
-        setPace(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-      }
+      setPace(computePace(duration, coordinates));
     }
   }, [duration, coordinates]);
 
@@ -409,26 +278,7 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
 
   const showProgress = !!initialTrail;
 
-  const recenterMap = async () => {
-    if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (mapRef.current) {
-      try {
-        const loc = await BackgroundGeolocation.getCurrentPosition({ timeout: 30 });
-        if (loc && loc.coords) {
-          const coord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-          setCurrentLocation(coord);
-          setUserLocationFollow(coord);
-          setAccuracy(loc.coords.accuracy ?? undefined);
-          mapRef.current.animateToRegion({ latitude: coord.latitude, longitude: coord.longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 }, 500);
-        }
-      } catch (error) {
-        console.error('Error getting current location:', error);
-        if (currentLocation) {
-          mapRef.current.animateToRegion({ latitude: currentLocation.latitude, longitude: currentLocation.longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 }, 500);
-        }
-      }
-    }
-  };
+  const recenterMap = makeRecenterMapFactory({ mapRef, bgReadyRef: bgReady, currentLocationRef: { current: currentLocation }, setCurrentLocation: (c) => { setCurrentLocation(c); setUserLocationFollow(c); }, setAccuracy });
 
   const handleCamera = async () => {
     try {
@@ -443,7 +293,7 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
       }
       if (result.status === 'saved') {
         const message = result.savedToGallery
-          ? 'Captured photo saved to your device gallery and added to this recording.'
+          ? 'Captured photo saved to your device gallery.'
           : 'Captured photo saved to this recording (not saved to device gallery).';
         Alert.alert('Photo saved', message);
       }
@@ -453,46 +303,12 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
     }
   };
 
-  const initialHeight = useRef<number>(0);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dy) > 5,
-      onPanResponderGrant: () => { initialHeight.current = (bottomSheetAnim as any)._value; },
-      onPanResponderMove: (_, gestureState) => {
-        const newValue = initialHeight.current - gestureState.dy;
-        if (newValue >= collapsedHeight && newValue <= bottomSheetHeight) {
-          bottomSheetAnim.setValue(newValue);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        const threshold = (bottomSheetHeight + collapsedHeight) / 2;
-        const currentValue = (bottomSheetAnim as any)._value;
-        if (gestureState.dy < -50) expandBottomSheet();
-        else if (gestureState.dy > 50) collapseBottomSheet();
-        else if (currentValue > threshold) expandBottomSheet();
-        else collapseBottomSheet();
-      },
-    })
-  ).current;
-
-  const expandBottomSheet = () => { setIsExpanded(true); Animated.spring(bottomSheetAnim, { toValue: bottomSheetHeight, useNativeDriver: false, tension: 50, friction: 8 }).start(); };
-  const collapseBottomSheet = () => { setIsExpanded(false); Animated.spring(bottomSheetAnim, { toValue: collapsedHeight, useNativeDriver: false, tension: 50, friction: 8 }).start(); };
-  const toggleBottomSheet = () => { if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); if (isExpanded) collapseBottomSheet(); else expandBottomSheet(); };
+  // bottom-sheet controls provided by useBottomSheet
 
   const stopRecording = async () => {
     if (true) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    try { await BackgroundGeolocation.stop(); } catch (error) { console.error('Error stopping background location:', error); }
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    const snapshot = await stopRecordingShared({ timerRef, coordinates, maxElevation, maxSpeed, duration });
 
-    const snapshot = await loadRecordingSnapshot({
-      fallbackCoordinates: coordinates,
-      fallbackMaxElevation: maxElevation,
-      fallbackMaxSpeed: maxSpeed,
-      fallbackDuration: duration,
-    });
     const finalCoords = snapshot.coordinates;
     const finalMaxElevation = snapshot.maxElevation;
     const finalMaxSpeed = snapshot.maxSpeed;
@@ -617,7 +433,7 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
           <TouchableOpacity style={styles.handleContainer} onPress={toggleBottomSheet} activeOpacity={0.7}><View style={styles.handle} /></TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.bottomSheetContent} contentContainerStyle={{ paddingBottom: isExpanded ? navbarHeight : 12 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <View style={[styles.bottomSheetContent, { paddingBottom: isExpanded ? navbarHeight : 12 }]}>
           <RecordOverlay
             isRecording={isRecording}
             isExpanded={isExpanded}
@@ -637,7 +453,7 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
             onCancel={cancelRecording}
             onCamera={handleCamera}
           />
-        </ScrollView>
+        </View>
       </Animated.View>
 
     </View>

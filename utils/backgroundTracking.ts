@@ -112,11 +112,11 @@ export function appendCoordinateToPath(
   setCoordinates((prev) => {
     const last = (prevCoords && prevCoords.length > 0) ? prevCoords[prevCoords.length - 1] : prev[prev.length - 1];
     
-    // Prevent duplicate points from bloating the array
-    if (last && last.latitude === normalized.latitude && last.longitude === normalized.longitude) {
-      console.log('appendCoordinateToPath: skipped duplicate point', normalized);
-      return prev;
-    }
+    // // Prevent duplicate points from bloating the array
+    // if (last && last.latitude === normalized.latitude && last.longitude === normalized.longitude) {
+    //   console.log('appendCoordinateToPath: skipped duplicate point', normalized);
+    //   return prev;
+    // }
 
     // Filter large jumps (likely outliers). Calculate haversine distance in meters.
     if (last) {

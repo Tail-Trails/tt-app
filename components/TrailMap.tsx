@@ -2,7 +2,7 @@ import theme from '@/constants/colors';
 import { forwardRef, useMemo, useRef, useImperativeHandle, useEffect, useState } from 'react';
 import { View, Text as RNText, TouchableOpacity } from 'react-native';
 import { Map as MLMapView, Camera, GeoJSONSource, Layer, Marker } from '@maplibre/maplibre-react-native';
-import * as Location from 'expo-location';
+import BackgroundGeolocation from 'react-native-background-geolocation';
 import DogMarker from './DogMarker';
 
 interface TrailMapProps {
@@ -14,6 +14,7 @@ interface TrailMapProps {
   showsUserLocation?: boolean;
   followsUserLocation?: boolean;
   userLocation?: { latitude: number; longitude: number } | null;
+  onUserLocationUpdate?: (location: { latitude: number; longitude: number }) => void;
   startCoordinate?: { latitude: number; longitude: number } | null;
   showsMyLocationButton?: boolean;
   initialRegion?: {
@@ -56,6 +57,7 @@ const TrailMap = forwardRef<any, TrailMapProps>(({
   showsUserLocation = false,
   followsUserLocation = false,
   userLocation = null,
+  onUserLocationUpdate,
   startCoordinate = null,
   initialRegion,
   mapStyleURL,
@@ -82,6 +84,8 @@ const TrailMap = forwardRef<any, TrailMapProps>(({
   useEffect(() => {
     if (userLocation) setLiveUserLocation(userLocation);
   }, [userLocation]);
+
+  console.log('User location in TrailMap:', liveUserLocation);
 
   const center = useMemo(() => {
     if (initialRegion) return [initialRegion.longitude, initialRegion.latitude];
@@ -112,6 +116,19 @@ const TrailMap = forwardRef<any, TrailMapProps>(({
     } as any;
   }, [guideCoords]);
 
+  // Ensure the native route source is updated when our geojson changes.
+  useEffect(() => {
+    if (!nativeMapRef.current || !geojson) return;
+    try {
+      const src = nativeMapRef.current.getSource?.('routeSource');
+      if (src && typeof src.setData === 'function') {
+        src.setData(geojson);
+      }
+    } catch (e) {
+      // Some map implementations may not expose getSource/setData; ignore.
+    }
+  }, [geojson]);
+
   const activeStyle = useMemo(() => (mapStyleURL ?? DEFAULT_STYLE), [mapStyleURL]);
   const effectiveStyle = useMemo(() => (showOnlyPath ? BLANK_STYLE : activeStyle), [activeStyle, showOnlyPath]);
   const zoom = useMemo(() => latDeltaToZoom(initialRegion?.latitudeDelta), [initialRegion]);
@@ -138,48 +155,49 @@ const TrailMap = forwardRef<any, TrailMapProps>(({
   }));
 
   const shouldTrackUserLocation = showsUserLocation || followsUserLocation;
-  const resolvedUserLocation = liveUserLocation ?? userLocation;
+  // Prioritize parent-provided userLocation so RecordScreen controls the
+  // stable location used for display and recording.
+  const resolvedUserLocation = userLocation ?? liveUserLocation;
 
   useEffect(() => {
-    if (!shouldTrackUserLocation) return;
+    // If the parent supplies a `userLocation` prop, prefer it and avoid
+    // running the internal polling loop which can fight the parent's state.
+    if (!shouldTrackUserLocation || userLocation) return;
     let active = true;
-    let subscription: Location.LocationSubscription | null = null;
 
-    const startWatching = async () => {
-      const permission = await Location.getForegroundPermissionsAsync();
-      if (!active || permission.status !== 'granted') return;
-
-      subscription = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.High,
-          distanceInterval: 1,
-          timeInterval: 1000,
-        },
-        (location) => {
-          const lat = location?.coords?.latitude;
-          const lon = location?.coords?.longitude;
-          if (typeof lat === 'number' && typeof lon === 'number') {
-            setLiveUserLocation({ latitude: lat, longitude: lon });
-          }
+    const id = setInterval(async () => {
+      try {
+        // Use BackgroundGeolocation to obtain a stable, consistent user location
+        // without registering global listeners here.
+        // @ts-ignore
+        const loc = await BackgroundGeolocation.getCurrentPosition({ timeout: 30, maximumAge: 0, samples: 1, desiredAccuracy: 10 });
+        const lat = loc?.coords?.latitude;
+        const lon = loc?.coords?.longitude;
+        if (!active) return;
+        if (typeof lat === 'number' && typeof lon === 'number') {
+          const coord = { latitude: lat, longitude: lon };
+          setLiveUserLocation(coord);
+          try { onUserLocationUpdate?.(coord); } catch (e) { /* swallow */ }
         }
-      );
-    };
+      } catch (e) {
+        // ignore transient errors
+      }
+    }, 1000);
 
-    startWatching();
-    return () => { active = false; subscription?.remove(); };
+    return () => { active = false; clearInterval(id); };
   }, [shouldTrackUserLocation]);
 
   useEffect(() => {
-    if (!followsUserLocation || !resolvedUserLocation || hasCenteredOnOpenRef.current) return;
+    if (!followsUserLocation || !resolvedUserLocation) return;
 
+    // When follow mode is enabled, always ease the camera to the latest
+    // resolved user location so the map tracks movement live.
     cameraRef.current?.easeTo({
       center: [resolvedUserLocation.longitude, resolvedUserLocation.latitude],
       zoom,
       easing: 'fly',
       duration: 1000,
     });
-
-    hasCenteredOnOpenRef.current = true;
   }, [followsUserLocation, resolvedUserLocation, zoom]);
 
   return (
@@ -242,8 +260,8 @@ const TrailMap = forwardRef<any, TrailMapProps>(({
 
       {resolvedUserLocation && (
         <Marker
-          key="dog-marker-stable"
-          id="dogMarker"
+          key={`dog-marker-${resolvedUserLocation.latitude}-${resolvedUserLocation.longitude}`}
+          id={`dogMarker-${resolvedUserLocation.latitude}-${resolvedUserLocation.longitude}`}
           lngLat={[resolvedUserLocation.longitude, resolvedUserLocation.latitude]}
         >
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>

@@ -657,7 +657,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
             if (typeof image === 'string') return true;
             return image.id !== imageId;
           })
-          : trail.images;
+          : (trail.images === null || trail.images === undefined) ? [] : trail.images;
         return { ...trail, images: nextImages };
       }));
     } catch (error) {
@@ -675,6 +675,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     exposure?: number;
     offLeash?: boolean;
     wildlife?: boolean;
+    rating?: number;
   }) => {
     try {
       console.log('Updating trail details via API:', id, updates);

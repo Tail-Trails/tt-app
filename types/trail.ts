@@ -58,6 +58,6 @@ export interface Trail {
   startLatitude?: number;
   startLongitude?: number;
   distanceFromUser?: number;
-  dogMatchScore: number;
+  dogMatchScore?: number;
   reviewCount?: number;
 }
