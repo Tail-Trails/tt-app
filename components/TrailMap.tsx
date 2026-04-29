@@ -85,7 +85,7 @@ const TrailMap = forwardRef<any, TrailMapProps>(({
     if (userLocation) setLiveUserLocation(userLocation);
   }, [userLocation]);
 
-  console.log('User location in TrailMap:', liveUserLocation);
+  // console.log('User location in TrailMap:', liveUserLocation);
 
   const center = useMemo(() => {
     if (initialRegion) return [initialRegion.longitude, initialRegion.latitude];
@@ -160,32 +160,11 @@ const TrailMap = forwardRef<any, TrailMapProps>(({
   const resolvedUserLocation = userLocation ?? liveUserLocation;
 
   useEffect(() => {
-    // If the parent supplies a `userLocation` prop, prefer it and avoid
-    // running the internal polling loop which can fight the parent's state.
-    if (!shouldTrackUserLocation || userLocation) return;
-    let active = true;
-
-    const id = setInterval(async () => {
-      try {
-        // Use BackgroundGeolocation to obtain a stable, consistent user location
-        // without registering global listeners here.
-        // @ts-ignore
-        const loc = await BackgroundGeolocation.getCurrentPosition({ timeout: 30, maximumAge: 0, samples: 1, desiredAccuracy: 10 });
-        const lat = loc?.coords?.latitude;
-        const lon = loc?.coords?.longitude;
-        if (!active) return;
-        if (typeof lat === 'number' && typeof lon === 'number') {
-          const coord = { latitude: lat, longitude: lon };
-          setLiveUserLocation(coord);
-          try { onUserLocationUpdate?.(coord); } catch (e) { /* swallow */ }
-        }
-      } catch (e) {
-        // ignore transient errors
-      }
-    }, 1000);
-
-    return () => { active = false; clearInterval(id); };
-  }, [shouldTrackUserLocation]);
+    // Intentionally skipped internal polling inside Map component.
+    // Calling `getCurrentPosition` every 1000ms queues massive thread/plugin contention
+    // causing stale coordinates to block genuinely live updates.
+    // Instead, the root screen's `BackgroundGeolocation.onLocation` delivers fresh data naturally.
+  }, [shouldTrackUserLocation, userLocation]);
 
   useEffect(() => {
     if (!followsUserLocation || !resolvedUserLocation) return;

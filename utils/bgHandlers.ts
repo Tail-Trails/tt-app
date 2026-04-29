@@ -30,7 +30,12 @@ export function processBGLocation(location: BGLocation, h: Helpers) {
   try {
     const locationAccuracy = getLocationAccuracyMeters(location);
 
+    console.log('BG location received. timestamp=', getLocationTimestampMs(location), 'accuracy=', locationAccuracy, 'isSample=', location?.sample);
+
     const coord = toCoordinate(location);
+
+    console.log('Parsed coordinate:', coord);
+
     if (!coord) return;
 
     const gpsTs = getLocationTimestampMs(location);
@@ -87,6 +92,7 @@ export function processBGLocation(location: BGLocation, h: Helpers) {
 
 export function makeMotionHandler(h: Helpers) {
   return (event: MotionChangeEvent) => {
+    console.log('MotionChangeEvent', event);
     if (!h.isRecordingRef.current) return;
 
     if (!event.isMoving) {

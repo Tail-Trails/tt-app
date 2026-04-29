@@ -118,6 +118,11 @@ export async function startRecordingShared(params: StartParams) {
       }
 
       await BackgroundGeolocation.start();
+      // BE AWARE: Force the background geolocation plugin into the "moving" state.
+      // This is especially important for testing on iOS simulators (like "City Run")
+      // because simulators do not simulate the CMMotionActivity (motion sensor) events 
+      // that the plugin normally relies on to wake up from its stationary state.
+      await BackgroundGeolocation.changePace(true);
     } catch (bgErr) {
       console.warn('BackgroundGeolocation.start() failed (helper)', bgErr);
     }

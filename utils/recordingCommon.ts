@@ -117,31 +117,11 @@ export function usePollingPosition(opts: {
 }) {
   const { isRecording, bgReadyRef, isRecordingRef, setCurrentLocation, setAccuracy, setCoordinates, coordinatesRef } = opts;
   useEffect(() => {
-    if (!isRecording) return;
-    let mounted = true;
-    const id = setInterval(async () => {
-      if (!mounted) return;
-      if (!bgReadyRef.current) return;
-      try {
-        const loc = await BackgroundGeolocation.getCurrentPosition({ timeout: 30, maximumAge: 0, samples: 1, desiredAccuracy: 10 });
-        if (!loc || !loc.coords) return;
-        const coord = { latitude: loc.coords.latitude, longitude: loc.coords.longitude } as Coordinate;
-        setCurrentLocation(coord);
-        setAccuracy((loc.coords as any).accuracy);
-
-        if (isRecordingRef.current) {
-          try {
-            appendCoordinateToPath(setCoordinates, coord, coordinatesRef.current);
-          } catch (e) {
-            appendCoordinateToPath(setCoordinates, coord);
-          }
-        }
-      } catch (e) {
-        // ignore transient errors
-      }
-    }, 1000);
-
-    return () => { mounted = false; clearInterval(id); };
+    // Intentionally disabled. 
+    // Spamming BackgroundGeolocation.getCurrentPosition at 1Hz crashes 
+    // the native location queue and forces it to return stale cached coordinates,
+    // freezing the dog marker UI and path. BG Geolocation naturally emits 
+    // highly-accurate points to the `onLocation` listener instead!
   }, [isRecording, bgReadyRef, isRecordingRef, setCurrentLocation, setAccuracy, setCoordinates, coordinatesRef]);
 }
 
