@@ -20,7 +20,6 @@ export default function CollectibleScreen() {
   console.log("Collectibles:", collectibles);
   const router = useRouter();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -41,7 +40,7 @@ export default function CollectibleScreen() {
             activeOpacity={0.85}
             onPress={() => {
               setSelectedIndex(i);
-              setIsModalVisible(true);
+              router.push(`/collectible-detail?index=${i}`);
             }}
           >
             {collectible.preview_url ? (
@@ -61,14 +60,7 @@ export default function CollectibleScreen() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-      {/* Fullscreen modal for selected medal (extracted to reusable component) */}
-      <CollectibleModal
-        visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-        selectedIndex={selectedIndex}
-        collectibles={collectibles}
-        collectibleSvgs={collectibleSvgs}
-      />
+      {/* Detail screen opened via router when tapping an item */}
     </View>
   );
 }

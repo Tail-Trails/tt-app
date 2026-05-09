@@ -1,5 +1,4 @@
-import React from 'react';
-import { View, Modal, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components';
 import Medal3D from '@/components/Medal3D';
@@ -37,49 +36,47 @@ export default function CollectibleModal({ visible, onClose, selectedIndex, coll
     console.log("CollectibleModal - candidate:", candidate);
 
     return (
-        <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-                <SafeAreaView style={{ flex: 1, backgroundColor: '#000', paddingTop: 24 }}>
-                    <View style={{ padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <TouchableOpacity style={styles.backButton} onPress={onClose}>
-                            <ArrowLeft size={20} color={theme.accentPrimary} />
-                        </TouchableOpacity>
-                        <View />
-                    </View>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <SafeAreaView style={{ flex: 1, backgroundColor: theme.backgroundPrimary, paddingTop: 24 }}>
+                <View style={{ padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <TouchableOpacity style={styles.backButton} onPress={onClose}>
+                        <ArrowLeft size={20} color={theme.accentPrimary} />
+                    </TouchableOpacity>
+                    <View />
+                </View>
 
-                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        {modelUrl ? (
-                            <View style={{ width: '100%', height: '80%', justifyContent: 'center', alignItems: 'center' }}>
-                                <Medal3D fileUrl={modelUrl} />
-                                <View style={{ marginTop: 18, paddingHorizontal: 20 }}>
-                                    <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700', textAlign: 'center' }}>{item?.name}</Text>
-                                    {item?.description ? (
-                                        <Text style={{ color: '#ddd', textAlign: 'center', marginTop: 8 }}>{item.description}</Text>
-                                    ) : null}
-                                </View>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    {modelUrl ? (
+                        <View style={{ width: '100%', height: '80%', justifyContent: 'center', alignItems: 'center' }}>
+                            <Medal3D fileUrl={modelUrl} />
+                            <View style={{ marginTop: 18, paddingHorizontal: 20 }}>
+                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700', textAlign: 'center' }}>{item?.name}</Text>
+                                {item?.description ? (
+                                    <Text style={{ color: '#ddd', textAlign: 'center', marginTop: 8 }}>{item.description}</Text>
+                                ) : null}
                             </View>
-                        ) : candidate ? (
-                            // Not a model URL — render image preview instead
-                            <View style={{ width: '100%', height: '80%', justifyContent: 'center', alignItems: 'center' }}>
-                                <Image
-                                    source={{ uri: String(candidate) }}
-                                    style={{ width: '80%', height: '60%', borderRadius: 12 }}
-                                    contentFit="cover"
-                                    cachePolicy="memory-disk"
-                                />
-                                <View style={{ marginTop: 18, paddingHorizontal: 20 }}>
-                                    <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700', textAlign: 'center' }}>{item?.name}</Text>
-                                    {item?.description ? (
-                                        <Text style={{ color: '#ddd', textAlign: 'center', marginTop: 8 }}>{item.description}</Text>
-                                    ) : null}
-                                </View>
+                        </View>
+                    ) : candidate ? (
+                        // Not a model URL — render image preview instead
+                        <View style={{ width: '100%', height: '80%', justifyContent: 'center', alignItems: 'center' }}>
+                            <Image
+                                source={{ uri: String(candidate) }}
+                                style={{ width: '80%', height: '60%', borderRadius: 12 }}
+                                contentFit="cover"
+                                cachePolicy="memory-disk"
+                            />
+                            <View style={{ marginTop: 18, paddingHorizontal: 20 }}>
+                                <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700', textAlign: 'center' }}>{item?.name}</Text>
+                                {item?.description ? (
+                                    <Text style={{ color: '#ddd', textAlign: 'center', marginTop: 8 }}>{item.description}</Text>
+                                ) : null}
                             </View>
-                        ) : (
-                            <View />
-                        )}
-                    </View>
-                </SafeAreaView>
-            </GestureHandlerRootView>
-        </Modal>
+                        </View>
+                    ) : (
+                        <View />
+                    )}
+                </View>
+            </SafeAreaView>
+        </GestureHandlerRootView>
     );
 }
