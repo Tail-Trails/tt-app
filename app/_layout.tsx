@@ -120,7 +120,7 @@ function RootLayoutNav() {
       </Stack>
 
       {/* Feedback Modal */}
-      <Modal visible={isFeedbackOpen} animationType="slide" transparent>
+      {/* <Modal visible={isFeedbackOpen} animationType="slide" transparent>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={{ marginBottom: 20 }}>Send Feedback</Text>
@@ -142,16 +142,16 @@ function RootLayoutNav() {
             </View>
           </View>
         </KeyboardAvoidingView>
-      </Modal>
+      </Modal> */}
 
       {/* Floating feedback button */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.fab}
         onPress={() => setIsFeedbackOpen(true)}
         accessibilityLabel="Send feedback"
       >
         <MessageSquareQuote size={22} color={colors.backgroundPrimary} />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }

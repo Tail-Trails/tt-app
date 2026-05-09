@@ -419,7 +419,8 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
         />
       )}
 
-      <LocationWatchdog isRecording={isRecording} thresholdSeconds={12} />
+      {/* Removing watch dog notifications for now */}
+      {/* <LocationWatchdog isRecording={isRecording} thresholdSeconds={12} /> */}
 
       {(currentLocation || initialTrail) && (
         <TrailMap

@@ -1,20 +1,26 @@
-import React from 'react';
-import { View, ScrollView, TouchableOpacity } from 'react-native';
-import { SvgXml } from 'react-native-svg';
+import React, { useState } from 'react';
+import { View, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components';
+import { Image } from 'expo-image';
 import styles from './collectible.styles';
 import { useRouter } from 'expo-router';
 import { useAccount } from '@/context/AccountContext';
+import CollectibleModal from './collectible-modal';
 
 type Collectible = {
   name: string;
   description?: string;
+  preview_url?: string;
   image_url?: string;
 };
 
 export default function CollectibleScreen() {
   const { collectibles, collectibleSvgs } = useAccount();
+  console.log("Collectibles:", collectibles);
   const router = useRouter();
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -26,11 +32,25 @@ export default function CollectibleScreen() {
         <View style={styles.spacer} />
       </View>
 
+      {/* Collectibles List */}
       <ScrollView contentContainerStyle={styles.content}>
         {collectibles.map((collectible, i) => (
-          <TouchableOpacity key={`${collectible.name}-${i}`} style={styles.item} activeOpacity={0.85}>
-            {collectibleSvgs[i] ? (
-              <SvgXml xml={collectibleSvgs[i] || ''} width={56} height={56} />
+          <TouchableOpacity
+            key={`${collectible.name}-${i}`}
+            style={styles.item}
+            activeOpacity={0.85}
+            onPress={() => {
+              setSelectedIndex(i);
+              setIsModalVisible(true);
+            }}
+          >
+            {collectible.preview_url ? (
+              <Image
+                source={{ uri: collectible.preview_url }}
+                style={styles.thumb}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+              />
             ) : (
               <View style={styles.thumb} />
             )}
@@ -41,6 +61,14 @@ export default function CollectibleScreen() {
           </TouchableOpacity>
         ))}
       </ScrollView>
+      {/* Fullscreen modal for selected medal (extracted to reusable component) */}
+      <CollectibleModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        selectedIndex={selectedIndex}
+        collectibles={collectibles}
+        collectibleSvgs={collectibleSvgs}
+      />
     </View>
   );
 }

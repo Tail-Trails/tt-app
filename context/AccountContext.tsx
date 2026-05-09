@@ -15,6 +15,9 @@ export interface UserProfile {
 export interface Collectible {
   name: string;
   description?: string;
+  // `preview_url` is a small image/thumbnail for initial display
+  preview_url?: string;
+  // `image_url` may point to the full image or a GLB/GLTF model
   image_url?: string;
 }
 
@@ -36,22 +39,63 @@ export const [AccountContext, useAccount] = createContextHook(() => {
       const items: Collectible[] = Array.isArray(data) ? data : [];
       setCollectibles(items);
 
-      const urls = items
-        .map((item) => item?.image_url)
-        .filter((url): url is string => typeof url === 'string');
+      // Create array aligned with `items` so collectibleSvgs[i] corresponds to items[i]
+      const svgs: (string | null)[] = items.map(() => null);
 
-      const svgs: (string | null)[] = new Array(urls.length).fill(null);
       await Promise.all(
-        urls.map(async (u, i) => {
+        items.map(async (item, idx) => {
+          // Prefer `preview_url` for thumbnails; fall back to `image_url`.
+          const preview = item?.preview_url;
+          const modelUrl = item?.image_url;
+
+          // If preview is provided, use it (fetch SVG or keep URL)
+          if (preview) {
+            try {
+              const r = await fetch(preview);
+              if (!r.ok) {
+                svgs[idx] = preview; // fallback to URL
+                return;
+              }
+              const contentType = (r.headers.get('content-type') || '').toLowerCase();
+              if (contentType.includes('svg') || contentType.includes('xml') || preview.toLowerCase().endsWith('.svg')) {
+                svgs[idx] = await r.text();
+              } else {
+                svgs[idx] = preview;
+              }
+            } catch {
+              svgs[idx] = preview;
+            }
+            return;
+          }
+
+          // No preview; fall back to model/image URL
+          if (!modelUrl) return;
+
+          // If it's a model (GLB/GLTF) use the model URL so consumers can load it
+          if (/\.gltf?$|\.glb($|\?|#)/i.test(modelUrl)) {
+            svgs[idx] = modelUrl;
+            return;
+          }
+
+          // Otherwise try fetching the image and store SVG text if appropriate
           try {
-            const r = await fetch(u);
-            if (!r.ok) return;
-            svgs[i] = await r.text();
+            const r = await fetch(modelUrl);
+            if (!r.ok) {
+              svgs[idx] = modelUrl; // fallback to URL
+              return;
+            }
+            const contentType = (r.headers.get('content-type') || '').toLowerCase();
+            if (contentType.includes('svg') || contentType.includes('xml') || modelUrl.toLowerCase().endsWith('.svg')) {
+              svgs[idx] = await r.text();
+            } else {
+              svgs[idx] = modelUrl;
+            }
           } catch {
-            // ignore
+            svgs[idx] = modelUrl;
           }
         })
       );
+
       setCollectibleSvgs(svgs);
     } catch {
       // ignore

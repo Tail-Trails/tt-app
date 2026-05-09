@@ -1,5 +1,5 @@
 import React from 'react';
-import { SvgXml } from 'react-native-svg';
+// SvgXml removed — previews are always webp now
 import {
   View,
   TouchableOpacity,
@@ -47,7 +47,7 @@ export default function ProfileScreen() {
     );
   }
   const { user, signOut, session } = auth;
-  const { userProfile, isLoading: isAccountLoading, collectibleSvgs } = useAccount();
+  const { userProfile, isLoading: isAccountLoading, collectibleSvgs, collectibles } = useAccount();
   const { dogProfile, isDogProfileLoading } = useDogs();
   const { trails, savedTrails, isLoading: isTrailsLoading, saveTrailBookmark, removeTrailBookmark, isTrailSaved } = useTrails();
   const [isCardSwiping, setIsCardSwiping] = React.useState<Record<string, boolean>>({});
@@ -412,19 +412,24 @@ export default function ProfileScreen() {
               <View style={styles.statsCardContent}>
                 <View style={styles.statsSvgContainer}>
                   <View style={styles.statsSvgRow}>
-                    {collectibleSvgs.map((xml, i) => (
-                      <View
-                        key={i}
-                        style={styles.collectibleItem}
-                      >
-                        {xml ? (
-                          <SvgXml xml={xml} width={64} height={64} />
-                        ) : (
-                          <View style={styles.collectiblePlaceholder} />
-                        )}
-                        <View style={[styles.collectibleOverlay, i === 0 ? { opacity: 0 } : { opacity: 0.55 }]} />
-                      </View>
-                    ))}
+                    {collectibleSvgs.map((_, i) => {
+                      const collectible = (collectibles && collectibles[i]) || {};
+                      return (
+                        <View key={i} style={styles.collectibleItem}>
+                          {collectible.preview_url ? (
+                            <Image
+                              source={{ uri: collectible.preview_url }}
+                              style={[styles.collectiblePlaceholder, { width: 64, height: 64 }]}
+                              contentFit="cover"
+                              cachePolicy="memory-disk"
+                            />
+                          ) : (
+                            <View style={styles.collectiblePlaceholder} />
+                          )}
+                          <View style={[styles.collectibleOverlay, i === 0 ? { opacity: 0 } : { opacity: 0.55 }]} />
+                        </View>
+                      );
+                    })}
                   </View>
                 </View>
               </View>
