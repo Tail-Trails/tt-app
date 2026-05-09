@@ -4,6 +4,7 @@ import { Text } from '@/components';
 import TrailMap from '@/components/TrailMap';
 import * as Haptics from 'expo-haptics';
 import BackgroundGeolocation, { Location as BGLocation, MotionChangeEvent } from 'react-native-background-geolocation';
+import { checkBackgroundPermissionStatus } from '@/utils/permissions';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MapPin, Navigation } from 'lucide-react-native';
@@ -157,8 +158,20 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
   usePersistCoordinates(isRecording, coordinates);
 
   useEffect(() => {
-    requestPermissions();
-    loadRecordingState();
+    (async () => {
+      try {
+        const ok = await checkBackgroundPermissionStatus(bgReady);
+        setHasPermission(ok);
+      } catch (e) {
+        console.warn('checkBackgroundPermissionStatus failed:', e);
+        setHasPermission(false);
+      } finally {
+        setIsLoadingPermission(false);
+        // still call requestPermissions to let user actively prompt if needed
+        requestPermissions();
+        loadRecordingState();
+      }
+    })();
 
     // Load recording snapshot once; avoid polling and overwriting live state.
     return () => {
@@ -380,7 +393,7 @@ export default function FollowScreen({ trail: incomingTrail }: { trail?: Trail }
     ]);
   };
 
-  if (isLoadingPermission && true) {
+  if (isLoadingPermission) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.backgroundPrimary} />

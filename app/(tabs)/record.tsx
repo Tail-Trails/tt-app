@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Platform, TouchableOpacity, Alert, ActivityIndicator, Animated, PanResponder, Dimensions, ScrollView, AppState, AppStateStatus } from 'react-native';
+import { View, TouchableOpacity, Alert, ActivityIndicator, Animated } from 'react-native';
 import { Text } from '@/components';
 import TrailMap from '@/components/TrailMap';
 import { processBGLocation, makeMotionHandler } from '@/utils/bgHandlers';
 import * as Haptics from 'expo-haptics';
-import BackgroundGeolocation, { Location as BGLocation, MotionChangeEvent } from 'react-native-background-geolocation';
+import BackgroundGeolocation, { Location as BGLocation } from 'react-native-background-geolocation';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MapPin, Navigation } from 'lucide-react-native';
@@ -15,13 +15,14 @@ import { useTrails } from '@/context/TrailsContext';
 import { useAuth } from '@/context/AuthContext';
 import { Coordinate, Trail } from '@/types/trail';
 import { calculateTotalDistance } from '@/utils/distance';
-import { appendCoordinateToPath, getLocationAccuracyMeters, getLocationTimestampMs, shouldAcceptTrackedLocation, toCoordinate } from '@/utils/backgroundTracking';
+import { appendCoordinateToPath } from '@/utils/backgroundTracking';
 import { initBackgroundTracking } from '@/utils/backgroundGeolocationInit';
-import { clearRecordingSession, initializeRecordingSession, loadRecordingSnapshot, RECORDING_STORAGE_KEYS, saveBackup } from '@/utils/recordingSession';
+import { clearRecordingSession, saveBackup } from '@/utils/recordingSession';
 import { captureAndStoreRecordingPhoto, requestBgPermissionAndInitialLocation, resolveInitialRecordingCoordinate } from '@/utils/recordingFlow';
 import { loadRecordingState as loadRecordingStateHelper, requestPermissions as requestPermissionsHelper, startRecordingShared, stopRecordingShared } from '@/utils/recordingHelpers';
 import { useBottomSheet, computePace, makeRecenterMapFactory, usePersistCoordinates, usePollingPosition, useSignalWatchdog } from '@/utils/recordingCommon';
 import { LocationWatchdog } from '@/components/LocationWatchdog';
+import { checkBackgroundPermissionStatus } from '@/utils/permissions';
 
 // Background task removed — the native SDK will deliver locations via its own listeners
 
@@ -59,7 +60,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   const [speed, setSpeed] = useState<number>(0);
   const [maxSpeed, setMaxSpeed] = useState<number>(0);
   const [accuracy, setAccuracy] = useState<number | undefined>(undefined);
-  
+
   const stopStartTimeRef = useRef<number | null>(null);
   const lastLocationTimestamp = useRef<number>(Date.now());
   const lastAcceptedGpsTimestamp = useRef<number>(0);
@@ -177,12 +178,22 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   // (AppState listener removed — persistence handled on-change and via backups)
 
   useEffect(() => {
-    // Only check current permission state on mount — don't auto-prompt every time.
-    checkPermissionStatus();
-    // Load any existing recording snapshot once on mount. Avoid polling
-    // AsyncStorage repeatedly — `setCoordinates` is the single source of
-    // truth for the UI while recording.
-    loadRecordingState();
+    // Use shared background permission check to avoid duplicating logic and
+    // to wait for the background SDK to initialize before deciding state.
+    (async () => {
+      try {
+        const ok = await checkBackgroundPermissionStatus(bgReady);
+        setHasPermission(ok);
+      } catch (e) {
+        console.warn('checkBackgroundPermissionStatus failed:', e);
+        setHasPermission(false);
+      } finally {
+        setIsLoadingPermission(false);
+        // still call requestPermissions to let user actively prompt if needed
+        requestPermissions();
+        loadRecordingState();
+      }
+    })();
 
     return () => {
       if (locationSubscription.current) {
@@ -236,45 +247,6 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   const requestPermissions = async () => {
     // use shared helper
     await requestPermissionsHelper({ bgReadyRef: bgReady, setHasPermission, setIsLoadingPermission, setCurrentLocation, requestBgPermissionAndInitialLocation });
-  };
-
-  const checkPermissionStatus = async () => {
-    try {
-      if (!bgReady.current) {
-        setHasPermission(false);
-        setIsLoadingPermission(false);
-        return;
-      }
-
-      try {
-        // Try to query native provider state first to avoid triggering permission UI
-        // @ts-ignore
-        const state = await BackgroundGeolocation.getProviderState?.() ?? await BackgroundGeolocation.getState?.();
-        if (state) {
-          const s: any = state; // provider return shapes vary across platforms/SDK versions
-          const enabled = s.enabled === true;
-          const authVal = s.authorization ?? s.authorizationStatus ?? s.status ?? null;
-          const authStr = typeof authVal === 'string' ? authVal.toLowerCase() : null;
-          const authorized = enabled || (authStr && (
-            authStr.includes('always') || authStr.includes('when_in_use') || authStr.includes('authorized') || authStr.includes('granted') || authStr === 'authorized'
-          ));
-          if (authorized) {
-            setHasPermission(true);
-            setIsLoadingPermission(false);
-            return;
-          }
-        }
-      } catch (err) {
-        // ignore and fallback to conservative behaviour
-      }
-
-      setHasPermission(false);
-    } catch (error) {
-      console.error('Permission check error:', error);
-      setHasPermission(false);
-    } finally {
-      setIsLoadingPermission(false);
-    }
   };
 
   const startRecording = async () => {
@@ -393,6 +365,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
   }
 
   if (!hasPermission) {
+    console.log('No location permission');
     return (
       <View style={styles.permissionContainer}>
         <MapPin size={64} color="#666" />
@@ -425,7 +398,7 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
       {(currentLocation || initialTrail) && (
         <TrailMap
           ref={mapRef}
-            coordinates={isRecording ? coordinates : (initialTrail ? initialTrailCoordinates ?? initialTrail.coordinates : coordinates)}
+          coordinates={isRecording ? coordinates : (initialTrail ? initialTrailCoordinates ?? initialTrail.coordinates : coordinates)}
           style={styles.map}
           initialRegion={
             currentLocation
@@ -434,25 +407,25 @@ export default function RecordScreen({ trail: incomingTrail }: { trail?: Trail }
                 ? { latitude: initialTrailCoordinates[0].latitude, longitude: initialTrailCoordinates[0].longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 }
                 : undefined
           }
-            userLocation={currentLocation}
+          userLocation={currentLocation}
           showsUserLocation
           followsUserLocation={isRecording}
           routeColor={theme.backgroundPrimary}
           routeWidth={5}
           routeOpacity={1}
           showsMyLocationButton={false}
-            onUserLocationUpdate={(coord) => {
-              // Use the same stable expo-location points used by TrailMap for recording
-              setCurrentLocation(coord);
-              if (isRecordingRef.current) {
-                try {
-                  appendCoordinateToPath(setCoordinates, coord, coordinatesRef.current);
-                } catch (e) {
-                  console.warn('Error appending point from TrailMap user location', e);
-                  appendCoordinateToPath(setCoordinates, coord);
-                }
+          onUserLocationUpdate={(coord) => {
+            // Use the same stable expo-location points used by TrailMap for recording
+            setCurrentLocation(coord);
+            if (isRecordingRef.current) {
+              try {
+                appendCoordinateToPath(setCoordinates, coord, coordinatesRef.current);
+              } catch (e) {
+                console.warn('Error appending point from TrailMap user location', e);
+                appendCoordinateToPath(setCoordinates, coord);
               }
-            }}
+            }
+          }}
         />
       )}
 

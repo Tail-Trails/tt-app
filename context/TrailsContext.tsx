@@ -5,6 +5,7 @@ import { Trail } from '@/types/trail';
 import { API_URL } from '@/lib/api';
 import { getBestAvailableLocation } from '@/utils/location';
 import * as Location from 'expo-location';
+import { ensureForegroundLocationPermission } from '@/utils/permissions';
 
 export const [TrailsContext, useTrails] = createContextHook(() => {
   const { user, session } = useAuth();
@@ -36,8 +37,8 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     try {
       console.log('Loading my trails for user:', user?.id);
       // Ensure we have foreground location permission and a location before calling /trail/me
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      const hasPerm = await ensureForegroundLocationPermission();
+      if (!hasPerm) {
         console.warn('Location permission not granted; skipping /trail/me fetch');
         setTrails([]);
         setIsLoading(false);
@@ -96,8 +97,8 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
     try {
       console.log('Loading my trails for user:', user?.id);
       // Ensure we have foreground location permission and a location before calling /trail/me
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      const hasPerm = await ensureForegroundLocationPermission();
+      if (!hasPerm) {
         console.warn('Location permission not granted; skipping /trail/me fetch');
         setSavedTrails([]);
         setIsSavedLoading(false);
@@ -512,6 +513,7 @@ export const [TrailsContext, useTrails] = createContextHook(() => {
             lng = loc.coords.longitude;
           } else {
             console.warn('No location available for /trail/for-you');
+            
             return [] as Trail[];
           }
         } catch (err) {

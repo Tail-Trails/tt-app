@@ -36,7 +36,7 @@ export default StyleSheet.create({
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.backgroundSecondary,
+    backgroundColor: theme.backgroundPrimary,
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
@@ -45,7 +45,7 @@ export default StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: theme.backgroundPrimary,
     marginRight: 12,
   },
   itemText: {

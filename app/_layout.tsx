@@ -44,6 +44,9 @@ function RootLayoutNav() {
   const [feedbackText, setFeedbackText] = useState('');
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
+  // Hide FAB on certain pages that have critical UI interactions
+  const hideFab = segments.includes('record') || segments.includes('follow');
+
   async function submitFeedback(message: string) {
     setIsSubmittingFeedback(true);
     try {
@@ -120,7 +123,7 @@ function RootLayoutNav() {
       </Stack>
 
       {/* Feedback Modal */}
-      {/* <Modal visible={isFeedbackOpen} animationType="slide" transparent>
+      <Modal visible={isFeedbackOpen} animationType="slide" transparent>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={{ marginBottom: 20 }}>Send Feedback</Text>
@@ -142,16 +145,18 @@ function RootLayoutNav() {
             </View>
           </View>
         </KeyboardAvoidingView>
-      </Modal> */}
+      </Modal>
 
-      {/* Floating feedback button */}
-      {/* <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setIsFeedbackOpen(true)}
-        accessibilityLabel="Send feedback"
-      >
-        <MessageSquareQuote size={22} color={colors.backgroundPrimary} />
-      </TouchableOpacity> */}
+      {/* Floating feedback button (hidden on record/follow to avoid covering controls) */}
+      {!hideFab && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setIsFeedbackOpen(true)}
+          accessibilityLabel="Send feedback"
+        >
+          <MessageSquareQuote size={22} color={colors.backgroundPrimary} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

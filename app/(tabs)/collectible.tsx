@@ -1,19 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components';
 import { Image } from 'expo-image';
 import styles from './collectible.styles';
 import { useRouter } from 'expo-router';
 import { useAccount } from '@/context/AccountContext';
-import CollectibleModal from './collectible-modal';
 
-type Collectible = {
-  name: string;
-  description?: string;
-  preview_url?: string;
-  image_url?: string;
-};
 
 export default function CollectibleScreen() {
   const { collectibles, collectibleSvgs } = useAccount();
