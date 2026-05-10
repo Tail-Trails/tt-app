@@ -2,7 +2,7 @@
   "expo": {
     "name": "TailTrails",
     "slug": "dog-walk-tracker-x2nouww",
-    "version": "1.0.33",
+    "version": "1.0.36",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": [
@@ -47,7 +47,7 @@
     },
     "android": {
       "package": "com.tailtrailsclub.app",
-      "versionCode": 34,
+      "versionCode": 37,
       "googleServicesFile": "./google-services.json",
       "newArchEnabled": false,
       "softwareKeyboardLayoutMode": "pan",
@@ -131,7 +131,25 @@
           "android": {
             "newArchEnabled": false,
             "usesCleartextTraffic": true,
-            "extraProguardRules": "-keep class org.maplibre.** { *; }\n-keep class com.mapbox.** { *; }\n-keep class com.google.firebase.** { *; }"
+            "extraProguardRules": "-keep class org.maplibre.** { *; }\n-keep class com.mapbox.** { *; }\n-keep class com.google.firebase.** { *; }",
+            "extraStrings": [
+              {
+                "name": "app_name",
+                "value": "Tail Trails"
+              },
+              {
+                "name": "background_geolocation_notification_title",
+                "value": "Tail Trails Location Tracking"
+              },
+              {
+                "name": "background_geolocation_notification_text",
+                "value": "We use your location to track your walks and award medals, even when the app is in the background."
+              },
+              {
+                "name": "background_geolocation_location_services_off_message",
+                "value": "Location services are disabled. Tail Trails needs location to track your dog walks."
+              }
+            ]
           },
           "ios": {
             "useFrameworks": "static"

@@ -38,6 +38,15 @@ export async function initBackgroundTracking(options: InitBackgroundTrackingOpti
     distanceFilter: BG_DISTANCE_FILTER_METERS,
     stopOnTerminate: false,
     startOnBoot: false,
-    reset: false,
+    // reset: false,
+    // Customize the Android background-permission rationale dialog so it
+    // displays app-specific reasons instead of the library default placeholder.
+    backgroundPermissionRationale: {
+      title: "Allow TailTrails to access this device's location in the background?",
+      message:
+        "TailTrails collects location data to enable trail recording, background tracking, and distance calculations. To continue recording when the app is closed or the screen is locked, please enable 'Allow all the time'.",
+      positiveAction: 'Change to Allow all the time',
+      negativeAction: 'Cancel',
+    },
   } as any);
 }

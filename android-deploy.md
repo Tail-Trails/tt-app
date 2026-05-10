@@ -6,7 +6,7 @@
 `adb logcat | grep -i "FATAL"`
 
 PROCESS:
-`npx expo prebuild --clean`
+`npx expo prebuild --platform android --clean`
 `cd android && ./gradlew assembleRelease` for APK
 - found in `/android/app/build/outputs/apk/release/app-release.apk`
 `cd android && ./gradlew bundleRelease`  for AAB
