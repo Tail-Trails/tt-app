@@ -55,6 +55,17 @@ async function setupWeb() {
       const token = await cred.user.getIdToken();
       return { idToken: token, user: cred.user };
     },
+    // Sign in to Firebase using Apple ID token (web)
+    signInWithApple: async (_authParam: any, idToken?: string) => {
+      const { OAuthProvider, signInWithCredential } = await import('firebase/auth');
+      if (!idToken) throw new Error('ID Token is required for Apple Sign-In');
+      const provider = new OAuthProvider('apple.com');
+      // Create credential using idToken (Apple returns an identity token)
+      const credential = provider.credential({ idToken });
+      const cred = await signInWithCredential(_authParam || auth, credential as any);
+      const token = await cred.user.getIdToken();
+      return { idToken: token, user: cred.user };
+    },
   };
 }
 
@@ -119,6 +130,25 @@ async function setupNative() {
         throw error;
       }
     },
+    // Sign in to Firebase using Apple ID token (native)
+    signInWithApple: async (_authParam: any, idToken?: string) => {
+      if (!idToken) throw new Error('ID Token is required for Apple Sign-In');
+      try {
+        // RN Firebase exposes AppleAuthProvider on the auth module
+        const AppleAuthProvider = authModule.AppleAuthProvider || authModule.OAuthProvider;
+        // Prefer AppleAuthProvider.credential if available
+        const credential = AppleAuthProvider && AppleAuthProvider.credential ? AppleAuthProvider.credential(idToken) : null;
+        if (!credential) throw new Error('AppleAuthProvider not available in native auth module');
+        const userCredential = await nativeAuth.signInWithCredential(credential);
+        const user = userCredential.user;
+        if (!user) throw new Error('Failed to sign in with Apple');
+        const firebaseToken = await user.getIdToken();
+        return { idToken: firebaseToken, user };
+      } catch (error: any) {
+        console.error('Native Apple Auth Error:', error);
+        throw error;
+      }
+    },
   };
 }
 
@@ -128,6 +158,7 @@ let cached: Promise<{
   createUserWithEmailAndPassword: (a: any, e: string, p: string) => Promise<any>;
   updateProfile: (u: any, p: Record<string, any>) => Promise<any>;
   signInWithGoogle: (a: any, accessToken?: string, idToken?: string) => Promise<{ idToken: string; user: any }>;
+  signInWithApple: (a: any, idToken?: string) => Promise<{ idToken: string; user: any }>;
 }> | null = null;
 
 function ensureInit() {
@@ -164,6 +195,12 @@ export async function signInWithGoogle(authParam: any, accessToken?: string, idT
   const impl = await ensureInit();
   if (!impl.signInWithGoogle) throw new Error('Google sign-in not supported by this implementation');
   return impl.signInWithGoogle(authParam, accessToken, idToken);
+}
+
+export async function signInWithApple(authParam: any, idToken?: string) {
+  const impl = await ensureInit();
+  if (!impl.signInWithApple) throw new Error('Apple sign-in not supported by this implementation');
+  return impl.signInWithApple(authParam, idToken);
 }
 
 // Synchronous accessor for auth instance. Consumers may pass this to web wrappers.

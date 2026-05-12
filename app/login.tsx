@@ -8,36 +8,18 @@ import { useAuth } from '@/context/AuthContext';
 import { firebaseAuthExchange } from '@/lib/api';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { Apple } from 'lucide-react-native';
 import Constants from 'expo-constants';
 import { Image } from 'expo-image';
 import theme from '@/constants/colors';
-import { getFirebaseAuth, signInWithEmailAndPassword, signInWithGoogle } from '@/lib/firebase';
+import { getFirebaseAuth, signInWithEmailAndPassword, signInWithGoogle, signInWithApple } from '@/lib/firebase';
 import styles from './auth.styles';
 
-WebBrowser.maybeCompleteAuthSession();
+const AppleSvg = require('../assets/images/Apple.svg');
+const GoogleSvg = require('../assets/images/Google.svg');
 
-function normalizeToken(token: any): string | null {
-  if (!token) return null;
-  if (typeof token === 'string') return token;
-  // Expo / native may return ArrayBuffer-like or { data: number[] }
-  try {
-    if (token instanceof ArrayBuffer) {
-      const view = new Uint8Array(token);
-      let s = '';
-      for (let i = 0; i < view.length; i++) s += String.fromCharCode(view[i]);
-      return decodeURIComponent(escape(s));
-    }
-    if (token && typeof token === 'object' && Array.isArray((token as any).data)) {
-      const arr = (token as any).data as number[];
-      let s = '';
-      for (let i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]);
-      return decodeURIComponent(escape(s));
-    }
-    return String(token);
-  } catch (err) {
-    return String(token);
-  }
-}
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -160,6 +142,48 @@ export default function LoginScreen() {
     }
   };
 
+  const handleApplePress = async () => {
+    if (isLoading) return;
+    if (true) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    try {
+      setIsLoading(true);
+      const available = await (AppleAuthentication.isAvailableAsync ? AppleAuthentication.isAvailableAsync() : Promise.resolve(false));
+      if (!available) {
+        Alert.alert('Apple Sign-In not available on this device');
+        return;
+      }
+
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      const idToken = (credential as any)?.identityToken;
+      if (!idToken) throw new Error('Apple did not return an identity token.');
+
+      const fb = await signInWithApple(getFirebaseAuth(), idToken);
+      const session = await firebaseAuthExchange(fb.idToken);
+      await signInWithToken(session);
+
+      if (true) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      router.replace('/');
+    } catch (err: any) {
+      console.error('Apple sign-in error:', err);
+      Alert.alert('Apple Sign-In Error', err?.message || String(err));
+      if (true) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const webKeyProps: any = typeof window !== 'undefined'
     ? {
       onKeyDown: (e: any) => {
@@ -232,13 +256,29 @@ export default function LoginScreen() {
             )}
           </Pressable>
 
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={handleGooglePress}
-            disabled={!request}
-          >
-            <Text style={styles.secondaryButtonText}>Log in with Google</Text>
-          </TouchableOpacity>
+          <View style={styles.socialRow}>
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={handleGooglePress}
+              disabled={!request || isLoading}
+            >
+              <Image
+                source={GoogleSvg}
+                style={[styles.socialIcon, { resizeMode: 'contain' }]}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={async () => handleApplePress()}
+              disabled={isLoading}
+            >
+              <Image
+                source={AppleSvg}
+                style={[styles.socialIcon, { resizeMode: 'contain' }]}
+              />
+            </TouchableOpacity>
+          </View>
 
           {/* ... */}
 

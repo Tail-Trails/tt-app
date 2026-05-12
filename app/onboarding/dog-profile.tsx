@@ -420,7 +420,7 @@ export default function DogProfileScreen() {
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="Enter your dog\'s name"
+            placeholder="Enter your dog's name"
             placeholderTextColor="#5a6040"
             autoCapitalize="words"
             testID="dog-name-input"

@@ -8,6 +8,7 @@ import { useDogs } from '@/context/DogsContext';
 import styles from './settings.styles';
 import theme from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
+import { API_URL } from '@/lib/api';
 import LottieLoader from '@/components/LottieLoader';
 
 export default function SettingsScreen() {
@@ -34,6 +35,51 @@ export default function SettingsScreen() {
       console.error('Logout failed', err);
       Alert.alert('Error', 'Failed to logout');
     }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setShowLoader(true);
+              const token = auth?.session?.accessToken;
+              const tokenType = auth?.session?.tokenType || 'Bearer';
+              if (!token) throw new Error('Not authenticated');
+
+              const res = await fetch(`${API_URL}/account/authenticated/me`, {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `${tokenType} ${token}`,
+                },
+              });
+
+              if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || 'Failed to delete account');
+              }
+
+              // Successful deletion — clear local session and navigate home
+              if (auth?.signOut) await auth.signOut();
+              Alert.alert('Account deleted', 'Your account has been deleted.');
+              router.replace('/');
+            } catch (err: any) {
+              console.error('Delete account failed', err);
+              Alert.alert('Error', err?.message || 'Failed to delete account');
+            } finally {
+              setShowLoader(false);
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   return (
@@ -95,6 +141,10 @@ export default function SettingsScreen() {
         <TouchableOpacity style={styles.logoutCard} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
           <ChevronRight size={18} color={theme.accentPrimary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
+          <Text style={styles.deleteText}>Delete account</Text>
         </TouchableOpacity>
       </ScrollView>
 

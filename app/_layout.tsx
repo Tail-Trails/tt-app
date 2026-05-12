@@ -29,7 +29,7 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: true,
     shouldSetBadge: false,
-    shouldShowBanner: true, 
+    shouldShowBanner: true,
     shouldShowList: true,
   }),
 });
@@ -45,7 +45,7 @@ function RootLayoutNav() {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
   // Hide FAB on certain pages that have critical UI interactions
-  const hideFab = segments.includes('record') || segments.includes('follow');
+  const hideFab = segments.includes('record') || segments.includes('follow') || segments.includes('login') || segments.includes('signup') || segments.includes('onboarding');
 
   async function submitFeedback(message: string) {
     setIsSubmittingFeedback(true);

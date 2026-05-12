@@ -67,4 +67,18 @@ export default StyleSheet.create({
   logoutText: {
     ...Typography.label(theme.accentPrimary),
   },
+  deleteButton: {
+    backgroundColor: '#ff3b30',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  deleteText: {
+    ...Typography.label('#fff'),
+    color: '#fff',
+    fontWeight: '600',
+  },
 });
