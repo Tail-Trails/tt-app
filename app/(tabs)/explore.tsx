@@ -7,6 +7,7 @@ import TrailMap from '@/components/TrailMap';
 import TrailMapPopup from '@/components/TrailMapPopup';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
+import ensureForegroundLocationPermission from '@/utils/permissions';
 import { getBestAvailableLocation } from '@/utils/location';
 import * as Haptics from 'expo-haptics';
 import { MapPin, Umbrella, Star, X, Navigation, ChevronLeft, Trees, TrafficCone, Mountain, List, Map } from 'lucide-react-native';
@@ -48,9 +49,9 @@ export default function ExploreScreen() {
 
   const loadUserLocationAndNearbyTrails = useCallback(async () => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const granted = await ensureForegroundLocationPermission();
 
-      if (status === 'granted') {
+      if (granted) {
         const location = await getBestAvailableLocation({ accuracy: Location.Accuracy.Balanced });
 
         // Skip reverse geocoding to avoid rate limits. We only need lat/lon for nearby search.

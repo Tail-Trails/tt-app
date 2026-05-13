@@ -5,13 +5,34 @@ import type { MutableRefObject } from 'react';
 
 export async function ensureForegroundLocationPermission(): Promise<boolean> {
   try {
+    // If we can, check the current permission status first to avoid spamming prompts
+    // @ts-ignore - expo-location typings
+    const current = await Location.getForegroundPermissionsAsync?.();
+    const currentStatus = current?.status ?? null;
+    if (currentStatus === 'granted') return true;
+
+    // Show an explicit rationale before requesting permission so the user understands
+    // why we need foreground location access.
+    const userAgreed: boolean = await new Promise((resolve) => {
+      Alert.alert(
+        'Allow Location While Using the App?',
+        'TailTrails uses your location to show your real-time position on the map and enable features like live-follow and walk recording.\n\nWe only request foreground location now — background tracking is requested separately when you start a walk.',
+        [
+          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Continue', onPress: () => resolve(true) },
+        ],
+      );
+    });
+
+    if (!userAgreed) return false;
+
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status === 'granted') return true;
 
-    // Permission denied — prompt the user to open app settings so they can enable it.
+    // Permission denied — provide an explicit explanation and option to open settings
     Alert.alert(
-      'Location Permission Required',
-      'This feature needs access to your location. Open settings to enable location access?',
+      'Location Permission Needed',
+      'TailTrails needs foreground location access to show your position on the map. Please open Settings to enable location access if you change your mind.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -21,7 +42,6 @@ export async function ensureForegroundLocationPermission(): Promise<boolean> {
               if (Platform.OS === 'ios') {
                 Linking.openURL('app-settings:');
               } else if ((Linking as any).openSettings) {
-                // react-native newer API
                 (Linking as any).openSettings();
               } else {
                 Linking.openURL('package:' + (Platform.OS === 'android' ? '' : ''));
@@ -31,8 +51,9 @@ export async function ensureForegroundLocationPermission(): Promise<boolean> {
             }
           },
         },
-      ]
+      ],
     );
+
     return false;
   } catch (err) {
     console.warn('ensureForegroundLocationPermission error:', err);

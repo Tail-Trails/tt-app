@@ -25,6 +25,7 @@ import styles from './profile.styles';
 import { useRouter } from 'expo-router';
 import { formatDistance } from '@/utils/distance';
 import * as Location from 'expo-location';
+import ensureForegroundLocationPermission from '@/utils/permissions';
 import { getBestAvailableLocation } from '@/utils/location';
 import { LinearGradient } from 'expo-linear-gradient';
 import TrailMapPreview from '@/components/TrailMapPreview';
@@ -138,8 +139,8 @@ export default function ProfileScreen() {
       let latitude = 0;
       let longitude = 0;
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status === 'granted') {
+        const granted = await ensureForegroundLocationPermission();
+        if (granted) {
           const loc = await getBestAvailableLocation({ accuracy: Location.Accuracy.Balanced });
           if (loc && loc.coords) {
             latitude = loc.coords.latitude;

@@ -36,8 +36,21 @@ export default function InfoPage() {
   }, [rawDraft]);
 
   const pickImages = async () => {
+    const agreed = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        'Allow Photo Library Access?',
+        'Add photos from your device to include with your trail. TailTrails will upload selected photos when you save the trail.',
+        [
+          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Continue', onPress: () => resolve(true) },
+        ],
+      );
+    });
+    if (!agreed) return;
+
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return;
+
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsMultipleSelection: true,
       quality: 0.6,

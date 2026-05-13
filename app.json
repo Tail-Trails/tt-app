@@ -2,7 +2,7 @@
   "expo": {
     "name": "TailTrails",
     "slug": "dog-walk-tracker-x2nouww",
-    "version": "1.0.38",
+    "version": "1.0.39",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": [
@@ -24,9 +24,9 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "TailTrails needs your location to record your dog's walking path even when the screen is locked.",
-        "NSLocationAlwaysUsageDescription": "TailTrails tracks your walk in the background so you can lock your phone while enjoying your time with your dog.",
-        "NSLocationWhenInUseUsageDescription": "TailTrails uses your location to show your real-time position on the map.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "TailTrails needs background location to continue recording your dog's walk when the app is backgrounded or the screen is locked.",
+        "NSLocationAlwaysUsageDescription": "TailTrails requests background location so your walk continues to be recorded if you switch apps or lock your phone.",
+        "NSLocationWhenInUseUsageDescription": "TailTrails uses your location while the app is open to show your real-time position on the map and to start recordings.",
         "NSMotionUsageDescription": "TailTrails uses motion data to detect when you're walking and optimize location tracking for your walk.",
         "NSLocationTemporaryUsageDescriptionDictionary": {
           "HighAccuracy": "TailTrails needs high accuracy location to precisely map your walking trail."
@@ -41,13 +41,13 @@
           "com.transistorsoft.customtask"
         ],
         "TSLocationManagerLicense": "eyJhbGciOiJFZERTQSIsImtpZCI6ImVkMjU1MTktbWFpbi12MSJ9.eyJvcyI6ImlvcyIsImFwcF9pZCI6ImNvbS50YWlsdHJhaWxzLmFwcCIsIm9yZGVyX251bWJlciI6MTU4NzYsInJlbmV3YWxfdXJsIjoiaHR0cHM6Ly9zaG9wLnRyYW5zaXN0b3Jzb2Z0LmNvbS9jYXJ0LzE2NTA3ODYxNTA1OjE_bm90ZT0xMDU1OCIsImN1c3RvbWVyX2lkIjo5NjAyLCJwcm9kdWN0IjoicmVhY3QtbmF0aXZlLWJhY2tncm91bmQtZ2VvbG9jYXRpb24iLCJrZXlfdmVyc2lvbiI6MSwiYWxsb3dlZF9zdWZmaXhlcyI6WyIuZGV2IiwiLmRldmVsb3BtZW50IiwiLnN0YWdpbmciLCIuc3RhZ2UiLCIucWEiLCIudWF0IiwiLnRlc3QiLCIuZGVidWciXSwibWF4X2J1aWxkX3N0YW1wIjoyMDI3MDUwMSwiZ3JhY2VfYnVpbGRzIjowLCJlbnRpdGxlbWVudHMiOlsiY29yZSJdLCJpYXQiOjE3NzUwMzYwNTJ9.8r3wg1psE5puMMketwOJlLkDNW0CWJn3GwJ9PWvJXTi_wNpF2GRMNHLg-ADqIB8LsKehD6LazVBMe3OyLJQ1Dw",
-        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
-        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera"
+        "NSPhotoLibraryUsageDescription": "TailTrails requests access to your photo library so you can attach photos to trails and save pictures taken during walks.",
+        "NSCameraUsageDescription": "TailTrails requests access to your camera to let you take photos of your dog or the trail while recording a walk."
       }
     },
     "android": {
       "package": "com.tailtrailsclub.app",
-      "versionCode": 39,
+      "versionCode": 40,
       "googleServicesFile": "./google-services.json",
       "newArchEnabled": false,
       "softwareKeyboardLayoutMode": "pan",
@@ -69,7 +69,6 @@
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
         "CAMERA",
-        "RECORD_AUDIO",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
         "VIBRATE",
@@ -106,7 +105,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow TailTrails to track your walk.",
+          "locationAlwaysAndWhenInUsePermission": "Allow TailTrails to track your walk. We need this permission to keep recording your walk if you switch to another app or lock your screen.",
           "isAndroidForegroundServiceEnabled": true,
           "isAndroidBackgroundLocationEnabled": true,
           "foregroundService": {
@@ -119,7 +118,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "The app accesses your photos to let you share them with your friends."
+          "photosPermission": "TailTrails needs access to your photos so you can attach pictures to trails, your dog profile, and save photos taken during walks."
         }
       ],
       "@maplibre/maplibre-react-native",

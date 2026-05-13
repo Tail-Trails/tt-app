@@ -112,9 +112,21 @@ export default function DogProfileScreen() {
 
   const pickImage = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const agreed = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        'Allow Photo Library Access?',
+        'TailTrails uses your photo library to let you pick a profile photo for your dog and attach photos to walks.\n\nYou can continue without adding a photo.',
+        [
+          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Continue', onPress: () => resolve(true) },
+        ],
+      );
+    });
+    if (!agreed) return;
+
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'We need access to your photo library');
+      Alert.alert('Permission needed', 'Photo library access was not granted. You can add a photo later.');
       return;
     }
 
@@ -136,9 +148,21 @@ export default function DogProfileScreen() {
 
   const takePhoto = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const agreed = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        'Allow Camera Access?',
+        'TailTrails needs access to your camera so you can take a photo of your dog for the profile or during walks.',
+        [
+          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Continue', onPress: () => resolve(true) },
+        ],
+      );
+    });
+    if (!agreed) return;
+
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'We need camera access to take photos');
+      Alert.alert('Permission needed', 'Camera access was not granted. You can add a photo later.');
       return;
     }
 

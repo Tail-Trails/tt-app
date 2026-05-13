@@ -35,9 +35,21 @@ export default function AccountSettingsScreen() {
 
   const handlePickImage = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const agreed = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        'Allow Photo Library Access?',
+        'TailTrails needs access to your photo library so you can choose a profile photo and attach images to trails.',
+        [
+          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Continue', onPress: () => resolve(true) },
+        ],
+      );
+    });
+    if (!agreed) return;
+
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please allow access to your photo library');
+      Alert.alert('Permission needed', 'Photo library access was not granted.');
       return;
     }
 

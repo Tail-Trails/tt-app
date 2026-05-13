@@ -17,6 +17,7 @@ import { Text } from '@/components';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import TrailMapPreview from '@/components/TrailMapPreview';
 import * as Location from 'expo-location';
+import ensureForegroundLocationPermission from '@/utils/permissions';
 import { MapPin, Calendar, Edit3, Check, X, Navigation, Star, ArrowLeft, ChevronRight, Bookmark } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTrails } from '@/context/TrailsContext';
@@ -284,8 +285,8 @@ export default function TrailDetailScreen() {
 
     setIsGettingDirections(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      const granted = await ensureForegroundLocationPermission();
+      if (!granted) {
         Alert.alert('Permission required', 'Allow location access to get directions');
         return;
       }

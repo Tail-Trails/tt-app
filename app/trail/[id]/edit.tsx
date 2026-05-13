@@ -146,9 +146,21 @@ export default function EditTrailScreen() {
 
   const pickImages = async () => {
     try {
+      const agreed = await new Promise<boolean>((resolve) => {
+        Alert.alert(
+          'Allow Photo Library Access?',
+          'TailTrails needs access to your photo library so you can choose photos to attach to this trail. Photos will be uploaded to the trail when you save.',
+          [
+            { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Continue', onPress: () => resolve(true) },
+          ],
+        );
+      });
+      if (!agreed) return;
+
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Please allow access to your photo library');
+        Alert.alert('Permission Required', 'Photo library access was not granted.');
         return;
       }
 

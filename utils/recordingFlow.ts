@@ -11,6 +11,28 @@ type InitialLocationResult = {
 };
 
 export async function requestBgPermissionAndInitialLocation(timeout: number = 30): Promise<InitialLocationResult> {
+  // Ask the user for a brief rationale before invoking the native background permission prompt.
+  // Background location allows TailTrails to continue recording your walk when the app is backgrounded
+  // or the screen is locked.
+  // @ts-ignore
+  const userAgreed = await new Promise<boolean>((resolve) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { Alert } = require('react-native');
+      Alert.alert(
+        'Allow Background Location?',
+        'To record your walk while the app is in the background or your screen is locked, TailTrails needs background location access.\n\nYou can deny this and still use the app, but walk recording may stop when the app is backgrounded.',
+        [
+          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Continue', onPress: () => resolve(true) },
+        ],
+      );
+    } catch (e) {
+      resolve(true);
+    }
+  });
+  if (!userAgreed) return { coordinate: null, accuracy: undefined };
+
   // @ts-ignore
   await BackgroundGeolocation.requestPermission();
   try {
@@ -43,6 +65,25 @@ export async function captureAndStoreRecordingPhoto() {
     return { status: 'not-supported' as const };
   }
 
+  // Ask the user why we need camera access before invoking the native prompt
+  const cameraAgreed: boolean = await new Promise((resolve) => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { Alert } = require('react-native');
+      Alert.alert(
+        'Allow Camera Access?',
+        'TailTrails can take photos during your walk to attach to your recording and make your trail memories richer.',
+        [
+          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Continue', onPress: () => resolve(true) },
+        ],
+      );
+    } catch (e) {
+      resolve(true);
+    }
+  });
+  if (!cameraAgreed) return { status: 'permission-denied' as const };
+
   const { status } = await ImagePicker.requestCameraPermissionsAsync();
   if (status !== 'granted') {
     return { status: 'permission-denied' as const };
@@ -61,16 +102,36 @@ export async function captureAndStoreRecordingPhoto() {
   const uri = result.assets[0].uri;
   let savedToGallery = false;
   try {
-    const { status: mediaStatus } = await MediaLibrary.requestPermissionsAsync();
-    if (mediaStatus === 'granted') {
+    // Explain why we might save to the user's gallery
+    const mediaAgreed: boolean = await new Promise((resolve) => {
       try {
-        await MediaLibrary.saveToLibraryAsync(uri);
-        savedToGallery = true;
-      } catch (err) {
-        console.warn('Failed to save photo to gallery', err);
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { Alert } = require('react-native');
+        Alert.alert(
+          'Save Photo to Library?',
+          'If you allow access to your photo library, TailTrails can save a copy of photos you take during walks to your device gallery.',
+          [
+            { text: 'Don\'t Save', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Allow & Save', onPress: () => resolve(true) },
+          ],
+        );
+      } catch (e) {
+        resolve(true);
       }
-    } else {
-      console.warn('Media library permission not granted, photo not saved to gallery');
+    });
+
+    if (mediaAgreed) {
+      const { status: mediaStatus } = await MediaLibrary.requestPermissionsAsync();
+      if (mediaStatus === 'granted') {
+        try {
+          await MediaLibrary.saveToLibraryAsync(uri);
+          savedToGallery = true;
+        } catch (err) {
+          console.warn('Failed to save photo to gallery', err);
+        }
+      } else {
+        console.warn('Media library permission not granted, photo not saved to gallery');
+      }
     }
   } catch (err) {
     console.warn('Media library error', err);
