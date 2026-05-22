@@ -2,8 +2,10 @@ import theme from '@/constants/colors';
 import { forwardRef, useMemo, useRef, useImperativeHandle, useEffect, useState } from 'react';
 import { View, Text as RNText, TouchableOpacity } from 'react-native';
 import { Map as MLMapView, Camera, GeoJSONSource, Layer, Marker } from '@maplibre/maplibre-react-native';
-import BackgroundGeolocation from 'react-native-background-geolocation';
 import DogMarker from './DogMarker';
+
+// const DogMarker = require('../assets/images/map-icon.svg');
+
 
 interface TrailMapProps {
   coordinates?: { latitude: number; longitude: number }[];
@@ -244,7 +246,7 @@ const TrailMap = forwardRef<any, TrailMapProps>(({
           lngLat={[resolvedUserLocation.longitude, resolvedUserLocation.latitude]}
         >
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <DogMarker size={50} color={theme.backgroundPrimary} />
+            <DogMarker size={40} color={theme.backgroundPrimary} />
           </View>
         </Marker>
       )}

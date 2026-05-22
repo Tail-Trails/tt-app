@@ -12,6 +12,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { API_URL } from '@/lib/api';
 import * as Haptics from 'expo-haptics';
+import { openAppSettings } from '@/utils/permissions';
 
 const Icon = require('../../../assets/images/icon.png');
 
@@ -35,22 +36,42 @@ export default function AccountSettingsScreen() {
 
   const handlePickImage = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const agreed = await new Promise<boolean>((resolve) => {
+    const { status: existingStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
+
+    if (existingStatus === 'denied') {
       Alert.alert(
-        'Allow Photo Library Access?',
-        'TailTrails needs access to your photo library so you can choose a profile photo and attach images to trails.',
+        'Photo Library Access Needed',
+        'TailTrails needs photo library access to choose a profile photo. Please enable it in Settings.',
         [
-          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
-          { text: 'Continue', onPress: () => resolve(true) },
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: openAppSettings },
         ],
       );
-    });
-    if (!agreed) return;
-
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Photo library access was not granted.');
       return;
+    }
+
+    if (existingStatus !== 'granted') {
+      await new Promise<void>((resolve) => {
+        Alert.alert(
+          'Allow Photo Library Access?',
+          'TailTrails needs access to your photo library so you can choose a profile photo and attach images to trails.',
+          [{ text: 'Continue', onPress: () => resolve() }],
+          { cancelable: false },
+        );
+      });
+
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Photo Library Access Needed',
+          'TailTrails needs photo library access to choose a profile photo. Please enable it in Settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: openAppSettings },
+          ],
+        );
+        return;
+      }
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({

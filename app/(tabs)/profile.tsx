@@ -486,7 +486,7 @@ export default function ProfileScreen() {
                 {selectedTab === 'created'
                   ? 'No trails created yet'
                     : selectedTab === 'saved'
-                    ? 'Trail saving, coming soon!'
+                    ? 'No trails saved yet!'
                     : 'No history yet'}
               </Text>
             </View>

@@ -12,6 +12,7 @@ import { ChevronDown, Camera, Upload, ArrowLeft } from 'lucide-react-native';
 import theme from '@/constants/colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styles from './dog-profile.styles';
+import { openAppSettings } from '@/utils/permissions';
 
 import { DogSize, DOG_SIZES } from '@/types/dog-profile';
 
@@ -112,22 +113,42 @@ export default function DogProfileScreen() {
 
   const pickImage = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const agreed = await new Promise<boolean>((resolve) => {
+    const { status: existingStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
+
+    if (existingStatus === 'denied') {
       Alert.alert(
-        'Allow Photo Library Access?',
-        'TailTrails uses your photo library to let you pick a profile photo for your dog and attach photos to walks.\n\nYou can continue without adding a photo.',
+        'Photo Library Access Needed',
+        'TailTrails needs photo library access to pick a profile photo. Please enable it in Settings.',
         [
-          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
-          { text: 'Continue', onPress: () => resolve(true) },
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: openAppSettings },
         ],
       );
-    });
-    if (!agreed) return;
-
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Photo library access was not granted. You can add a photo later.');
       return;
+    }
+
+    if (existingStatus !== 'granted') {
+      await new Promise<void>((resolve) => {
+        Alert.alert(
+          'Allow Photo Library Access?',
+          'TailTrails uses your photo library to let you pick a profile photo for your dog and attach photos to walks.',
+          [{ text: 'Continue', onPress: () => resolve() }],
+          { cancelable: false },
+        );
+      });
+
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Photo Library Access Needed',
+          'Photo library access was not granted. You can add a photo later.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: openAppSettings },
+          ],
+        );
+        return;
+      }
     }
 
     setIsLoadingImage(true);
@@ -148,22 +169,42 @@ export default function DogProfileScreen() {
 
   const takePhoto = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const agreed = await new Promise<boolean>((resolve) => {
+    const { status: existingStatus } = await ImagePicker.getCameraPermissionsAsync();
+
+    if (existingStatus === 'denied') {
       Alert.alert(
-        'Allow Camera Access?',
-        'TailTrails needs access to your camera so you can take a photo of your dog for the profile or during walks.',
+        'Camera Access Needed',
+        'TailTrails needs camera access to take a photo. Please enable it in Settings.',
         [
-          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
-          { text: 'Continue', onPress: () => resolve(true) },
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: openAppSettings },
         ],
       );
-    });
-    if (!agreed) return;
-
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Camera access was not granted. You can add a photo later.');
       return;
+    }
+
+    if (existingStatus !== 'granted') {
+      await new Promise<void>((resolve) => {
+        Alert.alert(
+          'Allow Camera Access?',
+          'TailTrails needs access to your camera so you can take a photo of your dog for the profile or during walks.',
+          [{ text: 'Continue', onPress: () => resolve() }],
+          { cancelable: false },
+        );
+      });
+
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Camera Access Needed',
+          'Camera access was not granted. You can add a photo later.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: openAppSettings },
+          ],
+        );
+        return;
+      }
     }
 
     setIsLoadingImage(true);
@@ -399,21 +440,17 @@ export default function DogProfileScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 20 }]}> 
-        <TouchableOpacity style={styles.backButton} onPress={() => {
-          if (openedFromTab) router.back(); else router.push('/profile');
-        }}>
-          <ArrowLeft size={20} color={theme.accentPrimary} />
-        </TouchableOpacity>
+        {dogProfile && (
+          <TouchableOpacity style={styles.backButton} onPress={() => {
+            if (openedFromTab) router.back(); else router.push('/profile');
+          }}>
+            <ArrowLeft size={20} color={theme.accentPrimary} />
+          </TouchableOpacity>
+        )}
 
         <View style={styles.header}>
           <Text style={styles.title}>{dogProfile ? 'Edit dog profile' : 'Tell us about your dog'}</Text>
           <Text style={styles.subtitle}>{dogProfile ? 'Update your dog\'s information' : 'Let\'s start with the basics'}</Text>
-          {!dogProfile && (
-            <View style={styles.progressContainer}>
-              <View style={[styles.progressDot, styles.progressDotActive]} />
-              <View style={styles.progressDot} />
-            </View>
-          )}
         </View>
 
         <TouchableOpacity
@@ -592,7 +629,7 @@ export default function DogProfileScreen() {
           {isSaving ? (
             <ActivityIndicator color="#1a1f0a" />
           ) : (
-            <Text style={styles.nextButtonText}>{openedFromSettings ? 'Save' : 'Next'}</Text>
+            <Text style={styles.nextButtonText}>{dogProfile ? 'Save' : 'Next'}</Text>
           )}
         </TouchableOpacity>
       </ScrollView>

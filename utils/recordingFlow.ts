@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import BackgroundGeolocation from 'react-native-background-geolocation';
 import { Coordinate } from '@/types/trail';
+import { openAppSettings } from '@/utils/permissions';
 
 type InitialLocationResult = {
   coordinate: Coordinate | null;
@@ -15,23 +16,20 @@ export async function requestBgPermissionAndInitialLocation(timeout: number = 30
   // Background location allows TailTrails to continue recording your walk when the app is backgrounded
   // or the screen is locked.
   // @ts-ignore
-  const userAgreed = await new Promise<boolean>((resolve) => {
+  await new Promise<void>((resolve) => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { Alert } = require('react-native');
       Alert.alert(
         'Allow Background Location?',
-        'To record your walk while the app is in the background or your screen is locked, TailTrails needs background location access.\n\nYou can deny this and still use the app, but walk recording may stop when the app is backgrounded.',
-        [
-          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
-          { text: 'Continue', onPress: () => resolve(true) },
-        ],
+        'To record your walk while the app is in the background or your screen is locked, TailTrails needs background location access.',
+        [{ text: 'Continue', onPress: () => resolve() }],
+        { cancelable: false },
       );
     } catch (e) {
-      resolve(true);
+      resolve();
     }
   });
-  if (!userAgreed) return { coordinate: null, accuracy: undefined };
 
   // @ts-ignore
   await BackgroundGeolocation.requestPermission();
@@ -65,28 +63,56 @@ export async function captureAndStoreRecordingPhoto() {
     return { status: 'not-supported' as const };
   }
 
-  // Ask the user why we need camera access before invoking the native prompt
-  const cameraAgreed: boolean = await new Promise((resolve) => {
+  // Check current camera permission status first
+  const { status: existingStatus } = await ImagePicker.getCameraPermissionsAsync();
+  if (existingStatus === 'granted') {
+    // Already granted — go straight to the camera
+  } else if (existingStatus === 'denied') {
+    // Already denied — skip rationale, offer Settings link
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { Alert } = require('react-native');
       Alert.alert(
-        'Allow Camera Access?',
-        'TailTrails can take photos during your walk to attach to your recording and make your trail memories richer.',
+        'Camera Access Needed',
+        'TailTrails needs camera access to take walk photos. Please enable it in Settings.',
         [
-          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
-          { text: 'Continue', onPress: () => resolve(true) },
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: openAppSettings },
         ],
       );
-    } catch (e) {
-      resolve(true);
-    }
-  });
-  if (!cameraAgreed) return { status: 'permission-denied' as const };
-
-  const { status } = await ImagePicker.requestCameraPermissionsAsync();
-  if (status !== 'granted') {
+    } catch { /* ignore */ }
     return { status: 'permission-denied' as const };
+  } else {
+    // Ask the user why we need camera access before invoking the native prompt
+    await new Promise<void>((resolve) => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { Alert } = require('react-native');
+        Alert.alert(
+          'Allow Camera Access?',
+          'TailTrails can take photos during your walk to attach to your recording and make your trail memories richer.',
+          [{ text: 'Continue', onPress: () => resolve() }],
+          { cancelable: false },
+        );
+      } catch (e) {
+        resolve();
+      }
+    });
+
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      try {
+        const { Alert } = require('react-native');
+        Alert.alert(
+          'Camera Access Needed',
+          'TailTrails needs camera access to take walk photos. Please enable it in Settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: openAppSettings },
+          ],
+        );
+      } catch { /* ignore */ }
+      return { status: 'permission-denied' as const };
+    }
   }
 
   const result = await ImagePicker.launchCameraAsync({

@@ -3,55 +3,57 @@ import * as Location from 'expo-location';
 import BackgroundGeolocation from 'react-native-background-geolocation';
 import type { MutableRefObject } from 'react';
 
+export function openAppSettings() {
+  try {
+    if (Platform.OS === 'ios') {
+      Linking.openURL('app-settings:');
+    } else if ((Linking as any).openSettings) {
+      (Linking as any).openSettings();
+    }
+  } catch (e) {
+    console.warn('Could not open settings:', e);
+  }
+}
+
+function showOpenSettingsAlert(title: string, message: string) {
+  Alert.alert(title, message, [
+    { text: 'Cancel', style: 'cancel' },
+    { text: 'Open Settings', onPress: openAppSettings },
+  ]);
+}
+
 export async function ensureForegroundLocationPermission(): Promise<boolean> {
   try {
-    // If we can, check the current permission status first to avoid spamming prompts
     // @ts-ignore - expo-location typings
     const current = await Location.getForegroundPermissionsAsync?.();
     const currentStatus = current?.status ?? null;
     if (currentStatus === 'granted') return true;
 
-    // Show an explicit rationale before requesting permission so the user understands
-    // why we need foreground location access.
-    const userAgreed: boolean = await new Promise((resolve) => {
+    // Already denied — skip rationale and offer Settings link directly
+    if (currentStatus === 'denied') {
+      showOpenSettingsAlert(
+        'Location Permission Needed',
+        'TailTrails needs location access to show your position on the map. Please enable it in Settings.',
+      );
+      return false;
+    }
+
+    // First time — show rationale, then the native prompt
+    await new Promise<void>((resolve) => {
       Alert.alert(
         'Allow Location While Using the App?',
         'TailTrails uses your location to show your real-time position on the map and enable features like live-follow and walk recording.\n\nWe only request foreground location now — background tracking is requested separately when you start a walk.',
-        [
-          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
-          { text: 'Continue', onPress: () => resolve(true) },
-        ],
+        [{ text: 'Continue', onPress: () => resolve() }],
+        { cancelable: false },
       );
     });
-
-    if (!userAgreed) return false;
 
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status === 'granted') return true;
 
-    // Permission denied — provide an explicit explanation and option to open settings
-    Alert.alert(
+    showOpenSettingsAlert(
       'Location Permission Needed',
-      'TailTrails needs foreground location access to show your position on the map. Please open Settings to enable location access if you change your mind.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Open Settings',
-          onPress: () => {
-            try {
-              if (Platform.OS === 'ios') {
-                Linking.openURL('app-settings:');
-              } else if ((Linking as any).openSettings) {
-                (Linking as any).openSettings();
-              } else {
-                Linking.openURL('package:' + (Platform.OS === 'android' ? '' : ''));
-              }
-            } catch (e) {
-              console.warn('Could not open settings:', e);
-            }
-          },
-        },
-      ],
+      'TailTrails needs location access to show your position on the map. Please enable it in Settings.',
     );
 
     return false;

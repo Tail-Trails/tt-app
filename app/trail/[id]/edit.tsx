@@ -11,6 +11,7 @@ import * as Haptics from 'expo-haptics';
 import theme from '@/constants/colors';
 import styles from './edit.styles';
 import * as ImagePicker from 'expo-image-picker';
+import { openAppSettings } from '@/utils/permissions';
 
 export default function EditTrailScreen() {
   const { id } = useLocalSearchParams();
@@ -146,22 +147,42 @@ export default function EditTrailScreen() {
 
   const pickImages = async () => {
     try {
-      const agreed = await new Promise<boolean>((resolve) => {
+      const { status: existingStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
+
+      if (existingStatus === 'denied') {
         Alert.alert(
-          'Allow Photo Library Access?',
-          'TailTrails needs access to your photo library so you can choose photos to attach to this trail. Photos will be uploaded to the trail when you save.',
+          'Photo Library Access Needed',
+          'TailTrails needs photo library access to attach photos to this trail. Please enable it in Settings.',
           [
-            { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
-            { text: 'Continue', onPress: () => resolve(true) },
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: openAppSettings },
           ],
         );
-      });
-      if (!agreed) return;
-
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Photo library access was not granted.');
         return;
+      }
+
+      if (existingStatus !== 'granted') {
+        await new Promise<void>((resolve) => {
+          Alert.alert(
+            'Allow Photo Library Access?',
+            'TailTrails needs access to your photo library so you can choose photos to attach to this trail. Photos will be uploaded to the trail when you save.',
+            [{ text: 'Continue', onPress: () => resolve() }],
+            { cancelable: false },
+          );
+        });
+
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert(
+            'Photo Library Access Needed',
+            'TailTrails needs photo library access to attach photos to this trail. Please enable it in Settings.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Open Settings', onPress: openAppSettings },
+            ],
+          );
+          return;
+        }
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({

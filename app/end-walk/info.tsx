@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, Image as RNImage } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, Image as RNImage, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
@@ -8,6 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTrails } from '@/context/TrailsContext';
 import styles from './info.styles';
+import { openAppSettings } from '@/utils/permissions';
 
 export default function InfoPage() {
   const router = useRouter();
@@ -36,20 +37,43 @@ export default function InfoPage() {
   }, [rawDraft]);
 
   const pickImages = async () => {
-    const agreed = await new Promise<boolean>((resolve) => {
+    const { status: existingStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
+
+    if (existingStatus === 'denied') {
       Alert.alert(
-        'Allow Photo Library Access?',
-        'Add photos from your device to include with your trail. TailTrails will upload selected photos when you save the trail.',
+        'Photo Library Access Needed',
+        'TailTrails needs photo library access to attach photos to your trail. Please enable it in Settings.',
         [
-          { text: 'Not Now', style: 'cancel', onPress: () => resolve(false) },
-          { text: 'Continue', onPress: () => resolve(true) },
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: openAppSettings },
         ],
       );
-    });
-    if (!agreed) return;
+      return;
+    }
 
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') return;
+    if (existingStatus !== 'granted') {
+      await new Promise<void>((resolve) => {
+        Alert.alert(
+          'Allow Photo Library Access?',
+          'Add photos from your device to include with your trail. TailTrails will upload selected photos when you save the trail.',
+          [{ text: 'Continue', onPress: () => resolve() }],
+          { cancelable: false },
+        );
+      });
+
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Photo Library Access Needed',
+          'TailTrails needs photo library access to attach photos to your trail. Please enable it in Settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: openAppSettings },
+          ],
+        );
+        return;
+      }
+    }
 
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsMultipleSelection: true,
